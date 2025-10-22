@@ -1,0 +1,10 @@
+{
+  "Id": "ModWithConflict",
+  "Name": "Conflicting Mod",
+  "Version": "1.0.0",
+  "Author": "Test Suite",
+  "Description": "A mod designed to test conflict resolution",
+  "Dependencies": [],
+  "LoadAfter": ["SimpleMod"],
+  "LoadBefore": []
+}

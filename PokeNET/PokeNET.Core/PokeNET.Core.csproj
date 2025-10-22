@@ -3,9 +3,21 @@
         <TargetFramework>net8.0</TargetFramework>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PokeNET.Domain\PokeNET.Domain.csproj" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*">
             <PrivateAssets>All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Arch" Version="2.*" />
+        <PackageReference Include="Lib.Harmony" Version="2.*" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.*" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.*" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.*" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.*" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.*" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.*" />
     </ItemGroup>
 </Project>

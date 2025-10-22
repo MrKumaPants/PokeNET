@@ -1,0 +1,13 @@
+{
+  "id": "com.example.simplecontentmod",
+  "name": "Simple Content Mod",
+  "version": "1.0.0",
+  "author": "YourName",
+  "description": "Adds custom sprite for Flame Dragon",
+  "dependencies": [
+    {
+      "id": "com.pokenet.core",
+      "version": ">=1.0.0"
+    }
+  ]
+}

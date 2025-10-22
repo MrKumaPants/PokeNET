@@ -1,0 +1,14 @@
+{
+  "sprites": [
+    {
+      "id": "flame_dragon_sprite",
+      "path": "Content/Sprites/custom_creature.png",
+      "type": "creature",
+      "metadata": {
+        "width": 96,
+        "height": 96,
+        "artist": "YourName"
+      }
+    }
+  ]
+}

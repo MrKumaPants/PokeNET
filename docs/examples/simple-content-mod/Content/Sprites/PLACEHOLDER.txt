@@ -1,0 +1,13 @@
+This is a placeholder for your custom sprite.
+
+SPRITE REQUIREMENTS:
+- Format: PNG with transparency
+- Size: 96x96 pixels
+- Color depth: 32-bit RGBA
+- File name: custom_creature.png
+
+For testing, you can use sprites from:
+- https://veekun.com/dex/downloads
+- https://pokemondb.net/sprites
+
+Replace this file with your actual PNG sprite named "custom_creature.png"

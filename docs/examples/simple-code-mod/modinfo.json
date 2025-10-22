@@ -1,0 +1,13 @@
+{
+  "id": "com.example.simplecodemod",
+  "name": "Simple Code Mod",
+  "version": "1.0.0",
+  "author": "YourName",
+  "description": "Doubles damage and adds custom battle messages using Harmony",
+  "dependencies": [
+    {
+      "id": "com.pokenet.core",
+      "version": ">=1.0.0"
+    }
+  ]
+}

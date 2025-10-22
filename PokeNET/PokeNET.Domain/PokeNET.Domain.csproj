@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Arch" Version="2.*" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.*" />
+    </ItemGroup>
+</Project>

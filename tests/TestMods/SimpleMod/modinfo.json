@@ -1,0 +1,10 @@
+{
+  "Id": "SimpleMod",
+  "Name": "Simple Test Mod",
+  "Version": "1.0.0",
+  "Author": "Test Suite",
+  "Description": "A simple mod for testing basic functionality",
+  "Dependencies": [],
+  "LoadAfter": [],
+  "LoadBefore": []
+}

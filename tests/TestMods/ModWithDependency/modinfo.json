@@ -1,0 +1,10 @@
+{
+  "Id": "ModWithDependency",
+  "Name": "Mod With Dependency",
+  "Version": "1.0.0",
+  "Author": "Test Suite",
+  "Description": "A mod that depends on SimpleMod for dependency resolution testing",
+  "Dependencies": ["SimpleMod"],
+  "LoadAfter": [],
+  "LoadBefore": []
+}

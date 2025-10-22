@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Harmony for runtime patching -->
+    <PackageReference Include="Lib.Harmony" Version="2.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PokeNET references - update paths as needed -->
+    <Reference Include="PokeNET.Core">
+      <HintPath>../../PokeNET.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PokeNET.ModApi">
+      <HintPath>../../PokeNET.ModApi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Copy DLL to Assemblies folder on build -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <MakeDir Directories="$(ProjectDir)Assemblies" Condition="!Exists('$(ProjectDir)Assemblies')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)Assemblies" />
+  </Target>
+
+</Project>

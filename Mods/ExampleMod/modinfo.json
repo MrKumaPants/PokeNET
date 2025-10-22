@@ -1,0 +1,11 @@
+{
+  "id": "com.pokenet.examplemod",
+  "name": "Example Mod",
+  "version": "1.0.0",
+  "author": "PokeNET Team",
+  "description": "Example mod demonstrating the modding API and Harmony patching",
+  "dependencies": [],
+  "loadAfter": [],
+  "loadBefore": [],
+  "assemblyName": "ExampleMod.dll"
+}

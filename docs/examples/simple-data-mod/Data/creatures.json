@@ -1,0 +1,100 @@
+{
+  "creatures": [
+    {
+      "id": "flame_lizard",
+      "name": "Flame Lizard",
+      "type": ["fire"],
+      "baseStats": {
+        "hp": 39,
+        "attack": 52,
+        "defense": 43,
+        "specialAttack": 60,
+        "specialDefense": 50,
+        "speed": 65
+      },
+      "abilities": ["blaze"],
+      "learnset": [
+        {"level": 1, "move": "scratch"},
+        {"level": 1, "move": "ember"},
+        {"level": 7, "move": "smokescreen"},
+        {"level": 10, "move": "dragon_rage"},
+        {"level": 17, "move": "scary_face"},
+        {"level": 22, "move": "fire_fang"},
+        {"level": 28, "move": "slash"},
+        {"level": 34, "move": "flamethrower"}
+      ],
+      "evolutionChain": [
+        {"to": "flame_dragon", "level": 16}
+      ],
+      "spriteId": "flame_lizard_sprite",
+      "description": "A small lizard with a flame on its tail. The flame indicates its mood and health.",
+      "catchRate": 0.45,
+      "baseExperience": 62,
+      "growthRate": "medium_slow"
+    },
+    {
+      "id": "flame_dragon",
+      "name": "Flame Dragon",
+      "type": ["fire", "dragon"],
+      "baseStats": {
+        "hp": 58,
+        "attack": 64,
+        "defense": 58,
+        "specialAttack": 80,
+        "specialDefense": 65,
+        "speed": 80
+      },
+      "abilities": ["blaze"],
+      "learnset": [
+        {"level": 1, "move": "scratch"},
+        {"level": 1, "move": "ember"},
+        {"level": 1, "move": "smokescreen"},
+        {"level": 1, "move": "dragon_rage"},
+        {"level": 17, "move": "scary_face"},
+        {"level": 22, "move": "fire_fang"},
+        {"level": 28, "move": "slash"},
+        {"level": 34, "move": "flamethrower"},
+        {"level": 36, "move": "dragon_claw"},
+        {"level": 42, "move": "fire_spin"},
+        {"level": 50, "move": "dragon_pulse"}
+      ],
+      "evolutionChain": [
+        {"from": "flame_lizard", "level": 16},
+        {"to": "mega_flame_dragon", "item": "dragon_stone"}
+      ],
+      "spriteId": "flame_dragon_sprite",
+      "description": "Wings have grown on its back, and its flames burn even hotter. It can breathe powerful fire.",
+      "catchRate": 0.25,
+      "baseExperience": 142,
+      "growthRate": "medium_slow"
+    },
+    {
+      "id": "mega_flame_dragon",
+      "name": "Mega Flame Dragon",
+      "type": ["fire", "dragon"],
+      "baseStats": {
+        "hp": 78,
+        "attack": 84,
+        "defense": 78,
+        "specialAttack": 109,
+        "specialDefense": 85,
+        "speed": 100
+      },
+      "abilities": ["blaze", "solar_power"],
+      "learnset": [
+        {"level": 1, "move": "dragon_dance"},
+        {"level": 1, "move": "flare_blitz"},
+        {"level": 1, "move": "dragon_pulse"},
+        {"level": 1, "move": "air_slash"}
+      ],
+      "evolutionChain": [
+        {"from": "flame_dragon", "item": "dragon_stone"}
+      ],
+      "spriteId": "mega_flame_dragon_sprite",
+      "description": "The ultimate form of the flame dragon. Its power is legendary, and its flames can melt steel.",
+      "catchRate": 0.05,
+      "baseExperience": 240,
+      "growthRate": "medium_slow"
+    }
+  ]
+}

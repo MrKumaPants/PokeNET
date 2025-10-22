@@ -1,0 +1,13 @@
+{
+  "id": "com.example.simpledatamod",
+  "name": "Simple Data Mod",
+  "version": "1.0.0",
+  "author": "YourName",
+  "description": "Adds three new fire-type creatures to the game",
+  "dependencies": [
+    {
+      "id": "com.pokenet.core",
+      "version": ">=1.0.0"
+    }
+  ]
+}

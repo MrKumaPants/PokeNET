@@ -1,10 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Core", "PokeNET\PokeNET.Core\PokeNET.Core.csproj", "{91142727-4397-481A-91D4-3F1B91C3963C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.DesktopGL", "PokeNET\PokeNET.DesktopGL\PokeNET.DesktopGL.csproj", "{825D8F3D-8AE6-4AB5-A6F5-D0738C5ABA85}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.WindowsDX", "PokeNET\PokeNET.WindowsDX\PokeNET.WindowsDX.csproj", "{7B32296D-C59F-4E49-AAC5-C6086A6F235F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Tests", "tests\PokeNET.Tests.csproj", "{66D19D8D-4979-4BA2-A5D1-9939D044F318}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Domain", "PokeNET\PokeNET.Domain\PokeNET.Domain.csproj", "{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +29,13 @@ Global
 		{7B32296D-C59F-4E49-AAC5-C6086A6F235F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B32296D-C59F-4E49-AAC5-C6086A6F235F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B32296D-C59F-4E49-AAC5-C6086A6F235F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

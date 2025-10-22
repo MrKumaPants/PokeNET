@@ -70,7 +70,7 @@ internal class LocalizationManager
     /// </summary>
     /// <param name="cultureCode">The culture code (e.g., "en-US", "fr-FR") to set for the game.</param>
     /// <remarks>
-    /// This method modifies the <see cref="Thread.CurrentThread.CurrentCulture"/> and <see cref="Thread.CurrentThread.CurrentUICulture"/> properties,
+    /// This method modifies the Thread.CurrentThread.CurrentCulture and Thread.CurrentThread.CurrentUICulture properties,
     /// which affect how dates, numbers, and other culture-specific values are formatted, as well as how localized resources are loaded.
     /// </remarks>
     public static void SetCulture(string cultureCode)

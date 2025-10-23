@@ -1,0 +1,238 @@
+PokeNET.Audio - Class Diagram (C4 Component Level)
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         PokeNET.Audio Component                              │
+│                  (SOLID-Compliant Audio System Architecture)                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                            ORCHESTRATION LAYER
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ <<interface>>                                                               │
+│ IAudioManager                                                               │
+│ ─────────────────────────────────────────────────────────────────────────  │
+│ Responsibility: Facade for all audio subsystems (Facade Pattern)           │
+│ SOLID: Dependency Inversion - depends on abstractions                      │
+├────────────────────────────────────────────────────────────────────────────┤
+│ + MusicPlayer: IMusicPlayer                                                 │
+│ + SoundEffectPlayer: ISoundEffectPlayer                                     │
+│ + Mixer: IAudioMixer                                                        │
+│ + Configuration: IAudioConfiguration                                        │
+├────────────────────────────────────────────────────────────────────────────┤
+│ + InitializeAsync(CancellationToken): Task                                  │
+│ + ShutdownAsync(CancellationToken): Task                                    │
+│ + PauseAll(): void                                                          │
+│ + ResumeAll(): void                                                         │
+│ + StopAll(): void                                                           │
+│ + MuteAll(): void                                                           │
+│ + UnmuteAll(): void                                                         │
+├────────────────────────────────────────────────────────────────────────────┤
+│ ~ StateChanged: EventHandler<AudioStateChangedEventArgs>                    │
+│ ~ ErrorOccurred: EventHandler<AudioErrorEventArgs>                          │
+└────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                ┌─────────────────────┼────────────────────┐
+                │                     │                    │
+                ▼                     ▼                    ▼
+
+═══════════════════════════════════════════════════════════════════════════════
+                          SPECIALIZED PLAYER LAYER
+═══════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────────────────┐  ┌─────────────────────────┐  ┌───────────────┐
+│ <<interface>>                 │  │ <<interface>>            │  │ <<interface>> │
+│ IMusicPlayer : IAudioService  │  │ ISoundEffectPlayer       │  │ IProc.Music   │
+│ ───────────────────────────── │  │ ──────────────────────── │  │ Generator     │
+│ Responsibility: Long-form     │  │ Responsibility: Short    │  │ ───────────── │
+│ audio with transitions        │  │ duration multi-channel   │  │ Resp: MIDI    │
+│ SOLID: LSP - extends base     │  │ SOLID: ISP - separate    │  │ generation    │
+│        ISP - music-specific   │  │        from music        │  │ SOLID: OCP    │
+├──────────────────────────────┤  ├─────────────────────────┤  ├───────────────┤
+│ + CurrentTrack: AudioTrack?   │  │ + MaxSimultaneousSounds  │  │ + CurrentScale│
+│ + NextTrack: AudioTrack?      │  │ + ActiveSoundCount       │  │ + Tempo: int  │
+│ + MusicState: MusicState      │  │ + IsMuted: bool          │  │ + TimeSignat. │
+│ + IsLooping: bool             │  │                          │  │               │
+│ + CrossfadeDuration: TimeSpan │  │                          │  │               │
+├──────────────────────────────┤  ├─────────────────────────┤  ├───────────────┤
+│ + LoadAsync(...)              │  │ + Play(...): Guid?       │  │ + GenerateAs..│
+│ + TransitionToAsync(...)      │  │ + PlayAsync(...)         │  │ + GenerateMi..│
+│ + FadeOutAsync(...)           │  │ + Stop(Guid): bool       │  │ + SetScale()  │
+│ + FadeInAsync(...)            │  │ + StopAll()              │  │ + SetTempo()  │
+│ + SetVolume(float)            │  │ + StopAllByName(...)     │  │ + AdaptCurr.. │
+│ + GetVolume(): float          │  │ + SetMasterVolume(...)   │  │ + GenerateVa..│
+├──────────────────────────────┤  │ + GetMasterVolume()      │  ├───────────────┤
+│ ~ TrackCompleted              │  │ + Mute(), Unmute()       │  │ ~ Generation  │
+│ ~ TrackTransitioning          │  │ + IsPlaying(Guid)        │  │   Completed   │
+│                               │  │ + PreloadAsync(...)      │  │ ~ TrackAdapted│
+│                               │  │ + Unload(string)         │  │               │
+│                               │  ├─────────────────────────┤  │               │
+│                               │  │ ~ SoundCompleted         │  │               │
+│                               │  │ ~ SoundInterrupted       │  │               │
+└──────────────────────────────┘  └─────────────────────────┘  └───────────────┘
+              │                                                          │
+              │                                                          │
+              └──────────────────────┐                                  │
+                                     ▼                                  │
+═══════════════════════════════════════════════════════════════════════════════
+                            FOUNDATION LAYER
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────┐  ┌──────────────────────┐  ┌──────────────────┐
+│ <<interface>>                │  │ <<interface>>         │  │ <<interface>>     │
+│ IAudioService (BASE)         │  │ IAudioMixer           │  │ IAudioConfig.     │
+│ ──────────────────────────── │  │ ───────────────────── │  │ ──────────────── │
+│ Responsibility: Core playback│  │ Resp: Volume & mixing │  │ Resp: Settings    │
+│ SOLID: SRP - playback only   │  │ SOLID: SRP - mix only │  │ SOLID: OCP        │
+├─────────────────────────────┤  ├──────────────────────┤  ├──────────────────┤
+│ + State: PlaybackState       │  │ + MasterVolume: float │  │ + SampleRate: int │
+│ + IsPlaying: bool            │  │ + MusicVolume: float  │  │ + BitDepth: int   │
+├─────────────────────────────┤  │ + SoundEffectsVol.    │  │ + Channels: int   │
+│ + PlayAsync(...)             │  │ + VoiceVolume: float  │  │ + BufferSize: int │
+│ + Pause()                    │  │ + IsDuckingEnabled    │  │ + Default volumes │
+│ + Resume()                   │  │ + DuckingLevel        │  │ + Audio paths     │
+│ + Stop()                     │  ├──────────────────────┤  │ + EnableDucking   │
+│ + GetPosition(): TimeSpan    │  │ + SetChannelVolume() │  │ + AudioBackend    │
+│ + Seek(TimeSpan)             │  │ + GetChannelVolume() │  │ + CustomSettings  │
+└─────────────────────────────┘  │ + EnableDucking()     │  ├──────────────────┤
+                                 │ + DisableDucking()    │  │ + LoadAsync(...)  │
+                                 │ + MuteChannel()       │  │ + SaveAsync(...)  │
+                                 │ + UnmuteChannel()     │  │ + ResetToDefaults │
+                                 │ + IsChannelMuted()    │  │ + Validate()      │
+                                 │ + MuteAll(), UnmutAll │  │ + GetValidation.. │
+                                 │ + SetPan(), GetPan()  │  │ + SetCustomSett.. │
+                                 │ + FadeChannelAsync()  │  │ + GetCustomSett.. │
+                                 │ + Reset()             │  ├──────────────────┤
+                                 ├──────────────────────┤  │ ~ Configuration   │
+                                 │ ~ VolumeChanged       │  │   Changed         │
+                                 └──────────────────────┘  └──────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                              DOMAIN MODELS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────────────┐  ┌────────────────────────┐  ┌─────────────────────┐
+│ <<model>>                 │  │ <<model>>               │  │ <<model>>            │
+│ AudioTrack                │  │ SoundEffect             │  │ MusicState           │
+│ ───────────────────────── │  │ ──────────────────────  │  │ ──────────────────── │
+│ Resp: Music track data    │  │ Resp: SFX data          │  │ Resp: Player state   │
+│ SOLID: SRP                │  │ SOLID: SRP              │  │ SOLID: SRP           │
+├──────────────────────────┤  ├────────────────────────┤  ├─────────────────────┤
+│ + Id: string              │  │ + Id: string            │  │ + CurrentTrack       │
+│ + Name: string            │  │ + Name: string          │  │ + NextTrack          │
+│ + FilePath: string        │  │ + FilePath: string      │  │ + State              │
+│ + Duration: TimeSpan      │  │ + Duration: TimeSpan    │  │ + Position           │
+│ + Artist: string?         │  │ + Volume: float         │  │ + Volume             │
+│ + Album: string?          │  │ + Priority: int         │  │ + IsLooping          │
+│ + Genre: string?          │  │ + Category              │  │ + IsMuted            │
+│ + Volume: float           │  │ + AllowOverlap: bool    │  │ + IsTransitioning    │
+│ + Loop: bool              │  │ + MaxSimultaneous       │  │ + TransitionProgress │
+│ + Type: TrackType         │  │ + Cooldown: TimeSpan?   │  │ + PlaybackSpeed      │
+│ + Mood: string?           │  │ + SampleRate: int       │  │ + Tempo: int?        │
+│ + Energy: float           │  │ + Channels: int         │  │ + Energy: float?     │
+│ + Metadata: Dictionary    │  │ + Metadata: Dictionary  │  │ + Mood: string?      │
+│ + IsProcedurallyGenerated │  │ + IsPreloaded: bool     │  │ + CustomData: Dict.  │
+│ + SampleRate, Channels    │  │ + PlayCount: int        │  ├─────────────────────┤
+│ + BitDepth: int           │  ├────────────────────────┤  │ + Snapshot()         │
+│ + CreatedAt, LastPlayedAt │  │ + Clone()               │  │ + ToString()         │
+│ + PlayCount: int          │  │ + ToString()            │  │                      │
+├──────────────────────────┤  └────────────────────────┘  └─────────────────────┘
+│ + Clone()                 │
+│ + ToString()              │
+└──────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                           EXCEPTION HIERARCHY
+═══════════════════════════════════════════════════════════════════════════════
+
+                        ┌─────────────────────┐
+                        │ AudioException      │
+                        │ (base exception)    │
+                        └──────────┬──────────┘
+                                   │
+         ┌────────────┬────────────┼────────────┬──────────────────┐
+         │            │            │            │                  │
+    ┌────▼────┐  ┌───▼──────┐  ┌─▼──────┐  ┌──▼──────────────┐  │
+    │Playback │  │AudioLoad │  │Audio   │  │Audio            │  │
+    │Exception│  │Exception │  │Init    │  │Configuration    │  │
+    │         │  │+FilePath │  │Exception│  │Exception        │  │
+    └─────────┘  └──────────┘  └────────┘  │+ValidationErrors│  │
+                                            └─────────────────┘  │
+
+═══════════════════════════════════════════════════════════════════════════════
+                           ENUMERATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐
+│ PlaybackState     │  │ TrackType     │  │ AudioChannel  │  │ SoundCategory   │
+├──────────────────┤  ├──────────────┤  ├──────────────┤  ├────────────────┤
+│ Stopped           │  │ Music         │  │ Master        │  │ General         │
+│ Playing           │  │ Ambient       │  │ Music         │  │ UI              │
+│ Paused            │  │ Voice         │  │ SoundEffects  │  │ Combat          │
+│ Buffering         │  │ SoundEffect   │  │ Voice         │  │ Movement        │
+│ Error             │  │ UI            │  │ Ambient       │  │ Environment     │
+└──────────────────┘  │ Procedural    │  │ UI            │  │ Item            │
+                      └──────────────┘  └──────────────┘  │ Voice           │
+┌──────────────────┐  ┌──────────────┐                    │ SpecialEffect   │
+│ InterruptionReason│  │ AdaptationSty│                    │ Pokemon         │
+├──────────────────┤  ├──────────────┤                    │ Battle          │
+│ ChannelLimit      │  │ Smooth        │                    │ Menu            │
+│ ManualStop        │  │ Abrupt        │                    └────────────────┘
+│ GlobalStop        │  │ NextPhrase    │
+│ ResourceExhaustion│  │ NextMeasure   │
+│ Error             │  └──────────────┘
+└──────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+                         SOLID PRINCIPLES APPLIED
+═══════════════════════════════════════════════════════════════════════════════
+
+SRP (Single Responsibility):
+  ✓ IAudioService     → Core playback only
+  ✓ IMusicPlayer      → Music-specific features only
+  ✓ ISoundEffectPlayer→ SFX-specific features only
+  ✓ IAudioMixer       → Volume & mixing only
+  ✓ IAudioConfiguration→ Settings only
+  ✓ IProceduralMusicGenerator→ Generation only
+  ✓ IAudioManager     → Orchestration only
+
+OCP (Open/Closed):
+  ✓ CustomSettings dictionary in IAudioConfiguration
+  ✓ Metadata dictionaries in models
+  ✓ Event-driven architecture allows extension
+  ✓ Strategy pattern for audio backends
+
+LSP (Liskov Substitution):
+  ✓ IMusicPlayer extends IAudioService correctly
+  ✓ All implementations can substitute interfaces
+
+ISP (Interface Segregation):
+  ✓ Small, focused interfaces (7 total)
+  ✓ Music and SFX separate (not one fat interface)
+  ✓ Clients depend only on what they use
+
+DIP (Dependency Inversion):
+  ✓ IAudioManager depends on abstractions (IMusicPlayer, ISoundEffectPlayer)
+  ✓ No dependencies on concrete implementations
+  ✓ Enables dependency injection
+
+═══════════════════════════════════════════════════════════════════════════════
+                              DESIGN PATTERNS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Facade Pattern        → IAudioManager simplifies subsystem access
+2. Strategy Pattern      → AudioBackend setting allows swapping implementations
+3. Observer Pattern      → Event-driven state changes and notifications
+4. Factory Pattern       → Future: Track/Effect creation abstraction
+5. Command Pattern       → Async operations enable command queue
+
+═══════════════════════════════════════════════════════════════════════════════
+Legend:
+  <<interface>>  = Interface definition
+  <<model>>      = Domain model / data class
+  +              = Public member
+  ~              = Event
+  →              = Dependency/Usage relationship
+  :              = Inheritance/Implementation
+═══════════════════════════════════════════════════════════════════════════════

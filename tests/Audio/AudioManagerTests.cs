@@ -1,0 +1,471 @@
+using Xunit;
+using Moq;
+using FluentAssertions;
+using PokeNET.Audio;
+using PokeNET.Audio.Mixing;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace PokeNET.Tests.Audio
+{
+    /// <summary>
+    /// Comprehensive tests for AudioManager
+    /// Tests playback, caching, and disposal functionality
+    /// </summary>
+    public class AudioManagerTests : IDisposable
+    {
+        private readonly Mock<ILogger<AudioManager>> _mockLogger;
+        private readonly Mock<IAudioCache> _mockCache;
+        private readonly Mock<IMusicPlayer> _mockMusicPlayer;
+        private readonly Mock<ISoundEffectPlayer> _mockSfxPlayer;
+        private AudioManager _audioManager;
+
+        public AudioManagerTests()
+        {
+            _mockLogger = new Mock<ILogger<AudioManager>>();
+            _mockCache = new Mock<IAudioCache>();
+            _mockMusicPlayer = new Mock<IMusicPlayer>();
+            _mockSfxPlayer = new Mock<ISoundEffectPlayer>();
+        }
+
+        private AudioManager CreateAudioManager()
+        {
+            return new AudioManager(
+                _mockLogger.Object,
+                _mockCache.Object,
+                _mockMusicPlayer.Object,
+                _mockSfxPlayer.Object
+            );
+        }
+
+        #region Initialization Tests
+
+        [Fact]
+        public void Constructor_ShouldInitializeWithValidDependencies()
+        {
+            // Arrange & Act
+            _audioManager = CreateAudioManager();
+
+            // Assert
+            _audioManager.Should().NotBeNull();
+            _audioManager.IsInitialized.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
+        {
+            // Arrange & Act
+            Action act = () => new AudioManager(
+                null,
+                _mockCache.Object,
+                _mockMusicPlayer.Object,
+                _mockSfxPlayer.Object
+            );
+
+            // Assert
+            act.Should().Throw<ArgumentNullException>()
+                .WithParameterName("logger");
+        }
+
+        [Fact]
+        public async Task InitializeAsync_ShouldSetupAudioSystem()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            await _audioManager.InitializeAsync();
+
+            // Assert
+            _audioManager.IsInitialized.Should().BeTrue();
+            _mockMusicPlayer.Verify(m => m.InitializeAsync(), Times.Once);
+            _mockSfxPlayer.Verify(s => s.InitializeAsync(), Times.Once);
+        }
+
+        #endregion
+
+        #region Playback Tests
+
+        [Fact]
+        public async Task PlayMusic_WithValidFile_ShouldStartPlayback()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var musicFile = "music/theme.mid";
+            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
+                .ReturnsAsync(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MIDI header
+
+            // Act
+            await _audioManager.PlayMusicAsync(musicFile);
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.PlayAsync(It.IsAny<byte[]>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PlayMusic_WithInvalidFile_ShouldLogError()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var musicFile = "music/nonexistent.mid";
+            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
+                .ThrowsAsync(new FileNotFoundException());
+
+            // Act
+            Func<Task> act = async () => await _audioManager.PlayMusicAsync(musicFile);
+
+            // Assert
+            await act.Should().ThrowAsync<FileNotFoundException>();
+            _mockLogger.VerifyLog(LogLevel.Error, Times.AtLeastOnce());
+        }
+
+        [Fact]
+        public async Task PlaySoundEffect_WithValidFile_ShouldPlayEffect()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var sfxFile = "sfx/jump.wav";
+            _mockCache.Setup(c => c.GetOrLoadAsync(sfxFile))
+                .ReturnsAsync(new byte[] { 0x52, 0x49, 0x46, 0x46 }); // WAV header
+
+            // Act
+            await _audioManager.PlaySoundEffectAsync(sfxFile);
+
+            // Assert
+            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<byte[]>(), It.IsAny<float>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task PlaySoundEffect_WithCustomVolume_ShouldUseSpecifiedVolume()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var sfxFile = "sfx/jump.wav";
+            var volume = 0.5f;
+            _mockCache.Setup(c => c.GetOrLoadAsync(sfxFile))
+                .ReturnsAsync(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+
+            // Act
+            await _audioManager.PlaySoundEffectAsync(sfxFile, volume);
+
+            // Assert
+            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<byte[]>(), volume), Times.Once);
+        }
+
+        [Fact]
+        public async Task StopMusic_ShouldStopCurrentPlayback()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            await _audioManager.StopMusicAsync();
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.StopAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task PauseMusic_ShouldPauseCurrentPlayback()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            await _audioManager.PauseMusicAsync();
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.PauseAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ResumeMusic_ShouldResumePlayback()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            await _audioManager.ResumeMusicAsync();
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.ResumeAsync(), Times.Once);
+        }
+
+        #endregion
+
+        #region Caching Tests
+
+        [Fact]
+        public async Task PlayMusic_WithCachedFile_ShouldUseCachedData()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var musicFile = "music/theme.mid";
+            var cachedData = new byte[] { 0x4D, 0x54, 0x68, 0x64 };
+            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
+                .ReturnsAsync(cachedData);
+
+            // Act
+            await _audioManager.PlayMusicAsync(musicFile);
+            await _audioManager.PlayMusicAsync(musicFile); // Second call
+
+            // Assert
+            _mockCache.Verify(c => c.GetOrLoadAsync(musicFile), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task PreloadAudio_ShouldCacheFile()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var audioFile = "sfx/powerup.wav";
+            var audioData = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            _mockCache.Setup(c => c.PreloadAsync(audioFile))
+                .ReturnsAsync(audioData);
+
+            // Act
+            await _audioManager.PreloadAudioAsync(audioFile);
+
+            // Assert
+            _mockCache.Verify(c => c.PreloadAsync(audioFile), Times.Once);
+        }
+
+        [Fact]
+        public async Task PreloadMultipleAudio_ShouldCacheAllFiles()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var audioFiles = new[] { "sfx/jump.wav", "sfx/hit.wav", "music/battle.mid" };
+            _mockCache.Setup(c => c.PreloadAsync(It.IsAny<string>()))
+                .ReturnsAsync(new byte[] { 0x00 });
+
+            // Act
+            await _audioManager.PreloadMultipleAsync(audioFiles);
+
+            // Assert
+            foreach (var file in audioFiles)
+            {
+                _mockCache.Verify(c => c.PreloadAsync(file), Times.Once);
+            }
+        }
+
+        [Fact]
+        public async Task ClearCache_ShouldRemoveAllCachedData()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            await _audioManager.ClearCacheAsync();
+
+            // Assert
+            _mockCache.Verify(c => c.ClearAsync(), Times.Once);
+        }
+
+        [Fact]
+        public void GetCacheSize_ShouldReturnCurrentCacheSize()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            _mockCache.Setup(c => c.GetSize()).Returns(1024 * 1024); // 1MB
+
+            // Act
+            var size = _audioManager.GetCacheSize();
+
+            // Assert
+            size.Should().Be(1024 * 1024);
+        }
+
+        #endregion
+
+        #region Volume and Mixing Tests
+
+        [Fact]
+        public void SetMasterVolume_ShouldUpdateAllChannels()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.SetMasterVolume(0.7f);
+
+            // Assert
+            _audioManager.MasterVolume.Should().Be(0.7f);
+        }
+
+        [Fact]
+        public void SetMasterVolume_AboveMax_ShouldClampToOne()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.SetMasterVolume(1.5f);
+
+            // Assert
+            _audioManager.MasterVolume.Should().Be(1.0f);
+        }
+
+        [Fact]
+        public void SetMasterVolume_BelowMin_ShouldClampToZero()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.SetMasterVolume(-0.5f);
+
+            // Assert
+            _audioManager.MasterVolume.Should().Be(0.0f);
+        }
+
+        [Fact]
+        public void SetMusicVolume_ShouldUpdateMusicChannel()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.SetMusicVolume(0.8f);
+
+            // Assert
+            _audioManager.MusicVolume.Should().Be(0.8f);
+            _mockMusicPlayer.Verify(m => m.SetVolume(0.8f), Times.Once);
+        }
+
+        [Fact]
+        public void SetSfxVolume_ShouldUpdateSfxChannel()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.SetSfxVolume(0.6f);
+
+            // Assert
+            _audioManager.SfxVolume.Should().Be(0.6f);
+            _mockSfxPlayer.Verify(s => s.SetVolume(0.6f), Times.Once);
+        }
+
+        #endregion
+
+        #region Disposal Tests
+
+        [Fact]
+        public void Dispose_ShouldCleanupResources()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.Dispose();
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.Dispose(), Times.Once);
+            _mockSfxPlayer.Verify(s => s.Dispose(), Times.Once);
+            _mockCache.Verify(c => c.Dispose(), Times.Once);
+        }
+
+        [Fact]
+        public void Dispose_CalledMultipleTimes_ShouldBeIdempotent()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+
+            // Act
+            _audioManager.Dispose();
+            _audioManager.Dispose();
+            _audioManager.Dispose();
+
+            // Assert
+            _mockMusicPlayer.Verify(m => m.Dispose(), Times.Once);
+            _mockSfxPlayer.Verify(s => s.Dispose(), Times.Once);
+        }
+
+        [Fact]
+        public async Task PlayMusic_AfterDispose_ShouldThrowObjectDisposedException()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            _audioManager.Dispose();
+
+            // Act
+            Func<Task> act = async () => await _audioManager.PlayMusicAsync("test.mid");
+
+            // Assert
+            await act.Should().ThrowAsync<ObjectDisposedException>();
+        }
+
+        #endregion
+
+        #region State Management Tests
+
+        [Fact]
+        public void IsPlaying_WithActiveMusic_ShouldReturnTrue()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            _mockMusicPlayer.Setup(m => m.IsPlaying).Returns(true);
+
+            // Act
+            var isPlaying = _audioManager.IsMusicPlaying;
+
+            // Assert
+            isPlaying.Should().BeTrue();
+        }
+
+        [Fact]
+        public void IsPaused_WithPausedMusic_ShouldReturnTrue()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            _mockMusicPlayer.Setup(m => m.IsPaused).Returns(true);
+
+            // Act
+            var isPaused = _audioManager.IsMusicPaused;
+
+            // Assert
+            isPaused.Should().BeTrue();
+        }
+
+        [Fact]
+        public void GetPlaybackPosition_ShouldReturnCurrentPosition()
+        {
+            // Arrange
+            _audioManager = CreateAudioManager();
+            var expectedPosition = TimeSpan.FromSeconds(30);
+            _mockMusicPlayer.Setup(m => m.GetPosition()).Returns(expectedPosition);
+
+            // Act
+            var position = _audioManager.GetMusicPosition();
+
+            // Assert
+            position.Should().Be(expectedPosition);
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            _audioManager?.Dispose();
+        }
+    }
+
+    // Helper extension for logger verification
+    public static class LoggerExtensions
+    {
+        public static void VerifyLog<T>(this Mock<ILogger<T>> mockLogger, LogLevel level, Times times)
+        {
+            mockLogger.Verify(
+                x => x.Log(
+                    level,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                times);
+        }
+    }
+}

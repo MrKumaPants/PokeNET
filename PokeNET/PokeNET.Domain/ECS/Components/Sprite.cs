@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+
 namespace PokeNET.Domain.ECS.Components;
 
 /// <summary>
@@ -17,19 +19,44 @@ public struct Sprite
     public float LayerDepth { get; set; }
 
     /// <summary>
-    /// The width of the sprite in pixels.
+    /// The source rectangle within the texture (null = entire texture).
     /// </summary>
-    public int Width { get; set; }
+    public Rectangle? SourceRectangle { get; set; }
 
     /// <summary>
-    /// The height of the sprite in pixels.
+    /// The color tint to apply (White = no tint).
     /// </summary>
-    public int Height { get; set; }
+    public Color Color { get; set; }
+
+    /// <summary>
+    /// The scale factor for rendering (1.0 = original size).
+    /// </summary>
+    public float Scale { get; set; }
+
+    /// <summary>
+    /// The rotation angle in radians.
+    /// </summary>
+    public float Rotation { get; set; }
+
+    /// <summary>
+    /// The origin point for rotation and scaling (defaults to center).
+    /// </summary>
+    public Vector2 Origin { get; set; }
 
     /// <summary>
     /// Whether the sprite is currently visible.
     /// </summary>
     public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// The width of the sprite in pixels (from source rectangle or texture).
+    /// </summary>
+    public int Width { get; set; }
+
+    /// <summary>
+    /// The height of the sprite in pixels (from source rectangle or texture).
+    /// </summary>
+    public int Height { get; set; }
 
     /// <summary>
     /// Initializes a new sprite component.
@@ -44,6 +71,11 @@ public struct Sprite
         Width = width;
         Height = height;
         LayerDepth = layerDepth;
+        SourceRectangle = null;
+        Color = Color.White;
+        Scale = 1.0f;
+        Rotation = 0f;
+        Origin = new Vector2(width / 2f, height / 2f);
         IsVisible = true;
     }
 }

@@ -1,0 +1,34 @@
+{
+  "keyboardBindings": {
+    "MoveUp": "W",
+    "MoveDown": "S",
+    "MoveLeft": "A",
+    "MoveRight": "D",
+    "Interact": "E",
+    "Cancel": "Q",
+    "Action1": "Space",
+    "Action2": "LeftShift",
+    "Pause": "Escape",
+    "Menu": "Tab",
+    "Inventory": "I",
+    "Map": "M",
+    "DebugToggle": "F3",
+    "DebugSpeed": "F4",
+    "Undo": "Z",
+    "Redo": "Y"
+  },
+  "gamepadBindings": {
+    "Interact": "A",
+    "Cancel": "B",
+    "Action1": "X",
+    "Action2": "Y",
+    "Pause": "Start",
+    "Menu": "Back",
+    "ShoulderLeft": "LeftShoulder",
+    "ShoulderRight": "RightShoulder"
+  },
+  "sensitivity": 1.0,
+  "deadZone": 0.2,
+  "enableBuffering": true,
+  "maxBufferSize": 10
+}

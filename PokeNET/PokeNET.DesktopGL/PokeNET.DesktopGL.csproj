@@ -8,11 +8,12 @@
         <AssemblyName>PokeNET</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\PokeNET.Core\PokeNET.Core.csproj"/>
-        <ProjectReference Include="..\PokeNET.Domain\PokeNET.Domain.csproj"/>
+        <ProjectReference Include="..\PokeNET.Core\PokeNET.Core.csproj" />
+        <ProjectReference Include="..\PokeNET.Domain\PokeNET.Domain.csproj" />
+        <ProjectReference Include="..\PokeNET.Scripting\PokeNET.Scripting.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*"/>
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.*" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.*" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.*" />
@@ -22,7 +23,7 @@
         <PackageReference Include="Arch" Version="2.*" />
     </ItemGroup>
     <Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">
-        <Message Text="Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)" Importance="High"/>
-        <Exec Command="dotnet tool restore"/>
+        <Message Text="Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)" Importance="High" />
+        <Exec Command="dotnet tool restore" />
     </Target>
 </Project>

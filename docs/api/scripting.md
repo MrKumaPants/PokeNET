@@ -708,11 +708,300 @@ private CreatureDefinition GetCreature(string id)
 - Cannot execute unsafe code
 - Cannot create threads directly
 
+## Troubleshooting
+
+### Common Issues
+
+#### Script Fails to Load
+
+**Symptom**: Script doesn't appear in loaded scripts list
+
+**Solutions**:
+1. Check `manifest.json` syntax is valid JSON
+2. Verify script path in manifest matches actual file location
+3. Check for compilation errors in script syntax
+4. Review logs: `/logs/scripts/[script-name].log`
+
+```csharp
+// Check for common syntax errors
+// ❌ Missing return statement
+public class MyScript { }
+// Script must return something!
+
+// ✅ Correct
+public class MyScript { }
+return new MyScript(Api);
+```
+
+#### SecurityException During Execution
+
+**Symptom**: Script throws `SecurityException`
+
+**Cause**: Attempting to access blocked APIs
+
+**Solutions**:
+- Remove file I/O operations (`File`, `Directory`)
+- Remove network operations (`HttpClient`, `Socket`)
+- Remove reflection on game internals
+- Use only allowed APIs from `IScriptApi`
+
+```csharp
+// ❌ BAD - Will throw SecurityException
+File.ReadAllText("data.txt");
+
+// ✅ GOOD - Use script API
+var data = Api.Data.GetCreature("pikachu");
+```
+
+#### TimeoutException
+
+**Symptom**: Script terminated with `TimeoutException`
+
+**Cause**: Script execution exceeded 5-second timeout
+
+**Solutions**:
+1. Break long operations into smaller chunks
+2. Remove infinite loops
+3. Add iteration limits to while loops
+4. Use early returns
+
+```csharp
+// ❌ BAD - Potential infinite loop
+while (condition)
+{
+    // No exit condition!
+}
+
+// ✅ GOOD - Limited iterations
+int iterations = 0;
+while (condition && iterations < 1000)
+{
+    // Work
+    iterations++;
+}
+```
+
+#### OutOfMemoryException
+
+**Symptom**: Script terminated due to excessive memory usage
+
+**Cause**: Script exceeded 50 MB memory limit
+
+**Solutions**:
+1. Clear collections when done: `list.Clear()`
+2. Avoid unbounded caching
+3. Use object pooling for temporary objects
+4. Dispose resources properly
+
+```csharp
+// ❌ BAD - Unbounded cache growth
+private Dictionary<string, Data> _cache = new();
+
+public void OnEvent(Event evt)
+{
+    _cache[evt.Id] = new Data(); // Grows forever!
+}
+
+// ✅ GOOD - Bounded cache with LRU
+private LRUCache<string, Data> _cache = new(maxSize: 1000);
+```
+
+#### Components Not Found
+
+**Symptom**: `KeyNotFoundException` when accessing components
+
+**Cause**: Entity doesn't have the requested component
+
+**Solutions**:
+- Use `TryGet` instead of `Get`
+- Use `Has` to check before accessing
+- Verify query includes correct component types
+
+```csharp
+// ❌ BAD - Will throw if component missing
+var health = entity.Get<Health>();
+
+// ✅ GOOD - Safe access
+if (entity.TryGet<Health>(out var health))
+{
+    // Use health
+}
+
+// ✅ ALSO GOOD - Check first
+if (entity.Has<Health>())
+{
+    var health = entity.Get<Health>();
+}
+```
+
+#### Events Not Firing
+
+**Symptom**: Event handlers never called
+
+**Cause**: Subscription issues or wrong event type
+
+**Solutions**:
+1. Verify event subscription in constructor
+2. Check event type matches published events
+3. Ensure handler method signature is correct
+4. Check if script is enabled
+
+```csharp
+// ❌ BAD - Wrong event type
+_api.Events.Subscribe<WrongEvent>(OnBattle);
+
+// ✅ GOOD - Correct event type
+_api.Events.Subscribe<BattleStartEvent>(OnBattle);
+
+// ✅ Verify handler signature
+private void OnBattle(BattleStartEvent evt) // Must match event type
+{
+    // Handler code
+}
+```
+
+#### Performance Degradation
+
+**Symptom**: Game runs slowly when script is enabled
+
+**Cause**: Script is too slow or allocates too much
+
+**Solutions**:
+1. Profile script with `/script-profile [id]`
+2. Review [Performance Guide](../performance/script-performance.md)
+3. Cache expensive lookups
+4. Avoid LINQ in hot paths
+5. Reduce event handler complexity
+
+```csharp
+// Check execution time
+var sw = Stopwatch.StartNew();
+// Your code
+sw.Stop();
+if (sw.ElapsedMilliseconds > 1)
+{
+    Api.Logger.LogWarning("Slow handler: {Time}ms", sw.ElapsedMilliseconds);
+}
+```
+
+### Debug Commands
+
+```bash
+# List all loaded scripts
+/scripts list
+
+# Reload specific script
+/script reload <script-id>
+
+# Reload all scripts
+/reload-scripts
+
+# View script logs
+/script logs <script-id>
+
+# View script performance stats
+/script stats <script-id>
+
+# Enable detailed profiling
+/script profile <script-id>
+
+# Test script in isolation
+/script test <script-id>
+```
+
+### Logging Best Practices
+
+Use appropriate log levels:
+
+```csharp
+// Trace: Very detailed, rarely needed
+Api.Logger.LogTrace("Variable value: {Value}", value);
+
+// Debug: Debugging information during development
+Api.Logger.LogDebug("Processing entity {EntityId}", entity.Id);
+
+// Information: General informational messages
+Api.Logger.LogInformation("Script initialized with {Count} handlers", handlerCount);
+
+// Warning: Something unexpected but handled
+Api.Logger.LogWarning("Entity missing optional component {Component}", "StatusCondition");
+
+// Error: Error occurred but script continues
+Api.Logger.LogError(ex, "Failed to process event {EventType}", evt.GetType().Name);
+
+// Critical: Critical error, script may be disabled
+Api.Logger.LogCritical("Script failed initialization");
+```
+
+### Getting Help
+
+1. **Documentation**: Review this documentation and guides
+2. **Examples**: Check example scripts in `/Examples/Scripts/`
+3. **Logs**: Check script logs in `/logs/scripts/`
+4. **Community**: Ask in PokeNET Discord `#modding` channel
+5. **Issues**: Report bugs on GitHub: https://github.com/you/pokenet/issues
+
+---
+
+## Quick Reference Card
+
+### Essential API Methods
+
+```csharp
+// Entity Queries
+Api.Entities.Query<Component1, Component2>()
+Api.Entities.CreateEntity(definitionId)
+
+// Component Access
+entity.Get<Component>()
+entity.TryGet<Component>(out var component)
+entity.Has<Component>()
+entity.Set(component)
+entity.Add(component)
+entity.Remove<Component>()
+
+// Data Access
+Api.Data.GetCreature(id)
+Api.Data.GetMove(id)
+Api.Data.GetAbility(id)
+Api.Data.GetItem(id)
+
+// Events
+Api.Events.Subscribe<EventType>(handler)
+Api.Events.Unsubscribe<EventType>(handler)
+Api.Events.Publish(eventObject)
+
+// Utilities
+Api.Utilities.CalculateMoveDamage(attacker, defender, move)
+Api.Utilities.GetTypeEffectiveness(attackType, defenderTypes)
+Api.Utilities.Random(min, max)
+Api.Utilities.RandomChance(probability)
+
+// Logging
+Api.Logger.LogInformation(message, ...args)
+Api.Logger.LogWarning(message, ...args)
+Api.Logger.LogError(exception, message, ...args)
+```
+
+### Performance Limits
+
+| Resource | Limit |
+|----------|-------|
+| Execution Timeout | 5 seconds |
+| Event Handler Timeout | 2 seconds |
+| Memory Limit | 50 MB |
+| API Calls/Second | 10,000 |
+| Log Entries/Second | 100 |
+
+---
+
 ## Next Steps
 
-- [Complete Scripting Example](../examples/scripting-examples.md)
-- [Event Reference](events.md)
-- [Script Mod Tutorial](../modding/script-mods.md)
+- **[Scripting Guide](../modding/scripting-guide.md)** - Comprehensive guide for mod developers
+- **[Security Model](../security/script-security.md)** - Security and sandboxing details
+- **[Performance Guide](../performance/script-performance.md)** - Optimization best practices
+- [Complete Scripting Examples](../examples/scripting-examples.md) - Advanced examples
+- [Event Reference](events.md) - Complete event documentation
 
 ---
 

@@ -114,7 +114,7 @@ public static class HarmonyTestHelpers
             return value * 2;
         }
 
-        public virtual string VirtualTestMethod(string input)
+        public static string VirtualTestMethod(string input)
         {
             CallCount++;
             return $"Virtual: {input}";

@@ -11,6 +11,8 @@ using PokeNET.Domain.Assets;
 using PokeNET.Domain.ECS.Events;
 using PokeNET.Domain.ECS.Systems;
 using PokeNET.Domain.Modding;
+using PokeNET.Scripting.Abstractions;
+using PokeNET.Scripting.Services;
 
 namespace PokeNET.DesktopGL;
 
@@ -88,6 +90,9 @@ internal class Program
 
                 // Register modding services
                 RegisterModdingServices(services, context.Configuration);
+
+                // Register scripting services (Phase 5)
+                RegisterScriptingServices(services, context.Configuration);
 
                 // Register the game itself
                 services.AddSingleton<PokeNETGame>();
@@ -201,5 +206,46 @@ internal class Program
 
             return loader;
         });
+    }
+
+    /// <summary>
+    /// Registers scripting services including script engine, loaders, and API.
+    /// Phase 5: Roslyn C# Scripting Engine
+    /// </summary>
+    private static void RegisterScriptingServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Get the scripts directory from configuration or use default
+        var scriptsDirectory = configuration["Scripts:Directory"] ?? "Scripts";
+        var maxCacheSize = configuration.GetValue<int?>("Scripts:MaxCacheSize") ?? 100;
+
+        // Register script loader
+        services.AddSingleton<IScriptLoader>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<FileScriptLoader>>();
+            return new FileScriptLoader(logger);
+        });
+
+        // Register scripting engine with compilation cache
+        services.AddSingleton<IScriptingEngine>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<ScriptingEngine>>();
+            var cacheLogger = sp.GetRequiredService<ILogger<ScriptCompilationCache>>();
+            var scriptLoader = sp.GetRequiredService<IScriptLoader>();
+
+            var engine = new ScriptingEngine(logger, scriptLoader, cacheLogger, maxCacheSize);
+
+            logger.LogInformation(
+                "Scripting engine initialized: {EngineName} v{Version}, Cache Size: {CacheSize}, Hot Reload: {HotReload}",
+                engine.EngineName,
+                engine.EngineVersion,
+                maxCacheSize,
+                engine.SupportsHotReload);
+
+            return engine;
+        });
+
+        // TODO: Register script context and API when needed
+        // services.AddScoped<IScriptContext, ScriptContext>();
+        // services.AddScoped<IScriptApi, ScriptApi>();
     }
 }

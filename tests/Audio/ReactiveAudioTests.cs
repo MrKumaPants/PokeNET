@@ -3,7 +3,13 @@ using Moq;
 using FluentAssertions;
 using PokeNET.Audio;
 using PokeNET.Audio.Reactive;
-using PokeNET.Domain.Events;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
+using PokeNET.Domain.ECS.Events;
+using PokeNET.Domain.Models;
+using GameState = PokeNET.Domain.Models.GameState;
+using AudioReactionType = PokeNET.Audio.Reactive.AudioReactionType;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -20,7 +26,7 @@ namespace PokeNET.Tests.Audio
         private readonly Mock<ILogger<ReactiveAudioEngine>> _mockLogger;
         private readonly Mock<IAudioManager> _mockAudioManager;
         private readonly Mock<IEventBus> _mockEventBus;
-        private ReactiveAudioEngine _reactiveAudio;
+        private ReactiveAudioEngine? _reactiveAudio;
 
         public ReactiveAudioTests()
         {
@@ -82,7 +88,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("battle")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("battle")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -99,7 +105,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("overworld") || s.Contains("route")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("overworld") || s.Contains("route")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -116,7 +122,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.DuckMusicAsync(It.IsAny<float>()),
+                a => a.DuckMusicAsync(It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -134,7 +140,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.StopDuckingAsync(),
+                a => a.StopDuckingAsync(It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -154,7 +160,7 @@ namespace PokeNET.Tests.Audio
             await _reactiveAudio.OnGameStateChangedAsync(GameState.Overworld, targetState);
 
             // Assert
-            _mockLogger.VerifyLog(LogLevel.Information, Times.AtLeastOnce());
+            Tests.Audio.LoggerExtensions.VerifyLog(_mockLogger, LogLevel.Information, Times.AtLeastOnce());
         }
 
         #endregion
@@ -173,7 +179,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("battle_start")), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("battle_start")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -190,7 +196,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("wild")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("wild")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -207,7 +213,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("trainer")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("trainer")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -224,7 +230,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("gym") || s.Contains("leader")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("gym") || s.Contains("leader")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -241,7 +247,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("victory")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("victory")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -258,7 +264,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("faint")), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("faint")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -275,7 +281,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.IsAny<string>(), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.IsAny<string>(), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -292,7 +298,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("critical")), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("critical")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -318,7 +324,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("low_health")), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.Is<string>(s => s.Contains("low_health")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -357,7 +363,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayAmbientAsync(It.Is<string>(s => s.Contains("rain")), It.IsAny<float>()),
+                a => a.PlayAmbientAsync(It.Is<string>(s => s.Contains("rain")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -396,7 +402,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayAmbientAsync(It.IsAny<string>(), It.IsAny<float>()),
+                a => a.PlayAmbientAsync(It.IsAny<string>(), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -417,7 +423,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.IsAny<string>(), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.IsAny<string>(), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -434,7 +440,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("catch")), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("catch")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -451,7 +457,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("level_up")), It.IsAny<float>()),
+                a => a.PlaySoundEffectAsync(It.Is<string>(s => s.Contains("level_up")), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -537,7 +543,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioManager.Verify(
-                a => a.PlayMusicAsync(It.IsAny<string>(), It.IsAny<float>()),
+                a => a.PlayMusicAsync(It.IsAny<string>(), It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Never
             );
         }
@@ -547,11 +553,11 @@ namespace PokeNET.Tests.Audio
         #region Disposal Tests
 
         [Fact]
-        public void Dispose_ShouldUnsubscribeFromEvents()
+        public async Task Dispose_ShouldUnsubscribeFromEvents()
         {
             // Arrange
             _reactiveAudio = CreateReactiveAudio();
-            _reactiveAudio.InitializeAsync().Wait();
+            await _reactiveAudio.InitializeAsync();
 
             // Act
             _reactiveAudio.Dispose();
@@ -595,8 +601,8 @@ namespace PokeNET.Tests.Audio
                     level,
                     It.IsAny<EventId>(),
                     It.IsAny<It.IsAnyType>(),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 times);
         }
     }

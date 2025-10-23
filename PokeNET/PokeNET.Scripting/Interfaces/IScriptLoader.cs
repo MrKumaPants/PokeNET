@@ -31,6 +31,7 @@ public interface IScriptLoader
     /// Loads a script file and returns its metadata and source code.
     /// </summary>
     /// <param name="filePath">The path to the script file.</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>Script metadata and source code.</returns>
     /// <exception cref="ArgumentNullException">File path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Script file does not exist.</exception>

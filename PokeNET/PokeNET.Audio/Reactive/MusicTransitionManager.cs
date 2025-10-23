@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using PokeNET.Domain.ECS.Events;
 
 namespace PokeNET.Audio.Reactive
 {
@@ -9,11 +11,12 @@ namespace PokeNET.Audio.Reactive
     /// </summary>
     public class MusicTransitionManager : IDisposable
     {
+        private readonly ILogger<MusicTransitionManager> _logger;
         private readonly Dictionary<string, MusicTrackState> _trackStates;
         private readonly Queue<TransitionCommand> _transitionQueue;
 
-        private MusicTrackState _currentTrack;
-        private MusicTrackState _targetTrack;
+        private MusicTrackState? _currentTrack;
+        private MusicTrackState? _targetTrack;
         private TransitionState _transitionState;
 
         private float _masterVolume;
@@ -24,12 +27,29 @@ namespace PokeNET.Audio.Reactive
         private bool _isInitialized;
         private bool _isDisposed;
 
-        public string CurrentTrack => _currentTrack?.TrackName;
+        /// <summary>
+        /// Gets the name of the currently playing track.
+        /// </summary>
+        public string? CurrentTrack => _currentTrack?.TrackName;
+
+        /// <summary>
+        /// Gets whether a transition is currently in progress.
+        /// </summary>
         public bool IsTransitioning => _transitionState.IsActive;
+
+        /// <summary>
+        /// Gets the current volume including ducking.
+        /// </summary>
         public float CurrentVolume => _masterVolume * _duckingMultiplier;
 
-        public MusicTransitionManager()
+        /// <summary>
+        /// Initializes a new instance of the MusicTransitionManager class.
+        /// </summary>
+        /// <param name="logger">Logger for diagnostics.</param>
+        /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+        public MusicTransitionManager(ILogger<MusicTransitionManager> logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _trackStates = new Dictionary<string, MusicTrackState>();
             _transitionQueue = new Queue<TransitionCommand>();
 
@@ -48,11 +68,16 @@ namespace PokeNET.Audio.Reactive
         {
             if (_isInitialized)
             {
-                throw new InvalidOperationException("MusicTransitionManager is already initialized.");
+                _logger.LogWarning("MusicTransitionManager is already initialized");
+                return;
             }
+
+            _logger.LogInformation("Initializing MusicTransitionManager...");
 
             _transitionState.IsActive = false;
             _isInitialized = true;
+
+            _logger.LogInformation("MusicTransitionManager initialized successfully");
         }
 
         /// <summary>
@@ -443,9 +468,12 @@ namespace PokeNET.Audio.Reactive
         Underwater
     }
 
+    /// <summary>
+    /// Represents the state of a music track.
+    /// </summary>
     public class MusicTrackState
     {
-        public string TrackName { get; set; }
+        public required string TrackName { get; set; }
         public float Volume { get; set; }
         public bool IsPlaying { get; set; }
         public float IntensityMultiplier { get; set; } = 1.0f;
@@ -453,20 +481,26 @@ namespace PokeNET.Audio.Reactive
         public Weather Weather { get; set; }
     }
 
+    /// <summary>
+    /// Represents the state of an active transition.
+    /// </summary>
     public class TransitionState
     {
         public bool IsActive { get; set; }
         public TransitionType Type { get; set; }
         public float Duration { get; set; }
         public float ElapsedTime { get; set; }
-        public MusicTrackState SourceTrack { get; set; }
-        public MusicTrackState TargetTrack { get; set; }
+        public MusicTrackState? SourceTrack { get; set; }
+        public MusicTrackState? TargetTrack { get; set; }
     }
 
+    /// <summary>
+    /// Represents a command to transition to a new track.
+    /// </summary>
     public class TransitionCommand
     {
-        public string TargetTrack { get; set; }
-        public TransitionType TransitionType { get; set; }
+        public required string TargetTrack { get; set; }
+        public required TransitionType TransitionType { get; set; }
         public float Duration { get; set; }
         public float StartTime { get; set; }
     }

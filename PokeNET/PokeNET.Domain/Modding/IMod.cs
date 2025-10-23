@@ -73,7 +73,7 @@ public interface IMod
     /// This method is called after all mod dependencies have been loaded and initialized.
     /// </para>
     /// <para>
-    /// Initialization should be fast (< 5 seconds). Heavy operations should be deferred
+    /// Initialization should be fast (&lt; 5 seconds). Heavy operations should be deferred
     /// to background tasks or loaded on-demand.
     /// </para>
     /// <para>
@@ -98,7 +98,7 @@ public interface IMod
     /// Harmony patches are automatically removed after this method completes.
     /// </para>
     /// <para>
-    /// Shutdown should complete quickly (< 2 seconds). Long-running cleanup may be forcibly terminated.
+    /// Shutdown should complete quickly (&lt; 2 seconds). Long-running cleanup may be forcibly terminated.
     /// </para>
     /// </remarks>
     Task ShutdownAsync(CancellationToken cancellationToken = default);

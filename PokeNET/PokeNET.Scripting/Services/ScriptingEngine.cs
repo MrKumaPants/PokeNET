@@ -235,7 +235,7 @@ public sealed class ScriptingEngine : IScriptingEngine
     /// <summary>
     /// Internal compilation method that handles the actual compilation logic.
     /// </summary>
-    private async Task<ICompiledScript> CompileInternalAsync(
+    private Task<ICompiledScript> CompileInternalAsync(
         string scriptCode,
         string scriptId,
         ScriptCompilationOptions? options = null,
@@ -260,7 +260,7 @@ public sealed class ScriptingEngine : IScriptingEngine
                     "Retrieved compiled script from cache in {ElapsedMs}ms: {ScriptId}",
                     stopwatch.ElapsedMilliseconds,
                     scriptId);
-                return cachedScript!;
+                return Task.FromResult(cachedScript!);
             }
 
             // Compile the script
@@ -314,7 +314,7 @@ public sealed class ScriptingEngine : IScriptingEngine
                 scriptId,
                 scriptDiagnostics.Count(d => d.Severity == Models.DiagnosticSeverity.Warning));
 
-            return compiledScript;
+            return Task.FromResult<ICompiledScript>(compiledScript);
         }
         catch (OperationCanceledException)
         {

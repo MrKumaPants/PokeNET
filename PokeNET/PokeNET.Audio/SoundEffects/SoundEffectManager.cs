@@ -111,7 +111,7 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a sound effect with optional configuration
         /// </summary>
-        public PooledSoundEffectInstance Play(string soundKey, SoundEffectPlaybackConfig config = null)
+        public PooledSoundEffectInstance? Play(string soundKey, SoundEffectPlaybackConfig? config = null)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SoundEffectManager));
@@ -187,7 +187,7 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a simple sound effect with default settings
         /// </summary>
-        public PooledSoundEffectInstance PlaySimple(string soundKey, SoundCategory category = SoundCategory.System, float volume = 1.0f)
+        public PooledSoundEffectInstance? PlaySimple(string soundKey, SoundCategory category = SoundCategory.System, float volume = 1.0f)
         {
             return Play(soundKey, new SoundEffectPlaybackConfig
             {
@@ -199,7 +199,7 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a 3D positional sound effect
         /// </summary>
-        public PooledSoundEffectInstance Play3D(string soundKey, Vector3 position, SoundCategory category = SoundCategory.System, float volume = 1.0f)
+        public PooledSoundEffectInstance? Play3D(string soundKey, Vector3 position, SoundCategory category = SoundCategory.System, float volume = 1.0f)
         {
             return Play(soundKey, new SoundEffectPlaybackConfig
             {
@@ -213,7 +213,7 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a sound effect with random variations
         /// </summary>
-        public PooledSoundEffectInstance PlayWithVariation(string soundKey, SoundCategory category = SoundCategory.System,
+        public PooledSoundEffectInstance? PlayWithVariation(string soundKey, SoundCategory category = SoundCategory.System,
             float volume = 1.0f, float pitchVariation = 0.1f, float volumeVariation = 0.1f)
         {
             return Play(soundKey, new SoundEffectPlaybackConfig

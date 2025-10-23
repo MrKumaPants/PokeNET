@@ -1,19 +1,8 @@
 using System;
+using PokeNET.Audio.Models;
 
 namespace PokeNET.Audio.Mixing
 {
-    /// <summary>
-    /// Represents the type of audio channel
-    /// </summary>
-    public enum ChannelType
-    {
-        Master,
-        Music,
-        SoundEffects,
-        Voice,
-        Ambient
-    }
-
     /// <summary>
     /// Represents an individual audio channel with volume control and muting capabilities
     /// </summary>

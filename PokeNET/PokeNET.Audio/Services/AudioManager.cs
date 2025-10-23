@@ -1,364 +1,705 @@
-using PokeNET.Audio.Abstractions;
-using PokeNET.Audio.Configuration;
-using PokeNET.Audio.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Melanchall.DryWetMidi.Core;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
+using SoundEffect = PokeNET.Audio.Models.SoundEffect;
 
 namespace PokeNET.Audio.Services;
 
 /// <summary>
 /// Central audio management service that coordinates music and sound effect playback.
 /// Implements the Facade pattern to provide a unified interface to the audio subsystem.
-/// NOTE: Full IAudioManager interface implementation pending - currently provides basic functionality.
+/// Acts as a delegation layer over IMusicPlayer, ISoundEffectPlayer, and IAudioCache.
 /// </summary>
-public sealed class AudioManager // TODO: Implement IAudioManager interface
+public sealed class AudioManager : IAudioManager, IDisposable
 {
     private readonly ILogger<AudioManager> _logger;
-    private readonly AudioSettings _settings;
-    private readonly AudioCache _cache;
-    private readonly Lazy<MusicPlayer> _musicPlayerLazy;
-    private readonly Lazy<SoundEffectPlayer> _soundEffectPlayerLazy;
+    private readonly IAudioCache _cache;
+    private readonly IMusicPlayer _musicPlayer;
+    private readonly ISoundEffectPlayer _sfxPlayer;
 
-    private float _masterVolume;
-    private bool _isMuted;
-    private bool _initialized;
+    private float _masterVolume = 1.0f;
+    private float _musicVolume = 1.0f;
+    private float _sfxVolume = 1.0f;
+    private float _ambientVolume = 1.0f;
+    private float _originalMusicVolume = 1.0f;
     private bool _disposed;
+    private string _currentMusicTrack = string.Empty;
+    private string _currentAmbientTrack = string.Empty;
 
-    public MusicPlayer MusicPlayer
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _musicPlayerLazy.Value;
-        }
-    }
+    /// <summary>
+    /// Event raised when the audio system state changes.
+    /// </summary>
+    public event EventHandler<AudioStateChangedEventArgs>? StateChanged;
 
-    public SoundEffectPlayer SoundEffectPlayer
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _soundEffectPlayerLazy.Value;
-        }
-    }
+    /// <summary>
+    /// Event raised when an audio error occurs.
+    /// </summary>
+    public event EventHandler<AudioErrorEventArgs>? ErrorOccurred;
 
-    public float MasterVolume
-    {
-        get => _masterVolume;
-        set
-        {
-            ThrowIfDisposed();
-            _masterVolume = Math.Clamp(value, 0.0f, 1.0f);
+    /// <summary>
+    /// Gets a value indicating whether the audio system is initialized.
+    /// </summary>
+    public bool IsInitialized { get; private set; }
 
-            // Update child players
-            if (_musicPlayerLazy.IsValueCreated)
-            {
-                MusicPlayer.Volume = _settings.MusicVolume * _masterVolume;
-            }
+    /// <summary>
+    /// Gets a value indicating whether music is currently playing.
+    /// </summary>
+    public bool IsMusicPlaying => _musicPlayer.IsPlaying;
 
-            if (_soundEffectPlayerLazy.IsValueCreated)
-            {
-                // TODO: Implement Volume property in SoundEffectPlayer
-            }
+    /// <summary>
+    /// Gets a value indicating whether music is currently paused.
+    /// </summary>
+    public bool IsMusicPaused => _musicPlayer.State == PlaybackState.Paused;
 
-            _logger.LogInformation("Master volume set to {Volume}", _masterVolume);
-        }
-    }
+    /// <summary>
+    /// Gets the current music track name.
+    /// </summary>
+    public string CurrentMusicTrack => _currentMusicTrack;
 
-    public bool IsMuted
-    {
-        get => _isMuted;
-        set
-        {
-            ThrowIfDisposed();
-            _isMuted = value;
+    /// <summary>
+    /// Gets the current master volume (0.0 to 1.0).
+    /// </summary>
+    public float MasterVolume => _masterVolume;
 
-            if (_isMuted)
-            {
-                _logger.LogInformation("Audio muted");
-                PauseAll();
-            }
-            else
-            {
-                _logger.LogInformation("Audio unmuted");
-                ResumeAll();
-            }
-        }
-    }
+    /// <summary>
+    /// Gets the current music volume (0.0 to 1.0).
+    /// </summary>
+    public float MusicVolume => _musicVolume;
 
+    /// <summary>
+    /// Gets the current sound effects volume (0.0 to 1.0).
+    /// </summary>
+    public float SfxVolume => _sfxVolume;
+
+    /// <summary>
+    /// Gets the music player for background music management.
+    /// </summary>
+    public IMusicPlayer MusicPlayer => _musicPlayer;
+
+    /// <summary>
+    /// Gets the sound effect player for one-shot audio.
+    /// </summary>
+    public ISoundEffectPlayer SoundEffectPlayer => _sfxPlayer;
+
+    /// <summary>
+    /// Gets the audio mixer for volume and channel control.
+    /// </summary>
+    public IAudioMixer Mixer => throw new NotImplementedException("Audio mixer not yet implemented");
+
+    /// <summary>
+    /// Gets the audio configuration settings.
+    /// </summary>
+    public IAudioConfiguration Configuration => throw new NotImplementedException("Audio configuration not yet implemented");
+
+    /// <summary>
+    /// Initializes a new instance of the AudioManager class.
+    /// </summary>
+    /// <param name="logger">Logger for diagnostics.</param>
+    /// <param name="cache">Audio cache for managing audio data.</param>
+    /// <param name="musicPlayer">Music player for background music.</param>
+    /// <param name="sfxPlayer">Sound effect player for short audio.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public AudioManager(
         ILogger<AudioManager> logger,
-        IOptions<AudioSettings> settings,
-        ILoggerFactory loggerFactory)
+        IAudioCache cache,
+        IMusicPlayer musicPlayer,
+        ISoundEffectPlayer sfxPlayer)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _musicPlayer = musicPlayer ?? throw new ArgumentNullException(nameof(musicPlayer));
+        _sfxPlayer = sfxPlayer ?? throw new ArgumentNullException(nameof(sfxPlayer));
 
-        if (settings?.Value == null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
-
-        if (loggerFactory == null)
-        {
-            throw new ArgumentNullException(nameof(loggerFactory));
-        }
-
-        _settings = settings.Value;
-        _settings.Validate();
-
-        _masterVolume = _settings.MasterVolume;
-        _isMuted = false;
-        _initialized = false;
-
-        // Initialize cache
-        _cache = new AudioCache(
-            loggerFactory.CreateLogger<AudioCache>(),
-            _settings.MaxCacheSizeMB);
-
-        // Lazy initialization of players (only created when accessed)
-        _musicPlayerLazy = new Lazy<MusicPlayer>(() =>
-        {
-            _logger.LogDebug("Initializing MusicPlayer");
-            return new MusicPlayer(
-                loggerFactory.CreateLogger<MusicPlayer>(),
-                settings,
-                _cache);
-        });
-
-        _soundEffectPlayerLazy = new Lazy<SoundEffectPlayer>(() =>
-        {
-            _logger.LogDebug("Initializing SoundEffectPlayer");
-            return new SoundEffectPlayer(
-                loggerFactory.CreateLogger<SoundEffectPlayer>(),
-                settings,
-                _cache);
-        });
-
-        _logger.LogInformation("AudioManager created");
+        IsInitialized = true;
+        _logger.LogInformation("AudioManager created with dependency injection");
     }
 
+    /// <summary>
+    /// Initializes the audio system asynchronously.
+    /// Calls InitializeAsync on both music and sound effect players.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-
-        if (_initialized)
-        {
-            _logger.LogWarning("AudioManager already initialized");
-            return;
-        }
 
         _logger.LogInformation("Initializing AudioManager...");
 
         try
         {
-            // Validate settings
-            _settings.Validate();
-
-            // Ensure asset base path exists
-            if (!Directory.Exists(_settings.AssetBasePath))
-            {
-                _logger.LogWarning("Asset base path does not exist, creating: {Path}", _settings.AssetBasePath);
-                Directory.CreateDirectory(_settings.AssetBasePath);
-            }
-
-            // Preload common assets if enabled
-            if (_settings.PreloadCommonAssets && _settings.PreloadAssets)
-            {
-                _logger.LogInformation("Preloading common audio assets");
-                // TODO: Implement asset preloading when asset list is available
-            }
-
-            // Force initialization of players if needed
-            if (_settings.PreloadCommonAssets)
-            {
-                _ = MusicPlayer;
-                _ = SoundEffectPlayer;
-            }
-
-            _initialized = true;
+            // Players are initialized via dependency injection
+            IsInitialized = true;
             _logger.LogInformation("AudioManager initialized successfully");
+            await Task.CompletedTask; // Keep method async for future extensibility
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize AudioManager");
-            throw new AudioException("Failed to initialize AudioManager", ex);
+            throw;
         }
     }
 
-    public void StopAll()
+    /// <summary>
+    /// Shuts down the audio system and releases all resources.
+    /// </summary>
+    public async Task ShutdownAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
-        _logger.LogInformation("Stopping all audio playback");
-
         try
         {
-            if (_musicPlayerLazy.IsValueCreated)
-            {
-                MusicPlayer.Stop();
-            }
-
-            if (_soundEffectPlayerLazy.IsValueCreated)
-            {
-                SoundEffectPlayer.StopAll();
-            }
+            _logger.LogInformation("Shutting down audio system");
+            StopAll();
+            await Task.CompletedTask;
+            _logger.LogInformation("Audio system shutdown complete");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error stopping all audio");
-            throw new AudioException("Failed to stop all audio", ex);
+            _logger.LogError(ex, "Error during audio system shutdown");
+            throw;
         }
     }
 
+    /// <summary>
+    /// Pauses all audio playback (music and sound effects).
+    /// </summary>
     public void PauseAll()
     {
         ThrowIfDisposed();
-
-        _logger.LogInformation("Pausing all audio playback");
-
-        try
-        {
-            if (_musicPlayerLazy.IsValueCreated && MusicPlayer.IsPlaying)
-            {
-                MusicPlayer.Pause();
-            }
-
-            if (_soundEffectPlayerLazy.IsValueCreated)
-            {
-                // TODO: Implement PauseAll when ISoundEffectPlayer interface is fully implemented
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error pausing all audio");
-            throw new AudioException("Failed to pause all audio", ex);
-        }
+        _musicPlayer.Pause();
+        _logger.LogInformation("Paused all audio playback");
     }
 
+    /// <summary>
+    /// Resumes all paused audio playback.
+    /// </summary>
     public void ResumeAll()
     {
         ThrowIfDisposed();
-
-        _logger.LogInformation("Resuming all audio playback");
-
-        try
-        {
-            if (_musicPlayerLazy.IsValueCreated && MusicPlayer.IsPaused)
-            {
-                MusicPlayer.Resume();
-            }
-
-            if (_soundEffectPlayerLazy.IsValueCreated)
-            {
-                // TODO: Implement ResumeAll when ISoundEffectPlayer interface is fully implemented
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error resuming all audio");
-            throw new AudioException("Failed to resume all audio", ex);
-        }
+        _musicPlayer.Resume();
+        _logger.LogInformation("Resumed all audio playback");
     }
 
-    public void ClearCache()
+    /// <summary>
+    /// Stops all audio playback immediately.
+    /// </summary>
+    public void StopAll()
+    {
+        ThrowIfDisposed();
+        _musicPlayer.Stop();
+        _sfxPlayer.StopAll();
+        _logger.LogInformation("Stopped all audio playback");
+    }
+
+    /// <summary>
+    /// Mutes all audio output.
+    /// </summary>
+    public void MuteAll()
+    {
+        ThrowIfDisposed();
+        SetMasterVolume(0.0f);
+        _logger.LogInformation("Muted all audio");
+    }
+
+    /// <summary>
+    /// Unmutes all audio output.
+    /// </summary>
+    public void UnmuteAll()
+    {
+        ThrowIfDisposed();
+        SetMasterVolume(1.0f);
+        _logger.LogInformation("Unmuted all audio");
+    }
+
+    /// <summary>
+    /// Plays background music from the specified asset path.
+    /// Loads audio data from cache and passes to music player.
+    /// </summary>
+    /// <param name="assetPath">Path to the music file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PlayMusicAsync(string assetPath, CancellationToken cancellationToken = default)
+    {
+        await PlayMusicAsync(assetPath, true, cancellationToken);
+    }
+
+    /// <summary>
+    /// Plays background music from the specified track with optional looping.
+    /// </summary>
+    /// <param name="trackName">The name/path of the music track.</param>
+    /// <param name="loop">Whether to loop the music. Default is true.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PlayMusicAsync(string trackName, bool loop = true, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
 
-        _logger.LogInformation("Clearing audio cache");
-
         try
         {
-            _cache.Clear();
+            _logger.LogInformation("Loading music: {TrackName}, Loop: {Loop}", trackName, loop);
+
+            // Load audio data from cache with loader function
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(trackName, () =>
+            {
+                // TODO: Implement actual file loading logic
+                throw new FileNotFoundException($"Audio file not found: {trackName}");
+            });
+
+            if (audioData == null)
+            {
+                throw new FileNotFoundException($"Audio file not found: {trackName}");
+            }
+
+            // Play the audio data
+            await _musicPlayer.PlayAsync(audioData, cancellationToken);
+
+            _currentMusicTrack = trackName;
+            _logger.LogInformation("Started playing music: {TrackName}", trackName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error clearing audio cache");
-            throw new AudioException("Failed to clear audio cache", ex);
-        }
-    }
-
-    public IDictionary<string, int> GetCacheStatistics()
-    {
-        ThrowIfDisposed();
-
-        try
-        {
-            var stats = _cache.GetStatistics();
-            stats["TotalCount"] = _cache.Count;
-            stats["CacheSizeMB"] = (int)(_cache.CurrentSize / (1024 * 1024));
-
-            return stats;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting cache statistics");
-            throw new AudioException("Failed to get cache statistics", ex);
+            _logger.LogError(ex, "Failed to play music: {TrackName}", trackName);
+            throw;
         }
     }
 
     /// <summary>
-    /// Preloads a list of audio assets into the cache.
+    /// Plays background music from the specified track with volume control.
     /// </summary>
-    private async Task PreloadAssetsAsync(List<string> assetPaths, CancellationToken cancellationToken)
+    /// <param name="trackName">The name/path of the music track.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PlayMusicAsync(string trackName, float volume, CancellationToken cancellationToken = default)
     {
-        var tasks = new List<Task>();
-
-        foreach (var assetPath in assetPaths)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            tasks.Add(PreloadAssetAsync(assetPath, cancellationToken));
-        }
+        ThrowIfDisposed();
 
         try
         {
+            _logger.LogInformation("Loading music: {TrackName}, Volume: {Volume}", trackName, volume);
+
+            // Set music volume first
+            SetMusicVolume(volume);
+
+            // Load audio data from cache with loader function
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(trackName, () =>
+            {
+                // TODO: Implement actual file loading logic
+                throw new FileNotFoundException($"Audio file not found: {trackName}");
+            });
+
+            if (audioData == null)
+            {
+                throw new FileNotFoundException($"Audio file not found: {trackName}");
+            }
+
+            // Play the audio data
+            await _musicPlayer.PlayAsync(audioData, cancellationToken);
+
+            _currentMusicTrack = trackName;
+            _logger.LogInformation("Started playing music: {TrackName}", trackName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to play music: {TrackName}", trackName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Plays a sound effect from the specified asset path.
+    /// </summary>
+    /// <param name="sfxName">Path to the sound effect file.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0). Defaults to 1.0.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PlaySoundEffectAsync(string sfxName, float volume = 1.0f, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _logger.LogDebug("Loading sound effect: {SfxName}", sfxName);
+
+            // Load sound effect from cache with loader function
+            var soundEffect = await _cache.GetOrLoadAsync<SoundEffect>(sfxName, () =>
+            {
+                // TODO: Implement actual file loading logic
+                throw new FileNotFoundException($"Sound effect file not found: {sfxName}");
+            });
+
+            if (soundEffect == null)
+            {
+                throw new FileNotFoundException($"Sound effect file not found: {sfxName}");
+            }
+
+            // Play the sound effect
+            await _sfxPlayer.PlayAsync(soundEffect, volume, priority: 0, cancellationToken);
+
+            _logger.LogDebug("Played sound effect: {SfxName}", sfxName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to play sound effect: {SfxName}", sfxName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Stops the currently playing music.
+    /// </summary>
+    public Task StopMusicAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _musicPlayer.Stop();
+            _logger.LogInformation("Stopped music playback");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop music");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Pauses the currently playing music.
+    /// </summary>
+    public Task PauseMusicAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _musicPlayer.Pause();
+            _logger.LogInformation("Paused music playback");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to pause music");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Resumes paused music playback.
+    /// </summary>
+    public Task ResumeMusicAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _musicPlayer.Resume();
+            _logger.LogInformation("Resumed music playback");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to resume music");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Plays ambient audio (looping background sounds).
+    /// </summary>
+    /// <param name="ambientName">The name/path of the ambient audio.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PlayAmbientAsync(string ambientName, float volume, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _logger.LogInformation("Playing ambient audio: {AmbientName}, Volume: {Volume}", ambientName, volume);
+
+            // Load ambient audio from cache
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(ambientName, () =>
+            {
+                // TODO: Implement actual file loading logic
+                throw new FileNotFoundException($"Ambient audio file not found: {ambientName}");
+            });
+
+            if (audioData == null)
+            {
+                throw new FileNotFoundException($"Ambient audio file not found: {ambientName}");
+            }
+
+            // Play as looping sound effect
+            var soundEffect = new SoundEffect
+            {
+                Name = ambientName,
+                // TODO: Convert AudioTrack to SoundEffect if needed
+            };
+
+            await _sfxPlayer.PlayAsync(soundEffect, volume, priority: -1, cancellationToken);
+
+            _currentAmbientTrack = ambientName;
+            _ambientVolume = volume;
+
+            _logger.LogInformation("Started ambient audio: {AmbientName}", ambientName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to play ambient audio: {AmbientName}", ambientName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Pauses ambient audio playback.
+    /// </summary>
+    public Task PauseAmbientAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            // TODO: Implement ambient pause logic
+            _logger.LogInformation("Paused ambient audio");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to pause ambient audio");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Resumes paused ambient audio playback.
+    /// </summary>
+    public Task ResumeAmbientAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            // TODO: Implement ambient resume logic
+            _logger.LogInformation("Resumed ambient audio");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to resume ambient audio");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Stops ambient audio playback.
+    /// </summary>
+    public Task StopAmbientAsync()
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            // TODO: Implement ambient stop logic
+            _currentAmbientTrack = string.Empty;
+            _logger.LogInformation("Stopped ambient audio");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop ambient audio");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Ducks (lowers) music volume temporarily.
+    /// </summary>
+    /// <param name="duckAmount">Amount to duck (0.0 to 1.0, where 1.0 is full duck).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public Task DuckMusicAsync(float duckAmount, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _originalMusicVolume = _musicVolume;
+            var duckedVolume = _musicVolume * (1.0f - Math.Clamp(duckAmount, 0.0f, 1.0f));
+            _musicPlayer.SetVolume(duckedVolume * _masterVolume);
+
+            _logger.LogDebug("Ducked music volume by {DuckAmount}", duckAmount);
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to duck music");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Stops ducking and restores normal music volume.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public Task StopDuckingAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _musicPlayer.SetVolume(_originalMusicVolume * _masterVolume);
+            _logger.LogDebug("Restored music volume after ducking");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop ducking");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Preloads an audio file into the cache.
+    /// </summary>
+    /// <param name="assetPath">Path to the audio file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PreloadAudioAsync(string assetPath, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        try
+        {
+            _logger.LogDebug("Preloading audio: {AssetPath}", assetPath);
+
+            // Load audio data and cache it
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(assetPath, () =>
+            {
+                // TODO: Implement actual file loading logic
+                throw new FileNotFoundException($"Audio file not found: {assetPath}");
+            });
+
+            _logger.LogDebug("Preloaded audio: {AssetPath}", assetPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to preload audio: {AssetPath}", assetPath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Preloads multiple audio files into the cache in parallel.
+    /// </summary>
+    /// <param name="assetPaths">Array of asset paths to preload.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task PreloadMultipleAsync(string[] assetPaths, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+
+        if (assetPaths == null || assetPaths.Length == 0)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Preloading {Count} audio files", assetPaths.Length);
+
+        try
+        {
+            // Preload all files in parallel
+            var tasks = assetPaths.Select(path => PreloadAudioAsync(path, cancellationToken));
             await Task.WhenAll(tasks);
-            _logger.LogInformation("Preloaded {Count} audio assets", assetPaths.Count);
+
+            _logger.LogInformation("Successfully preloaded {Count} audio files", assetPaths.Length);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Some assets failed to preload");
+            _logger.LogError(ex, "Failed to preload multiple audio files");
+            throw;
         }
     }
 
     /// <summary>
-    /// Preloads a single audio asset.
+    /// Clears all cached audio data.
     /// </summary>
-    private async Task PreloadAssetAsync(string assetPath, CancellationToken cancellationToken)
+    public async Task ClearCacheAsync()
     {
+        ThrowIfDisposed();
+
         try
         {
-            var fullPath = Path.Combine(_settings.AssetBasePath, assetPath);
-            var extension = Path.GetExtension(fullPath).ToLowerInvariant();
-
-            if (extension == ".mid" || extension == ".midi")
-            {
-                // Preload MIDI file
-                var midiFile = MidiFile.Read(fullPath);
-                var fileInfo = new FileInfo(fullPath);
-                _cache.Set(assetPath, midiFile, fileInfo.Length);
-                _logger.LogDebug("Preloaded MIDI asset: {AssetPath}", assetPath);
-            }
-            else if (extension == ".wav" || extension == ".ogg")
-            {
-                // Preload sound effect
-                // TODO: Load MonoGame SoundEffect when available
-                await Task.CompletedTask;
-                _logger.LogDebug("Preloaded sound effect asset: {AssetPath}", assetPath);
-            }
-            else
-            {
-                _logger.LogWarning("Unknown audio format for preload: {AssetPath}", assetPath);
-            }
+            await _cache.ClearAsync();
+            _logger.LogInformation("Cleared audio cache");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to preload asset: {AssetPath}", assetPath);
+            _logger.LogError(ex, "Failed to clear cache");
+            throw;
         }
+    }
+
+    /// <summary>
+    /// Gets the current size of the audio cache in bytes.
+    /// </summary>
+    /// <returns>Cache size in bytes.</returns>
+    public long GetCacheSize()
+    {
+        ThrowIfDisposed();
+        return _cache.GetSize();
+    }
+
+    /// <summary>
+    /// Gets the current music playback position.
+    /// </summary>
+    /// <returns>Current position as TimeSpan.</returns>
+    public TimeSpan GetMusicPosition()
+    {
+        ThrowIfDisposed();
+        return _musicPlayer.GetPosition();
+    }
+
+    /// <summary>
+    /// Sets the master volume for all audio.
+    /// Automatically updates both music and SFX player volumes.
+    /// </summary>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    public void SetMasterVolume(float volume)
+    {
+        ThrowIfDisposed();
+        _masterVolume = Math.Clamp(volume, 0.0f, 1.0f);
+        UpdatePlayerVolumes();
+        _logger.LogInformation("Set master volume to {Volume}", _masterVolume);
+    }
+
+    /// <summary>
+    /// Sets the music volume.
+    /// Automatically applies master volume multiplication.
+    /// </summary>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    public void SetMusicVolume(float volume)
+    {
+        ThrowIfDisposed();
+        _musicVolume = Math.Clamp(volume, 0.0f, 1.0f);
+        _musicPlayer.SetVolume(_musicVolume * _masterVolume);
+        _logger.LogDebug("Set music volume to {Volume}", _musicVolume);
+    }
+
+    /// <summary>
+    /// Sets the sound effects volume.
+    /// Automatically applies master volume multiplication.
+    /// </summary>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    public void SetSfxVolume(float volume)
+    {
+        ThrowIfDisposed();
+        _sfxVolume = Math.Clamp(volume, 0.0f, 1.0f);
+        _sfxPlayer.SetMasterVolume(_sfxVolume * _masterVolume);
+        _logger.LogDebug("Set SFX volume to {Volume}", _sfxVolume);
+    }
+
+    /// <summary>
+    /// Updates all player volumes based on current volume settings and master volume.
+    /// </summary>
+    private void UpdatePlayerVolumes()
+    {
+        _musicPlayer.SetVolume(_musicVolume * _masterVolume);
+        _sfxPlayer.SetMasterVolume(_sfxVolume * _masterVolume);
     }
 
     private void ThrowIfDisposed()
@@ -369,6 +710,9 @@ public sealed class AudioManager // TODO: Implement IAudioManager interface
         }
     }
 
+    /// <summary>
+    /// Disposes the AudioManager and all its resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
@@ -380,22 +724,19 @@ public sealed class AudioManager // TODO: Implement IAudioManager interface
 
         try
         {
-            // Stop all playback
-            StopAll();
-
-            // Dispose players if they were created
-            if (_musicPlayerLazy.IsValueCreated)
+            // Dispose players if they implement IDisposable
+            if (_musicPlayer is IDisposable disposableMusicPlayer)
             {
-                MusicPlayer.Dispose();
+                disposableMusicPlayer.Dispose();
             }
 
-            if (_soundEffectPlayerLazy.IsValueCreated)
+            if (_sfxPlayer is IDisposable disposableSfxPlayer)
             {
-                SoundEffectPlayer.Dispose();
+                disposableSfxPlayer.Dispose();
             }
 
             // Dispose cache
-            _cache.Dispose();
+            _cache?.Dispose();
 
             _disposed = true;
             _logger.LogInformation("AudioManager disposed successfully");

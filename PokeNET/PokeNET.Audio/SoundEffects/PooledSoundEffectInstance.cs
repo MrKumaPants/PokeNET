@@ -76,6 +76,7 @@ namespace PokeNET.Audio.SoundEffects
             _category = category;
             _is3D = false;
             _baseVolume = 1.0f;
+            SourceEffect = null!; // Will be set by TryGetSourceEffect if available
 
             // Try to get source effect through reflection (MonoGame specific)
             TryGetSourceEffect();
@@ -213,13 +214,13 @@ namespace PokeNET.Audio.SoundEffects
 
                 if (field != null)
                 {
-                    SourceEffect = field.GetValue(_instance) as SoundEffect;
+                    SourceEffect = (field.GetValue(_instance) as SoundEffect)!;
                 }
             }
             catch
             {
                 // Reflection failed, source effect will remain null
-                SourceEffect = null;
+                SourceEffect = null!;
             }
         }
 

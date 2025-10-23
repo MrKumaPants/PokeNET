@@ -39,7 +39,7 @@ public interface IAudioManager
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the initialization operation.</returns>
-    /// <exception cref="AudioException">Thrown when initialization fails.</exception>
+    /// <exception cref="Exception">Thrown when initialization fails.</exception>
     Task InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -73,6 +73,103 @@ public interface IAudioManager
     /// Unmutes all audio output.
     /// </summary>
     void UnmuteAll();
+
+    /// <summary>
+    /// Gets whether music is currently playing.
+    /// </summary>
+    bool IsMusicPlaying { get; }
+
+    /// <summary>
+    /// Gets the current music track name.
+    /// </summary>
+    string CurrentMusicTrack { get; }
+
+    /// <summary>
+    /// Plays music from the specified track with optional looping.
+    /// </summary>
+    /// <param name="trackName">The name/path of the music track.</param>
+    /// <param name="loop">Whether to loop the music. Default is true.</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task PlayMusicAsync(string trackName, bool loop = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Plays music from the specified track with volume control.
+    /// </summary>
+    /// <param name="trackName">The name/path of the music track.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task PlayMusicAsync(string trackName, float volume, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Pauses music playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task PauseMusicAsync();
+
+    /// <summary>
+    /// Resumes paused music playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task ResumeMusicAsync();
+
+    /// <summary>
+    /// Stops music playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task StopMusicAsync();
+
+    /// <summary>
+    /// Plays a sound effect.
+    /// </summary>
+    /// <param name="sfxName">The name/path of the sound effect.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task PlaySoundEffectAsync(string sfxName, float volume, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Plays ambient audio (looping background sounds).
+    /// </summary>
+    /// <param name="ambientName">The name/path of the ambient audio.</param>
+    /// <param name="volume">Volume level (0.0 to 1.0).</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task PlayAmbientAsync(string ambientName, float volume, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Pauses ambient audio playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task PauseAmbientAsync();
+
+    /// <summary>
+    /// Resumes paused ambient audio playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task ResumeAmbientAsync();
+
+    /// <summary>
+    /// Stops ambient audio playback.
+    /// </summary>
+    /// <returns>A task representing the operation.</returns>
+    Task StopAmbientAsync();
+
+    /// <summary>
+    /// Ducks (lowers) music volume temporarily.
+    /// </summary>
+    /// <param name="duckAmount">Amount to duck (0.0 to 1.0, where 1.0 is full duck).</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task DuckMusicAsync(float duckAmount, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Stops ducking and restores normal music volume.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task StopDuckingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Event raised when the audio system state changes.

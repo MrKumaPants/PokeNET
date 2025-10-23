@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Exceptions;
 
 namespace PokeNET.Audio.Services;
@@ -7,7 +8,7 @@ namespace PokeNET.Audio.Services;
 /// Thread-safe cache for audio assets to prevent redundant loading.
 /// Implements LRU eviction when cache size limits are exceeded.
 /// </summary>
-public sealed class AudioCache : IDisposable
+public sealed class AudioCache : IAudioCache
 {
     private readonly ILogger<AudioCache> _logger;
     private readonly ConcurrentDictionary<string, CachedAsset> _cache;
@@ -268,6 +269,94 @@ public sealed class AudioCache : IDisposable
         {
             throw new ObjectDisposedException(nameof(AudioCache));
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<T?> GetOrLoadAsync<T>(string key, Func<Task<T>> loader) where T : class
+    {
+        ThrowIfDisposed();
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Cache key cannot be null or whitespace", nameof(key));
+        }
+
+        ArgumentNullException.ThrowIfNull(loader);
+
+        // Try to get from cache first
+        if (TryGet<T>(key, out var cachedAsset) && cachedAsset != null)
+        {
+            return cachedAsset;
+        }
+
+        // Load the asset
+        var asset = await loader().ConfigureAwait(false);
+        if (asset == null)
+        {
+            return null;
+        }
+
+        // Estimate size for caching
+        long sizeBytes = asset switch
+        {
+            byte[] bytes => bytes.Length,
+            string str => str.Length * 2,
+            _ => 1024 // Default estimate
+        };
+
+        Set(key, asset, sizeBytes);
+        return asset;
+    }
+
+    /// <inheritdoc />
+    public Task PreloadAsync(string key, object data)
+    {
+        ThrowIfDisposed();
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Cache key cannot be null or whitespace", nameof(key));
+        }
+
+        ArgumentNullException.ThrowIfNull(data);
+
+        // Estimate size for caching
+        long sizeBytes = data switch
+        {
+            byte[] bytes => bytes.Length,
+            string str => str.Length * 2,
+            _ => 1024 // Default estimate
+        };
+
+        var cachedAsset = new CachedAsset(data, sizeBytes);
+
+        _cacheLock.EnterWriteLock();
+        try
+        {
+            _cache[key] = cachedAsset;
+            Interlocked.Add(ref _currentCacheSize, sizeBytes);
+            _logger.LogDebug("Preloaded asset: {Key}, Size: {Size} bytes", key, sizeBytes);
+        }
+        finally
+        {
+            _cacheLock.ExitWriteLock();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ClearAsync()
+    {
+        Clear();
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public long GetSize()
+    {
+        ThrowIfDisposed();
+        return CurrentSize;
     }
 
     public void Dispose()

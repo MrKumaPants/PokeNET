@@ -1,4 +1,5 @@
 using Melanchall.DryWetMidi.MusicTheory;
+using PokeNET.Audio.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace PokeNET.Audio.Procedural
     /// </summary>
     public class ChordProgressionGenerator
     {
-        private readonly Random _random;
+        private readonly IRandomProvider _randomProvider;
         private static readonly Dictionary<string, int[][]> _progressionPatterns = new()
         {
             // Common progressions in scale degrees
@@ -25,9 +26,9 @@ namespace PokeNET.Audio.Procedural
             ["epic"] = new[] { new[] { 1, 5, 6, 3, 4, 1, 4, 5 }, new[] { 6, 4, 1, 5 } }
         };
 
-        public ChordProgressionGenerator(int? seed = null)
+        public ChordProgressionGenerator(IRandomProvider randomProvider)
         {
-            _random = seed.HasValue ? new Random(seed.Value) : new Random();
+            _randomProvider = randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace PokeNET.Audio.Procedural
                 var chord = MusicTheoryHelper.GetChordFromDegree(scale, currentDegree, chordType, octave);
 
                 // Add extensions for complexity
-                if (complexity > 0.7f && _random.NextDouble() < 0.3)
+                if (complexity > 0.7f && _randomProvider.NextDouble() < 0.3)
                 {
                     chordType = AddChordExtension(chordType);
                     chord = MusicTheoryHelper.GetChordFromDegree(scale, currentDegree, chordType, octave);
@@ -123,7 +124,7 @@ namespace PokeNET.Audio.Procedural
             style = style.ToLower();
             if (_progressionPatterns.TryGetValue(style, out var patterns))
             {
-                return patterns[_random.Next(patterns.Length)];
+                return patterns[_randomProvider.Next(patterns.Length)];
             }
 
             // Default to pop progression
@@ -224,7 +225,7 @@ namespace PokeNET.Audio.Procedural
             var transitions = tension > 0.5f ? tenseTransitions : calmTransitions;
             var possibleDegrees = transitions[currentDegree];
 
-            return possibleDegrees[_random.Next(possibleDegrees.Length)];
+            return possibleDegrees[_randomProvider.Next(possibleDegrees.Length)];
         }
 
         private ChordType AddChordExtension(ChordType baseType)
@@ -243,11 +244,11 @@ namespace PokeNET.Audio.Procedural
     /// </summary>
     public class ChordInfo
     {
-        public Chord Chord { get; set; }
+        public Chord Chord { get; set; } = null!;
         public int Degree { get; set; }
         public ChordType ChordType { get; set; }
         public double Duration { get; set; }  // Duration in bars
-        public Note RootNote { get; set; }
+        public Note RootNote { get; set; } = null!;
 
         public List<Note> Notes
         {

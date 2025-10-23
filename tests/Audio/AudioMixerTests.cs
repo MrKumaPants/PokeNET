@@ -2,6 +2,9 @@ using Xunit;
 using Moq;
 using FluentAssertions;
 using PokeNET.Audio.Mixing;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -16,7 +19,7 @@ namespace PokeNET.Tests.Audio
     public class AudioMixerTests : IDisposable
     {
         private readonly Mock<ILogger<AudioMixer>> _mockLogger;
-        private AudioMixer _mixer;
+        private AudioMixer? _mixer;
 
         public AudioMixerTests()
         {

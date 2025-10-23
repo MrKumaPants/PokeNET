@@ -64,7 +64,7 @@ namespace PokeNET.Audio.SoundEffects
                 // Create a new instance
                 var nativeInstance = soundEffect.CreateInstance();
                 if (nativeInstance == null)
-                    return null;
+                    return null!;
 
                 instance = new PooledSoundEffectInstance(nativeInstance, _category);
                 _totalCreated++;

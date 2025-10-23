@@ -1,6 +1,8 @@
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.MusicTheory;
 using PokeNET.Audio.Models;
+using MidiTimeSignature = Melanchall.DryWetMidi.Interaction.TimeSignature;
+using MidiNoteName = Melanchall.DryWetMidi.MusicTheory.NoteName;
 
 namespace PokeNET.Audio.Abstractions;
 
@@ -29,7 +31,7 @@ public interface IProceduralMusicGenerator
     /// <summary>
     /// Gets the current time signature.
     /// </summary>
-    TimeSignature TimeSignature { get; }
+    MidiTimeSignature TimeSignature { get; }
 
     /// <summary>
     /// Generates a procedural music track based on parameters.
@@ -64,7 +66,7 @@ public interface IProceduralMusicGenerator
     /// Sets the time signature for generated music.
     /// </summary>
     /// <param name="timeSignature">The time signature to use.</param>
-    void SetTimeSignature(TimeSignature timeSignature);
+    void SetTimeSignature(MidiTimeSignature timeSignature);
 
     /// <summary>
     /// Adapts the currently playing track based on new parameters.
@@ -126,7 +128,7 @@ public class ProceduralMusicParameters
     /// <summary>
     /// Gets or sets the musical key preference.
     /// </summary>
-    public NoteName? KeyPreference { get; set; }
+    public MidiNoteName? KeyPreference { get; set; }
 
     /// <summary>
     /// Gets or sets the genre or style (e.g., "orchestral", "electronic", "chiptune").

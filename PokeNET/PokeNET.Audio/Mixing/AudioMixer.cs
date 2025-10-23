@@ -3,9 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using PokeNET.Audio.Models;
 
 namespace PokeNET.Audio.Mixing
 {
+    /// <summary>
+    /// Configuration for saving/loading mixer state
+    /// </summary>
+    public class MixerConfiguration
+    {
+        public float MasterVolume { get; set; } = 1.0f;
+        public IEnumerable<ChannelConfig> Channels { get; set; } = Array.Empty<ChannelConfig>();
+    }
+
     /// <summary>
     /// Interface for audio mixer functionality
     /// </summary>
@@ -70,12 +83,15 @@ namespace PokeNET.Audio.Mixing
     /// <summary>
     /// Main audio mixer class with volume controls and channel management
     /// </summary>
-    public class AudioMixer : IAudioMixer
+    public class AudioMixer : IAudioMixer, IDisposable
     {
+        private readonly ILogger<AudioMixer> _logger;
         private readonly Dictionary<ChannelType, AudioChannel> _channels;
+        private readonly Dictionary<ChannelType, CancellationTokenSource> _activeFades;
         private readonly VolumeController _volumeController;
         private readonly DuckingController _duckingController;
         private float _masterVolume;
+        private bool _disposed;
 
         /// <summary>
         /// Gets or sets the master volume (0.0 to 1.0)
@@ -128,15 +144,19 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Initializes a new instance of the AudioMixer class
         /// </summary>
-        public AudioMixer()
+        public AudioMixer(ILogger<AudioMixer> logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _channels = new Dictionary<ChannelType, AudioChannel>();
+            _activeFades = new Dictionary<ChannelType, CancellationTokenSource>();
             _volumeController = new VolumeController();
             _duckingController = new DuckingController();
             _masterVolume = 1.0f;
             Enabled = true;
 
             InitializeChannels();
+
+            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", _channels.Count);
         }
 
         /// <summary>
@@ -144,11 +164,23 @@ namespace PokeNET.Audio.Mixing
         /// </summary>
         private void InitializeChannels()
         {
-            _channels[ChannelType.Master] = new AudioChannel(ChannelType.Master, "Master", 1.0f);
-            _channels[ChannelType.Music] = new AudioChannel(ChannelType.Music, "Music", 0.8f);
-            _channels[ChannelType.SoundEffects] = new AudioChannel(ChannelType.SoundEffects, "Sound Effects", 1.0f);
-            _channels[ChannelType.Voice] = new AudioChannel(ChannelType.Voice, "Voice/Dialogue", 1.0f);
-            _channels[ChannelType.Ambient] = new AudioChannel(ChannelType.Ambient, "Ambient", 0.6f);
+            // Initialize all channel types
+            foreach (ChannelType channelType in Enum.GetValues(typeof(ChannelType)))
+            {
+                var channelName = channelType switch
+                {
+                    ChannelType.Master => "Master",
+                    ChannelType.Music => "Music",
+                    ChannelType.SoundEffects => "Sound Effects",
+                    ChannelType.Voice => "Voice/Dialogue",
+                    ChannelType.Ambient => "Ambient",
+                    ChannelType.UI => "UI",
+                    _ => channelType.ToString()
+                };
+
+                var defaultVolume = channelType.GetDefaultVolume();
+                _channels[channelType] = new AudioChannel(channelType, channelName, defaultVolume);
+            }
         }
 
         /// <summary>
@@ -162,6 +194,15 @@ namespace PokeNET.Audio.Mixing
             }
 
             throw new ArgumentException($"Channel type {type} not found", nameof(type));
+        }
+
+        /// <summary>
+        /// Sets the master volume
+        /// </summary>
+        public void SetMasterVolume(float volume)
+        {
+            MasterVolume = volume;
+            _logger.LogDebug("Master volume set to {Volume}", MasterVolume);
         }
 
         /// <summary>
@@ -194,6 +235,95 @@ namespace PokeNET.Audio.Mixing
         public bool IsChannelMuted(ChannelType type)
         {
             return GetChannel(type).IsMuted;
+        }
+
+        /// <summary>
+        /// Mutes a channel
+        /// </summary>
+        public void MuteChannel(ChannelType type)
+        {
+            GetChannel(type).IsMuted = true;
+            _logger.LogDebug("Channel {Type} muted", type);
+        }
+
+        /// <summary>
+        /// Unmutes a channel
+        /// </summary>
+        public void UnmuteChannel(ChannelType type)
+        {
+            GetChannel(type).IsMuted = false;
+            _logger.LogDebug("Channel {Type} unmuted", type);
+        }
+
+        /// <summary>
+        /// Toggles mute state for a channel
+        /// </summary>
+        public void ToggleMute(ChannelType type)
+        {
+            var channel = GetChannel(type);
+            channel.IsMuted = !channel.IsMuted;
+            _logger.LogDebug("Channel {Type} mute toggled to {IsMuted}", type, channel.IsMuted);
+        }
+
+        /// <summary>
+        /// Mutes all channels except Master
+        /// </summary>
+        public void MuteAll()
+        {
+            foreach (var channel in _channels.Values)
+            {
+                if (channel.Type != ChannelType.Master)
+                {
+                    channel.IsMuted = true;
+                }
+            }
+            _logger.LogDebug("All channels muted");
+        }
+
+        /// <summary>
+        /// Sets ducking on a channel
+        /// </summary>
+        public void SetDucking(ChannelType type, bool isDucked, float duckLevel = 0.3f)
+        {
+            var channel = GetChannel(type);
+            channel.SetDucking(isDucked, duckLevel);
+            _logger.LogDebug("Channel {Type} ducking set to {IsDucked} at level {DuckLevel}",
+                type, isDucked, duckLevel);
+        }
+
+        /// <summary>
+        /// Ducks the music channel (commonly used when voice plays)
+        /// </summary>
+        public void DuckMusic(float duckLevel = 0.3f)
+        {
+            SetDucking(ChannelType.Music, true, duckLevel);
+            _logger.LogDebug("Music ducked to {DuckLevel}", duckLevel);
+        }
+
+        /// <summary>
+        /// Stops ducking on a channel
+        /// </summary>
+        public void StopDucking(ChannelType type)
+        {
+            var channel = GetChannel(type);
+            channel.SetDucking(false, 1.0f);
+            _logger.LogDebug("Channel {Type} ducking stopped", type);
+        }
+
+        /// <summary>
+        /// Gets the effective volume for a channel (master * channel * ducking)
+        /// </summary>
+        public float GetEffectiveVolume(ChannelType type)
+        {
+            var channel = GetChannel(type);
+
+            // Don't apply master volume to the master channel itself
+            if (type == ChannelType.Master)
+            {
+                return channel.EffectiveVolume;
+            }
+
+            return MasterVolume * channel.EffectiveVolume;
         }
 
         /// <summary>
@@ -248,6 +378,75 @@ namespace PokeNET.Audio.Mixing
 
             // Update ducking controller
             _duckingController.Update(_channels.Values, deltaTime);
+        }
+
+        /// <summary>
+        /// Fades a channel to a target volume over a duration
+        /// </summary>
+        public async Task FadeChannelAsync(ChannelType type, float targetVolume, float duration)
+        {
+            // Cancel any existing fade for this channel
+            if (_activeFades.TryGetValue(type, out var existingCts))
+            {
+                existingCts.Cancel();
+                existingCts.Dispose();
+            }
+
+            var cts = new CancellationTokenSource();
+            _activeFades[type] = cts;
+
+            try
+            {
+                var channel = GetChannel(type);
+                var startVolume = channel.Volume;
+                var elapsed = 0f;
+
+                while (elapsed < duration && !cts.Token.IsCancellationRequested)
+                {
+                    elapsed += 0.016f; // Approximate 60 FPS
+                    var t = Math.Min(elapsed / duration, 1.0f);
+                    var newVolume = startVolume + (targetVolume - startVolume) * t;
+                    channel.Volume = newVolume;
+
+                    await Task.Delay(16, cts.Token); // ~60 FPS
+                }
+
+                // Ensure we hit the exact target
+                if (!cts.Token.IsCancellationRequested)
+                {
+                    channel.Volume = targetVolume;
+                }
+
+                _logger.LogDebug("Channel {Type} faded to {Volume} over {Duration}s",
+                    type, targetVolume, duration);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogDebug("Fade operation cancelled for channel {Type}", type);
+            }
+            finally
+            {
+                _activeFades.Remove(type);
+                cts.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Fades a channel in from 0 to target volume
+        /// </summary>
+        public async Task FadeInAsync(ChannelType type, float targetVolume, float duration)
+        {
+            var channel = GetChannel(type);
+            channel.Volume = 0.0f;
+            await FadeChannelAsync(type, targetVolume, duration);
+        }
+
+        /// <summary>
+        /// Fades a channel out to 0
+        /// </summary>
+        public async Task FadeOutAsync(ChannelType type, float duration)
+        {
+            await FadeChannelAsync(type, 0.0f, duration);
         }
 
         /// <summary>
@@ -332,6 +531,50 @@ namespace PokeNET.Audio.Mixing
         }
 
         /// <summary>
+        /// Saves the current mixer configuration
+        /// </summary>
+        public MixerConfiguration SaveConfiguration()
+        {
+            var config = new MixerConfiguration
+            {
+                MasterVolume = MasterVolume,
+                Channels = _channels.Select(kvp => new ChannelConfig
+                {
+                    Type = kvp.Key,
+                    Name = kvp.Value.Name,
+                    Volume = kvp.Value.Volume,
+                    IsMuted = kvp.Value.IsMuted
+                }).ToList()
+            };
+
+            _logger.LogInformation("Mixer configuration saved");
+            return config;
+        }
+
+        /// <summary>
+        /// Loads a mixer configuration
+        /// </summary>
+        public void LoadConfiguration(MixerConfiguration config)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
+            MasterVolume = config.MasterVolume;
+
+            foreach (var channelConfig in config.Channels)
+            {
+                if (_channels.TryGetValue(channelConfig.Type, out var channel))
+                {
+                    channel.LoadConfig(channelConfig);
+                }
+            }
+
+            _logger.LogInformation("Mixer configuration loaded");
+        }
+
+        /// <summary>
         /// Saves mixer settings to file
         /// </summary>
         public void SaveSettings(string filePath)
@@ -407,24 +650,45 @@ namespace PokeNET.Audio.Mixing
         }
 
         /// <summary>
-        /// Resets all mixer settings to defaults
+        /// Resets all channels to default state
         /// </summary>
-        public void ResetToDefaults()
+        public void ResetAll()
         {
             MasterVolume = 1.0f;
-            Enabled = true;
 
             foreach (var channel in _channels.Values)
             {
                 channel.Reset();
             }
 
-            // Reset to default volumes
+            // Cancel all active fades
+            foreach (var cts in _activeFades.Values)
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+            _activeFades.Clear();
+
+            _logger.LogInformation("All mixer channels reset to defaults");
+        }
+
+        /// <summary>
+        /// Resets all mixer settings to defaults
+        /// </summary>
+        public void ResetToDefaults()
+        {
+            ResetAll();
+
+            // Reset to specific default volumes
             _channels[ChannelType.Master].Volume = 1.0f;
             _channels[ChannelType.Music].Volume = 0.8f;
             _channels[ChannelType.SoundEffects].Volume = 1.0f;
             _channels[ChannelType.Voice].Volume = 1.0f;
             _channels[ChannelType.Ambient].Volume = 0.6f;
+            if (_channels.ContainsKey(ChannelType.UI))
+            {
+                _channels[ChannelType.UI].Volume = 0.6f;
+            }
 
             _volumeController.Reset();
             _duckingController.Reset();
@@ -436,6 +700,24 @@ namespace PokeNET.Audio.Mixing
         public VolumeAnalysis AnalyzeChannel(ChannelType type)
         {
             return _volumeController.AnalyzeChannel($"{type}");
+        }
+
+        /// <summary>
+        /// Disposes the mixer and cancels all active operations
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            foreach (var cts in _activeFades.Values)
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+            _activeFades.Clear();
+
+            _disposed = true;
+            _logger.LogDebug("AudioMixer disposed");
         }
     }
 

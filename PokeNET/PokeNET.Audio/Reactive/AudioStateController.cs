@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace PokeNET.Audio.Reactive
 {
@@ -10,6 +11,7 @@ namespace PokeNET.Audio.Reactive
     /// </summary>
     public class AudioStateController : IDisposable
     {
+        private readonly ILogger<AudioStateController> _logger;
         private readonly Dictionary<string, MusicStateRule> _stateRules;
         private readonly Dictionary<string, List<string>> _locationMusicMap;
         private readonly Dictionary<BattleType, List<string>> _battleMusicMap;
@@ -18,10 +20,16 @@ namespace PokeNET.Audio.Reactive
         private bool _isInitialized;
         private bool _isDisposed;
         private string _defaultMusic;
-        private string _lastSelectedTrack;
+        private string? _lastSelectedTrack;
 
-        public AudioStateController()
+        /// <summary>
+        /// Initializes a new instance of the AudioStateController class.
+        /// </summary>
+        /// <param name="logger">Logger for diagnostics.</param>
+        /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+        public AudioStateController(ILogger<AudioStateController> logger)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _stateRules = new Dictionary<string, MusicStateRule>();
             _locationMusicMap = new Dictionary<string, List<string>>();
             _battleMusicMap = new Dictionary<BattleType, List<string>>();
@@ -37,13 +45,17 @@ namespace PokeNET.Audio.Reactive
         {
             if (_isInitialized)
             {
-                throw new InvalidOperationException("AudioStateController is already initialized.");
+                _logger.LogWarning("AudioStateController is already initialized");
+                return;
             }
+
+            _logger.LogInformation("Initializing AudioStateController...");
 
             SetupDefaultMusicMappings();
             SetupStateRules();
 
             _isInitialized = true;
+            _logger.LogInformation("AudioStateController initialized successfully");
         }
 
         /// <summary>
@@ -215,7 +227,7 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Get the appropriate music track for the current game state.
         /// </summary>
-        public string GetMusicForState(GameState state)
+        public string GetMusicForState(ReactiveAudioState state)
         {
             if (!_isInitialized)
             {
@@ -401,9 +413,24 @@ namespace PokeNET.Audio.Reactive
     /// </summary>
     public class MusicStateRule
     {
-        public string Name { get; set; }
-        public int Priority { get; set; }
-        public Func<GameState, bool> MatchCondition { get; set; }
-        public Func<GameState, string> MusicSelector { get; set; }
+        /// <summary>
+        /// Gets or sets the name of this rule.
+        /// </summary>
+        public required string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the priority of this rule (higher = more important).
+        /// </summary>
+        public required int Priority { get; set; }
+
+        /// <summary>
+        /// Gets or sets the condition that must be met for this rule to match.
+        /// </summary>
+        public required Func<ReactiveAudioState, bool> MatchCondition { get; set; }
+
+        /// <summary>
+        /// Gets or sets the function that selects music when this rule matches.
+        /// </summary>
+        public required Func<ReactiveAudioState, string> MusicSelector { get; set; }
     }
 }

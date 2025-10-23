@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
+using PokeNET.Domain.ECS.Events;
+using PokeNET.Domain.Models;
+using GameState = PokeNET.Domain.Models.GameState;
 
 namespace PokeNET.Audio.Reactive
 {
@@ -10,448 +17,507 @@ namespace PokeNET.Audio.Reactive
     /// </summary>
     public class ReactiveAudioEngine : IDisposable
     {
-        private readonly AudioStateController _stateController;
-        private readonly MusicTransitionManager _transitionManager;
-        private readonly AudioEventHandler _eventHandler;
-        private readonly Dictionary<string, Action<object>> _eventSubscriptions;
+        private readonly ILogger<ReactiveAudioEngine> _logger;
+        private readonly IAudioManager _audioManager;
+        private readonly IEventBus _eventBus;
+        private readonly Dictionary<AudioReactionType, bool> _reactionStates;
 
         private bool _isInitialized;
         private bool _isDisposed;
         private GameState _currentGameState;
+        private float _currentHealthPercentage = 1.0f;
+        private bool _isLowHealthMusicPlaying;
 
-        public bool IsEnabled { get; set; }
-        public float MasterVolume { get; set; }
-        public GameState CurrentState => _currentGameState;
+        /// <summary>
+        /// Gets whether the reactive audio engine is initialized.
+        /// </summary>
+        public bool IsInitialized => _isInitialized;
 
+        /// <summary>
+        /// Initializes a new instance of the ReactiveAudioEngine class.
+        /// </summary>
+        /// <param name="logger">Logger for diagnostics.</param>
+        /// <param name="audioManager">Audio manager for playback control.</param>
+        /// <param name="eventBus">Event bus for game event subscriptions.</param>
+        /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
         public ReactiveAudioEngine(
-            AudioStateController stateController,
-            MusicTransitionManager transitionManager,
-            AudioEventHandler eventHandler)
+            ILogger<ReactiveAudioEngine> logger,
+            IAudioManager audioManager,
+            IEventBus eventBus)
         {
-            _stateController = stateController ?? throw new ArgumentNullException(nameof(stateController));
-            _transitionManager = transitionManager ?? throw new ArgumentNullException(nameof(transitionManager));
-            _eventHandler = eventHandler ?? throw new ArgumentNullException(nameof(eventHandler));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
-            _eventSubscriptions = new Dictionary<string, Action<object>>();
-            IsEnabled = true;
-            MasterVolume = 1.0f;
-            _currentGameState = new GameState();
+            _reactionStates = new Dictionary<AudioReactionType, bool>();
+            InitializeReactionStates();
         }
 
         /// <summary>
-        /// Initialize the reactive audio engine and subscribe to all game events.
+        /// Initializes the reactive audio engine and subscribes to all game events.
         /// </summary>
-        public void Initialize()
+        /// <param name="cancellationToken">Cancellation token for async operation.</param>
+        /// <returns>A task representing the initialization operation.</returns>
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             if (_isInitialized)
             {
-                throw new InvalidOperationException("ReactiveAudioEngine is already initialized.");
-            }
-
-            SubscribeToGameEvents();
-            _stateController.Initialize();
-            _transitionManager.Initialize();
-            _eventHandler.Initialize();
-
-            _isInitialized = true;
-        }
-
-        /// <summary>
-        /// Subscribe to all relevant game events.
-        /// </summary>
-        private void SubscribeToGameEvents()
-        {
-            // Battle events
-            SubscribeToEvent("BattleStarted", OnBattleStarted);
-            SubscribeToEvent("BattleEnded", OnBattleEnded);
-            SubscribeToEvent("BattleIntensityChanged", OnBattleIntensityChanged);
-            SubscribeToEvent("PokemonHealthCritical", OnPokemonHealthCritical);
-
-            // Location events
-            SubscribeToEvent("LocationChanged", OnLocationChanged);
-            SubscribeToEvent("EnteredBuilding", OnEnteredBuilding);
-            SubscribeToEvent("ExitedBuilding", OnExitedBuilding);
-            SubscribeToEvent("EncounteredWildPokemon", OnEncounteredWildPokemon);
-
-            // Time events
-            SubscribeToEvent("TimeOfDayChanged", OnTimeOfDayChanged);
-            SubscribeToEvent("WeatherChanged", OnWeatherChanged);
-
-            // UI events
-            SubscribeToEvent("MenuOpened", OnMenuOpened);
-            SubscribeToEvent("MenuClosed", OnMenuClosed);
-            SubscribeToEvent("DialogueStarted", OnDialogueStarted);
-            SubscribeToEvent("DialogueEnded", OnDialogueEnded);
-
-            // Story events
-            SubscribeToEvent("StoryEventTriggered", OnStoryEventTriggered);
-            SubscribeToEvent("BossBattleStarted", OnBossBattleStarted);
-        }
-
-        /// <summary>
-        /// Subscribe to a specific game event.
-        /// </summary>
-        private void SubscribeToEvent(string eventName, Action<object> handler)
-        {
-            if (!_eventSubscriptions.ContainsKey(eventName))
-            {
-                _eventSubscriptions[eventName] = handler;
-            }
-        }
-
-        /// <summary>
-        /// Trigger a game event and process it through the reactive system.
-        /// </summary>
-        public void TriggerEvent(string eventName, object eventData = null)
-        {
-            if (!IsEnabled || !_isInitialized)
-            {
+                _logger.LogWarning("ReactiveAudioEngine is already initialized");
                 return;
             }
 
-            if (_eventSubscriptions.TryGetValue(eventName, out var handler))
+            _logger.LogInformation("Initializing ReactiveAudioEngine...");
+
+            try
             {
-                handler?.Invoke(eventData);
+                // Subscribe to game events
+                _eventBus.Subscribe<GameStateChangedEvent>(OnGameStateChangedEvent);
+                _eventBus.Subscribe<BattleEvent>(OnBattleEvent);
+                _eventBus.Subscribe<HealthChangedEvent>(OnHealthChangedEvent);
+                _eventBus.Subscribe<WeatherChangedEvent>(OnWeatherChangedEvent);
+                _eventBus.Subscribe<ItemUseEvent>(OnItemUseEvent);
+                _eventBus.Subscribe<PokemonCaughtEvent>(OnPokemonCaughtEvent);
+                _eventBus.Subscribe<LevelUpEvent>(OnLevelUpEvent);
+
+                _isInitialized = true;
+                _logger.LogInformation("ReactiveAudioEngine initialized successfully");
+
+                await Task.CompletedTask;
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize ReactiveAudioEngine");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Initializes all reaction states to enabled by default.
+        /// </summary>
+        private void InitializeReactionStates()
+        {
+            foreach (AudioReactionType reactionType in Enum.GetValues(typeof(AudioReactionType)))
+            {
+                _reactionStates[reactionType] = true;
+            }
+        }
+
+        /// <summary>
+        /// Sets whether a specific audio reaction type is enabled.
+        /// </summary>
+        /// <param name="type">The reaction type to configure.</param>
+        /// <param name="enabled">True to enable, false to disable.</param>
+        public void SetReactionEnabled(AudioReactionType type, bool enabled)
+        {
+            _reactionStates[type] = enabled;
+            _logger.LogDebug("Audio reaction {ReactionType} set to {Enabled}", type, enabled);
+        }
+
+        /// <summary>
+        /// Gets whether a specific audio reaction type is enabled.
+        /// </summary>
+        /// <param name="type">The reaction type to check.</param>
+        /// <returns>True if enabled, false otherwise.</returns>
+        public bool IsReactionEnabled(AudioReactionType type)
+        {
+            return _reactionStates.TryGetValue(type, out var enabled) && enabled;
         }
 
         #region Event Handlers
 
-        private void OnBattleStarted(object data)
+        /// <summary>
+        /// Handles game state changed events.
+        /// </summary>
+        private void OnGameStateChangedEvent(GameStateChangedEvent evt)
         {
-            var battleData = data as BattleEventData;
-            _currentGameState.InBattle = true;
-            _currentGameState.BattleType = battleData?.BattleType ?? BattleType.Wild;
-            _currentGameState.IsTrainerBattle = battleData?.IsTrainerBattle ?? false;
+            OnGameStateChangedAsync(evt).GetAwaiter().GetResult();
+        }
 
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Crossfade, 2.0f);
+        /// <summary>
+        /// Handles game state changes asynchronously.
+        /// </summary>
+        /// <param name="evt">The game state changed event.</param>
+        /// <returns>A task representing the operation.</returns>
+        public async Task OnGameStateChangedAsync(GameStateChangedEvent evt)
+        {
+            await OnGameStateChangedAsync(evt.PreviousState, evt.NewState);
+        }
 
-            _eventHandler.HandleEvent(new AudioEvent
+        /// <summary>
+        /// Handles game state changes asynchronously.
+        /// </summary>
+        /// <param name="previousState">The previous game state.</param>
+        /// <param name="newState">The new game state.</param>
+        /// <returns>A task representing the operation.</returns>
+        public async Task OnGameStateChangedAsync(GameState previousState, GameState newState)
+        {
+            _logger.LogInformation("Game state changed from {PreviousState} to {NewState}", previousState, newState);
+            _currentGameState = newState;
+
+            // Handle battle state
+            if (newState == GameState.Battle && IsReactionEnabled(AudioReactionType.BattleMusic))
             {
-                EventType = AudioEventType.BattleStart,
-                Priority = AudioPriority.High,
-                Data = battleData
-            });
-        }
-
-        private void OnBattleEnded(object data)
-        {
-            _currentGameState.InBattle = false;
-            _currentGameState.BattleType = BattleType.None;
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Crossfade, 3.0f);
-
-            _eventHandler.HandleEvent(new AudioEvent
+                await _audioManager.PlayMusicAsync("audio/music/battle_wild.ogg", 1.0f);
+            }
+            else if (previousState == GameState.Battle && newState == GameState.Overworld && IsReactionEnabled(AudioReactionType.LocationMusic))
             {
-                EventType = AudioEventType.BattleEnd,
-                Priority = AudioPriority.Medium,
-                Data = data
-            });
-        }
-
-        private void OnBattleIntensityChanged(object data)
-        {
-            var intensity = data is float f ? f : 0.5f;
-            _currentGameState.BattleIntensity = intensity;
-
-            // Adjust music intensity dynamically
-            _transitionManager.AdjustIntensity(intensity);
-        }
-
-        private void OnPokemonHealthCritical(object data)
-        {
-            _eventHandler.HandleEvent(new AudioEvent
+                await _audioManager.PlayMusicAsync("audio/music/route_01.ogg", 1.0f);
+            }
+            // Handle menu state
+            else if (newState == GameState.Menu && IsReactionEnabled(AudioReactionType.MenuDucking))
             {
-                EventType = AudioEventType.HealthCritical,
-                Priority = AudioPriority.Critical,
-                Data = data,
-                RequiresDucking = true,
-                DuckingAmount = 0.4f
-            });
-        }
-
-        private void OnLocationChanged(object data)
-        {
-            var locationData = data as LocationEventData;
-            _currentGameState.CurrentLocation = locationData?.LocationName ?? "Unknown";
-            _currentGameState.LocationType = locationData?.LocationType ?? LocationType.Route;
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Fade, 2.5f);
-
-            _eventHandler.HandleEvent(new AudioEvent
+                await _audioManager.DuckMusicAsync(0.3f);
+            }
+            else if (previousState == GameState.Menu && IsReactionEnabled(AudioReactionType.MenuDucking))
             {
-                EventType = AudioEventType.LocationChange,
-                Priority = AudioPriority.High,
-                Data = locationData
-            });
-        }
-
-        private void OnEnteredBuilding(object data)
-        {
-            _currentGameState.IsIndoors = true;
-
-            // Apply indoor audio effects
-            _transitionManager.ApplyEnvironmentFilter(EnvironmentFilter.Indoor);
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Crossfade, 1.5f);
-        }
-
-        private void OnExitedBuilding(object data)
-        {
-            _currentGameState.IsIndoors = false;
-
-            // Remove indoor audio effects
-            _transitionManager.ApplyEnvironmentFilter(EnvironmentFilter.Outdoor);
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Crossfade, 1.5f);
-        }
-
-        private void OnEncounteredWildPokemon(object data)
-        {
-            _eventHandler.HandleEvent(new AudioEvent
+                await _audioManager.StopDuckingAsync();
+            }
+            // Handle overworld
+            else if (newState == GameState.Overworld && IsReactionEnabled(AudioReactionType.LocationMusic))
             {
-                EventType = AudioEventType.WildEncounter,
-                Priority = AudioPriority.Critical,
-                Data = data,
-                RequiresDucking = true,
-                DuckingAmount = 0.6f
-            });
-        }
-
-        private void OnTimeOfDayChanged(object data)
-        {
-            var timeData = data as TimeEventData;
-            _currentGameState.TimeOfDay = timeData?.TimeOfDay ?? TimeOfDay.Day;
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Fade, 4.0f);
-        }
-
-        private void OnWeatherChanged(object data)
-        {
-            var weatherData = data as WeatherEventData;
-            _currentGameState.Weather = weatherData?.Weather ?? Weather.Clear;
-
-            // Apply weather-based audio effects
-            _transitionManager.ApplyWeatherEffects(_currentGameState.Weather);
-        }
-
-        private void OnMenuOpened(object data)
-        {
-            _currentGameState.MenuOpen = true;
-            _transitionManager.DuckMusic(0.3f, 0.5f);
-        }
-
-        private void OnMenuClosed(object data)
-        {
-            _currentGameState.MenuOpen = false;
-            _transitionManager.RestoreMusicVolume(0.5f);
-        }
-
-        private void OnDialogueStarted(object data)
-        {
-            _currentGameState.InDialogue = true;
-            _transitionManager.DuckMusic(0.5f, 0.3f);
-        }
-
-        private void OnDialogueEnded(object data)
-        {
-            _currentGameState.InDialogue = false;
-            _transitionManager.RestoreMusicVolume(0.5f);
-        }
-
-        private void OnStoryEventTriggered(object data)
-        {
-            var storyData = data as StoryEventData;
-            _currentGameState.CurrentStoryEvent = storyData?.EventId ?? "";
-
-            if (storyData?.HasCustomMusic ?? false)
+                await _audioManager.PlayMusicAsync("audio/music/route_01.ogg", 1.0f);
+            }
+            // Handle cutscene
+            else if (newState == GameState.Cutscene)
             {
-                _transitionManager.TransitionToTrack(storyData.MusicTrack, TransitionType.Crossfade, 2.0f);
+                _logger.LogInformation("Entered cutscene state");
             }
         }
 
-        private void OnBossBattleStarted(object data)
+        /// <summary>
+        /// Handles battle events.
+        /// </summary>
+        private void OnBattleEvent(BattleEvent evt)
         {
-            _currentGameState.InBattle = true;
-            _currentGameState.BattleType = BattleType.Boss;
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Immediate, 0.0f);
-
-            _eventHandler.HandleEvent(new AudioEvent
+            if (evt is BattleStartEvent startEvent)
             {
-                EventType = AudioEventType.BossBattle,
-                Priority = AudioPriority.Critical,
-                Data = data
-            });
+                OnBattleStartAsync(startEvent).GetAwaiter().GetResult();
+            }
+            else if (evt is BattleEndEvent endEvent)
+            {
+                OnBattleEndAsync(endEvent).GetAwaiter().GetResult();
+            }
+            else if (evt is PokemonFaintEvent faintEvent)
+            {
+                OnPokemonFaintAsync(faintEvent).GetAwaiter().GetResult();
+            }
+            else if (evt is AttackEvent attackEvent)
+            {
+                OnAttackUseAsync(attackEvent).GetAwaiter().GetResult();
+            }
+            else if (evt is CriticalHitEvent critEvent)
+            {
+                OnCriticalHitAsync(critEvent).GetAwaiter().GetResult();
+            }
+        }
+
+        /// <summary>
+        /// Handles battle start events.
+        /// </summary>
+        public async Task OnBattleStartAsync(BattleStartEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.BattleSoundEffects))
+                return;
+
+            _logger.LogInformation("Battle started: Wild={IsWild}, Gym={IsGym}", evt.IsWildBattle, evt.IsGymLeader);
+
+            // Play battle intro sound
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/battle_start.wav", 1.0f);
+
+            if (!IsReactionEnabled(AudioReactionType.BattleMusic))
+                return;
+
+            // Play appropriate battle music
+            if (evt.IsGymLeader)
+            {
+                await _audioManager.PlayMusicAsync("audio/music/battle_gym_leader.ogg", 1.0f);
+            }
+            else if (evt.IsWildBattle)
+            {
+                await _audioManager.PlayMusicAsync("audio/music/battle_wild.ogg", 1.0f);
+            }
+            else
+            {
+                await _audioManager.PlayMusicAsync("audio/music/battle_trainer.ogg", 1.0f);
+            }
+        }
+
+        /// <summary>
+        /// Handles battle end events.
+        /// </summary>
+        public async Task OnBattleEndAsync(BattleEndEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.BattleMusic))
+                return;
+
+            _logger.LogInformation("Battle ended: Victory={PlayerWon}", evt.PlayerWon);
+
+            if (evt.PlayerWon)
+            {
+                await _audioManager.PlayMusicAsync("audio/music/victory.ogg", 1.0f);
+            }
+        }
+
+        /// <summary>
+        /// Handles Pokemon faint events.
+        /// </summary>
+        public async Task OnPokemonFaintAsync(PokemonFaintEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.BattleSoundEffects))
+                return;
+
+            _logger.LogInformation("Pokemon fainted: {PokemonName}", evt.PokemonName);
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/faint.wav", 1.0f);
+        }
+
+        /// <summary>
+        /// Handles attack use events.
+        /// </summary>
+        public async Task OnAttackUseAsync(AttackEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.BattleSoundEffects))
+                return;
+
+            _logger.LogDebug("Attack used: {AttackName} ({AttackType})", evt.AttackName, evt.AttackType);
+
+            // Play type-specific attack sound
+            var soundPath = $"audio/sfx/attack_{evt.AttackType?.ToLower() ?? "normal"}.wav";
+            await _audioManager.PlaySoundEffectAsync(soundPath, 0.8f);
+        }
+
+        /// <summary>
+        /// Handles critical hit events.
+        /// </summary>
+        public async Task OnCriticalHitAsync(CriticalHitEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.BattleSoundEffects))
+                return;
+
+            _logger.LogInformation("Critical hit!");
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/critical.wav", 1.0f);
+        }
+
+        /// <summary>
+        /// Handles health changed events.
+        /// </summary>
+        private void OnHealthChangedEvent(HealthChangedEvent evt)
+        {
+            OnHealthChangedAsync(evt).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Handles health changed events asynchronously.
+        /// </summary>
+        public async Task OnHealthChangedAsync(HealthChangedEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.HealthMusic))
+                return;
+
+            _currentHealthPercentage = evt.HealthPercentage;
+            const float lowHealthThreshold = 0.25f;
+
+            if (evt.HealthPercentage <= lowHealthThreshold && !_isLowHealthMusicPlaying)
+            {
+                _logger.LogWarning("Health critical: {Percentage:P0}", evt.HealthPercentage);
+                await _audioManager.PlayMusicAsync("audio/music/low_health.ogg", 1.0f);
+                _isLowHealthMusicPlaying = true;
+            }
+            else if (evt.HealthPercentage > lowHealthThreshold && _isLowHealthMusicPlaying)
+            {
+                _logger.LogInformation("Health restored above critical threshold");
+                await _audioManager.StopMusicAsync();
+                _isLowHealthMusicPlaying = false;
+            }
+        }
+
+        /// <summary>
+        /// Handles weather changed events.
+        /// </summary>
+        private void OnWeatherChangedEvent(WeatherChangedEvent evt)
+        {
+            OnWeatherChangedAsync(evt).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Handles weather changed events asynchronously.
+        /// </summary>
+        public async Task OnWeatherChangedAsync(WeatherChangedEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.WeatherAmbient))
+                return;
+
+            _logger.LogInformation("Weather changed to: {Weather}", evt.NewWeather);
+
+            if (evt.NewWeather == Weather.Clear)
+            {
+                await _audioManager.StopAmbientAsync();
+            }
+            else
+            {
+                var ambientPath = evt.NewWeather switch
+                {
+                    Weather.Rain => "audio/ambient/rain.ogg",
+                    Weather.Snow => "audio/ambient/snow.ogg",
+                    Weather.Sandstorm => "audio/ambient/sandstorm.ogg",
+                    Weather.Fog => "audio/ambient/fog.ogg",
+                    _ => null
+                };
+
+                if (ambientPath != null)
+                {
+                    await _audioManager.PlayAmbientAsync(ambientPath, 0.6f);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles item use events.
+        /// </summary>
+        private void OnItemUseEvent(ItemUseEvent evt)
+        {
+            OnItemUseAsync(evt).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Handles item use events asynchronously.
+        /// </summary>
+        public async Task OnItemUseAsync(ItemUseEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.ItemSoundEffects))
+                return;
+
+            _logger.LogDebug("Item used: {ItemName}", evt.ItemName);
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/item_use.wav", 0.7f);
+        }
+
+        /// <summary>
+        /// Handles Pokemon caught events.
+        /// </summary>
+        private void OnPokemonCaughtEvent(PokemonCaughtEvent evt)
+        {
+            OnPokemonCaughtAsync(evt).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Handles Pokemon caught events asynchronously.
+        /// </summary>
+        public async Task OnPokemonCaughtAsync(PokemonCaughtEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.PokemonSounds))
+                return;
+
+            _logger.LogInformation("Pokemon caught: {PokemonName}", evt.PokemonName);
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/pokemon_catch.wav", 1.0f);
+        }
+
+        /// <summary>
+        /// Handles level up events.
+        /// </summary>
+        private void OnLevelUpEvent(LevelUpEvent evt)
+        {
+            OnLevelUpAsync(evt).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Handles level up events asynchronously.
+        /// </summary>
+        public async Task OnLevelUpAsync(LevelUpEvent evt)
+        {
+            if (!IsReactionEnabled(AudioReactionType.PokemonSounds))
+                return;
+
+            _logger.LogInformation("Pokemon leveled up to level {Level}", evt.NewLevel);
+            await _audioManager.PlaySoundEffectAsync("audio/sfx/level_up.wav", 1.0f);
+        }
+
+        #endregion
+
+        #region Audio Control
+
+        /// <summary>
+        /// Pauses all audio (music and ambient).
+        /// </summary>
+        /// <returns>A task representing the operation.</returns>
+        public async Task PauseAllAsync()
+        {
+            _logger.LogInformation("Pausing all audio");
+            await _audioManager.PauseMusicAsync();
+            await _audioManager.PauseAmbientAsync();
+        }
+
+        /// <summary>
+        /// Resumes all audio (music and ambient).
+        /// </summary>
+        /// <returns>A task representing the operation.</returns>
+        public async Task ResumeAllAsync()
+        {
+            _logger.LogInformation("Resuming all audio");
+            await _audioManager.ResumeMusicAsync();
+            await _audioManager.ResumeAmbientAsync();
+        }
+
+        /// <summary>
+        /// Gets the current music state.
+        /// </summary>
+        /// <returns>The current music state.</returns>
+        public MusicState GetCurrentMusicState()
+        {
+            return new MusicState
+            {
+                IsPlaying = _audioManager.IsMusicPlaying,
+                CurrentTrack = _audioManager.CurrentMusicTrack
+            };
         }
 
         #endregion
 
         /// <summary>
-        /// Update the reactive audio engine (call per frame).
+        /// Disposes the reactive audio engine and unsubscribes from events.
         /// </summary>
-        public void Update(float deltaTime)
-        {
-            if (!IsEnabled || !_isInitialized)
-            {
-                return;
-            }
-
-            _transitionManager.Update(deltaTime);
-            _eventHandler.Update(deltaTime);
-        }
-
-        /// <summary>
-        /// Force an immediate state update based on current game state.
-        /// </summary>
-        public void ForceStateUpdate()
-        {
-            if (!_isInitialized)
-            {
-                return;
-            }
-
-            var musicTrack = _stateController.GetMusicForState(_currentGameState);
-            _transitionManager.TransitionToTrack(musicTrack, TransitionType.Crossfade, 1.0f);
-        }
-
-        /// <summary>
-        /// Get current audio system status for debugging.
-        /// </summary>
-        public AudioSystemStatus GetStatus()
-        {
-            return new AudioSystemStatus
-            {
-                IsEnabled = IsEnabled,
-                CurrentState = _currentGameState,
-                CurrentTrack = _transitionManager.CurrentTrack,
-                IsTransitioning = _transitionManager.IsTransitioning,
-                ActiveEvents = _eventHandler.GetActiveEventCount()
-            };
-        }
-
         public void Dispose()
         {
             if (_isDisposed)
-            {
                 return;
+
+            _logger.LogInformation("Disposing ReactiveAudioEngine");
+
+            try
+            {
+                // Unsubscribe from all events
+                _eventBus.Unsubscribe<GameStateChangedEvent>(OnGameStateChangedEvent);
+                _eventBus.Unsubscribe<BattleEvent>(OnBattleEvent);
+                _eventBus.Unsubscribe<HealthChangedEvent>(OnHealthChangedEvent);
+                _eventBus.Unsubscribe<WeatherChangedEvent>(OnWeatherChangedEvent);
+                _eventBus.Unsubscribe<ItemUseEvent>(OnItemUseEvent);
+                _eventBus.Unsubscribe<PokemonCaughtEvent>(OnPokemonCaughtEvent);
+                _eventBus.Unsubscribe<LevelUpEvent>(OnLevelUpEvent);
+
+                _isDisposed = true;
+                _logger.LogInformation("ReactiveAudioEngine disposed successfully");
             }
-
-            _eventSubscriptions.Clear();
-            _stateController?.Dispose();
-            _transitionManager?.Dispose();
-            _eventHandler?.Dispose();
-
-            _isDisposed = true;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during ReactiveAudioEngine disposal");
+            }
         }
     }
 
-    #region Supporting Classes and Enums
+    #region Supporting Classes
 
-    public class GameState
+    /// <summary>
+    /// Represents the current music playback state.
+    /// </summary>
+    public class MusicState
     {
-        public bool InBattle { get; set; }
-        public BattleType BattleType { get; set; }
-        public bool IsTrainerBattle { get; set; }
-        public float BattleIntensity { get; set; }
-        public string CurrentLocation { get; set; }
-        public LocationType LocationType { get; set; }
-        public bool IsIndoors { get; set; }
-        public TimeOfDay TimeOfDay { get; set; }
-        public Weather Weather { get; set; }
-        public bool MenuOpen { get; set; }
-        public bool InDialogue { get; set; }
-        public string CurrentStoryEvent { get; set; }
-    }
+        /// <summary>
+        /// Gets or sets whether music is currently playing.
+        /// </summary>
+        public bool IsPlaying { get; set; }
 
-    public enum BattleType
-    {
-        None,
-        Wild,
-        Trainer,
-        Gym,
-        Boss,
-        EliteFour
-    }
-
-    public enum LocationType
-    {
-        Route,
-        Town,
-        City,
-        Cave,
-        Water,
-        Building,
-        Forest,
-        Mountain
-    }
-
-    public enum TimeOfDay
-    {
-        Morning,
-        Day,
-        Evening,
-        Night
-    }
-
-    public enum Weather
-    {
-        Clear,
-        Rain,
-        Storm,
-        Snow,
-        Fog,
-        Sandstorm
-    }
-
-    public class BattleEventData
-    {
-        public BattleType BattleType { get; set; }
-        public bool IsTrainerBattle { get; set; }
-        public string OpponentName { get; set; }
-        public int OpponentLevel { get; set; }
-    }
-
-    public class LocationEventData
-    {
-        public string LocationName { get; set; }
-        public LocationType LocationType { get; set; }
-        public string Region { get; set; }
-    }
-
-    public class TimeEventData
-    {
-        public TimeOfDay TimeOfDay { get; set; }
-        public int Hour { get; set; }
-    }
-
-    public class WeatherEventData
-    {
-        public Weather Weather { get; set; }
-        public float Intensity { get; set; }
-    }
-
-    public class StoryEventData
-    {
-        public string EventId { get; set; }
-        public bool HasCustomMusic { get; set; }
-        public string MusicTrack { get; set; }
-    }
-
-    public class AudioSystemStatus
-    {
-        public bool IsEnabled { get; set; }
-        public GameState CurrentState { get; set; }
-        public string CurrentTrack { get; set; }
-        public bool IsTransitioning { get; set; }
-        public int ActiveEvents { get; set; }
+        /// <summary>
+        /// Gets or sets the current music track name.
+        /// </summary>
+        public string CurrentTrack { get; set; } = string.Empty;
     }
 
     #endregion

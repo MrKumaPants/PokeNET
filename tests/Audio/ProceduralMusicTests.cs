@@ -3,8 +3,14 @@ using Moq;
 using FluentAssertions;
 using PokeNET.Audio;
 using PokeNET.Audio.Procedural;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.MusicTheory;
+using NoteName = PokeNET.Audio.Models.NoteName;
+using ScaleType = PokeNET.Audio.Models.ScaleType;
+using Note = PokeNET.Audio.Models.Note;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -21,7 +27,7 @@ namespace PokeNET.Tests.Audio
     {
         private readonly Mock<ILogger<ProceduralMusicGenerator>> _mockLogger;
         private readonly Mock<IRandomProvider> _mockRandom;
-        private ProceduralMusicGenerator _generator;
+        private ProceduralMusicGenerator? _generator;
 
         public ProceduralMusicTests()
         {
@@ -52,7 +58,7 @@ namespace PokeNET.Tests.Audio
         public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
         {
             // Arrange & Act
-            Action act = () => new ProceduralMusicGenerator(null, _mockRandom.Object);
+            Action act = () => new ProceduralMusicGenerator(null!, _mockRandom.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
@@ -416,8 +422,8 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             midiFile.GetTrackChunks().Should().NotBeEmpty();
-            var events = midiFile.GetTimedEvents();
-            events.Should().Contain(e => e.Event is NoteOnEvent);
+            var events = midiFile.GetTrackChunks().SelectMany(t => t.Events);
+            events.Should().Contain(e => e is NoteOnEvent);
         }
 
         [Fact]
@@ -432,8 +438,9 @@ namespace PokeNET.Tests.Audio
             var midiFile = _generator.ExportToMidi(melody, tempo);
 
             // Assert
-            var tempoEvents = midiFile.GetTimedEvents()
-                .Where(e => e.Event is SetTempoEvent)
+            var tempoEvents = midiFile.GetTrackChunks()
+                .SelectMany(t => t.Events)
+                .OfType<SetTempoEvent>()
                 .ToList();
             tempoEvents.Should().NotBeEmpty();
         }
@@ -502,12 +509,22 @@ namespace PokeNET.Tests.Audio
 
         private Melody CreateMelodyWithPattern(NoteName[] pattern)
         {
-            var melody = new Melody();
-            foreach (var note in pattern)
+            var notes = new List<Note>();
+            foreach (var noteName in pattern)
             {
-                melody.AddNote(new Note(note, octave: 4, duration: 1.0f));
+                notes.Add(new Note
+                {
+                    NoteName = noteName,
+                    Octave = 4,
+                    Duration = 1.0f
+                });
             }
-            return melody;
+            return new Melody
+            {
+                Notes = notes,
+                Tempo = 120f,
+                TimeSignature = new TimeSignature { BeatsPerMeasure = 4, BeatValue = 4 }
+            };
         }
 
         #endregion

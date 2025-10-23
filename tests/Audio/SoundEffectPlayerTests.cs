@@ -2,6 +2,9 @@ using Xunit;
 using Moq;
 using FluentAssertions;
 using PokeNET.Audio;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,7 +21,7 @@ namespace PokeNET.Tests.Audio
     {
         private readonly Mock<ILogger<SoundEffectPlayer>> _mockLogger;
         private readonly Mock<IAudioEngine> _mockAudioEngine;
-        private SoundEffectPlayer _sfxPlayer;
+        private SoundEffectPlayer? _sfxPlayer;
 
         public SoundEffectPlayerTests()
         {
@@ -77,7 +80,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _sfxPlayer.IsInitialized.Should().BeTrue();
-            _mockAudioEngine.Verify(e => e.InitializeAsync(), Times.Once);
+            _mockAudioEngine.Verify(e => e.InitializeAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         #endregion
@@ -90,7 +93,7 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer();
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1); // Sound ID
 
             // Act
@@ -108,7 +111,7 @@ namespace PokeNET.Tests.Audio
             _sfxPlayer = CreateSfxPlayer();
 
             // Act
-            Func<Task> act = async () => await _sfxPlayer.PlayAsync(null);
+            Func<Task> act = async () => await _sfxPlayer.PlayAsync(null!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
@@ -127,7 +130,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioEngine.Verify(
-                e => e.PlaySoundAsync(It.IsAny<byte[]>(), volume),
+                e => e.PlaySoundAsync(It.IsAny<byte[]>(), volume, It.IsAny<float>(), It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -145,7 +148,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _mockAudioEngine.Verify(
-                e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), pitch),
+                e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), pitch, It.IsAny<CancellationToken>()),
                 Times.Once
             );
         }
@@ -156,8 +159,8 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer();
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
-                .ReturnsAsync((byte[] data, float vol) => Random.Shared.Next(1, 1000));
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((byte[] data, float vol, float pitch, CancellationToken ct) => Random.Shared.Next(1, 1000));
 
             // Act
             var task1 = _sfxPlayer.PlayAsync(audioData);
@@ -184,7 +187,7 @@ namespace PokeNET.Tests.Audio
             // Act - Fill pool
             for (int i = 0; i < 4; i++)
             {
-                _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+                _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(i + 1);
                 soundIds.Add(await _sfxPlayer.PlayAsync(audioData));
             }
@@ -210,7 +213,7 @@ namespace PokeNET.Tests.Audio
             _sfxPlayer = CreateSfxPlayer(3);
             var audioData = CreateValidWavData();
             var soundId = 1;
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => soundId++);
 
             // Act - Exceed pool size
@@ -243,7 +246,7 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer(10);
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
 
             // Act
@@ -304,7 +307,7 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer();
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             var soundId = await _sfxPlayer.PlayAsync(audioData);
 
@@ -328,7 +331,7 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer();
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             var soundId = await _sfxPlayer.PlayAsync(audioData);
 
@@ -360,7 +363,7 @@ namespace PokeNET.Tests.Audio
             var audioData = CreateValidWavData();
             var soundIds = new List<int> { 1, 2, 3 };
             var index = 0;
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => soundIds[index++]);
 
             await _sfxPlayer.PlayAsync(audioData);
@@ -386,7 +389,7 @@ namespace PokeNET.Tests.Audio
             _sfxPlayer = CreateSfxPlayer(3);
             var audioData = CreateValidWavData();
             var soundId = 1;
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => soundId++);
 
             // Act
@@ -406,7 +409,7 @@ namespace PokeNET.Tests.Audio
             _sfxPlayer = CreateSfxPlayer(2);
             var audioData = CreateValidWavData();
             var soundId = 1;
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => soundId++);
 
             // Act
@@ -442,7 +445,7 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _sfxPlayer = CreateSfxPlayer();
             var audioData = CreateValidWavData();
-            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>()))
+            _mockAudioEngine.Setup(e => e.PlaySoundAsync(It.IsAny<byte[]>(), It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             await _sfxPlayer.PlayAsync(audioData);
 

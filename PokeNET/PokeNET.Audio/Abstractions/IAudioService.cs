@@ -30,7 +30,7 @@ public interface IAudioService
     /// <param name="track">The audio track to play.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the asynchronous play operation.</returns>
-    /// <exception cref="AudioException">Thrown when playback fails.</exception>
+    /// <exception cref="Exception">Thrown when playback fails.</exception>
     Task PlayAsync(AudioTrack track, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -64,7 +64,7 @@ public interface IAudioService
     /// Seeks to the specified position in the current track.
     /// </summary>
     /// <param name="position">The target position.</param>
-    /// <exception cref="AudioException">Thrown when seeking is not supported or fails.</exception>
+    /// <exception cref="Exception">Thrown when seeking is not supported or fails.</exception>
     void Seek(TimeSpan position);
 }
 

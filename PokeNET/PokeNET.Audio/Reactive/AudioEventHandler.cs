@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace PokeNET.Audio.Reactive
 {
@@ -10,6 +11,7 @@ namespace PokeNET.Audio.Reactive
     /// </summary>
     public class AudioEventHandler : IDisposable
     {
+        private readonly ILogger<AudioEventHandler> _logger;
         private readonly PriorityQueue<AudioEvent> _eventQueue;
         private readonly List<ActiveAudioEvent> _activeEvents;
         private readonly Dictionary<AudioEventType, AudioEventConfig> _eventConfigs;
@@ -18,10 +20,20 @@ namespace PokeNET.Audio.Reactive
         private bool _isInitialized;
         private bool _isDisposed;
 
+        /// <summary>
+        /// Gets the count of currently active audio events.
+        /// </summary>
         public int GetActiveEventCount() => _activeEvents.Count;
 
-        public AudioEventHandler(int maxConcurrentEvents = 10)
+        /// <summary>
+        /// Initializes a new instance of the AudioEventHandler class.
+        /// </summary>
+        /// <param name="logger">Logger for diagnostics.</param>
+        /// <param name="maxConcurrentEvents">Maximum number of concurrent audio events.</param>
+        /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+        public AudioEventHandler(ILogger<AudioEventHandler> logger, int maxConcurrentEvents = 10)
         {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _eventQueue = new PriorityQueue<AudioEvent>();
             _activeEvents = new List<ActiveAudioEvent>();
             _eventConfigs = new Dictionary<AudioEventType, AudioEventConfig>();
@@ -36,11 +48,16 @@ namespace PokeNET.Audio.Reactive
         {
             if (_isInitialized)
             {
-                throw new InvalidOperationException("AudioEventHandler is already initialized.");
+                _logger.LogWarning("AudioEventHandler is already initialized");
+                return;
             }
+
+            _logger.LogInformation("Initializing AudioEventHandler...");
 
             SetupDefaultEventConfigs();
             _isInitialized = true;
+
+            _logger.LogInformation("AudioEventHandler initialized successfully");
         }
 
         /// <summary>
@@ -291,7 +308,7 @@ namespace PokeNET.Audio.Reactive
         {
             // This would integrate with the actual audio playback system
             // For now, it's a placeholder
-            Console.WriteLine($"Playing sound effect: {soundEffect}");
+            _logger.LogDebug("Playing sound effect: {SoundEffect}", soundEffect);
         }
 
         /// <summary>
@@ -421,35 +438,44 @@ namespace PokeNET.Audio.Reactive
         Critical = 3
     }
 
+    /// <summary>
+    /// Represents an audio event with priority and behavior.
+    /// </summary>
     public class AudioEvent
     {
-        public AudioEventType EventType { get; set; }
+        public required AudioEventType EventType { get; set; }
         public AudioPriority Priority { get; set; }
-        public object Data { get; set; }
+        public object? Data { get; set; }
         public bool RequiresDucking { get; set; }
         public float DuckingAmount { get; set; }
-        public string SoundEffect { get; set; }
+        public string? SoundEffect { get; set; }
         public bool CanInterrupt { get; set; }
         public float MaxDuration { get; set; }
 
-        public Action OnEventStarted { get; set; }
-        public Action OnEventCompleted { get; set; }
+        public Action? OnEventStarted { get; set; }
+        public Action? OnEventCompleted { get; set; }
     }
 
+    /// <summary>
+    /// Configuration for an audio event type.
+    /// </summary>
     public class AudioEventConfig
     {
-        public AudioEventType EventType { get; set; }
-        public AudioPriority DefaultPriority { get; set; }
+        public required AudioEventType EventType { get; set; }
+        public required AudioPriority DefaultPriority { get; set; }
         public bool CanInterrupt { get; set; }
         public bool RequiresDucking { get; set; }
         public float DefaultDuckingAmount { get; set; }
         public float MaxDuration { get; set; }
-        public string SoundEffect { get; set; }
+        public string? SoundEffect { get; set; }
     }
 
+    /// <summary>
+    /// Represents an actively playing audio event.
+    /// </summary>
     public class ActiveAudioEvent
     {
-        public AudioEvent Event { get; set; }
+        public required AudioEvent Event { get; set; }
         public float StartTime { get; set; }
         public float ElapsedTime { get; set; }
         public bool IsPlaying { get; set; }

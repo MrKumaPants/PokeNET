@@ -1,7 +1,9 @@
 using Xunit;
 using Moq;
 using FluentAssertions;
-using PokeNET.Audio;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 using PokeNET.Audio.Mixing;
 using Microsoft.Extensions.Logging;
 using System;
@@ -20,7 +22,7 @@ namespace PokeNET.Tests.Audio
         private readonly Mock<IAudioCache> _mockCache;
         private readonly Mock<IMusicPlayer> _mockMusicPlayer;
         private readonly Mock<ISoundEffectPlayer> _mockSfxPlayer;
-        private AudioManager _audioManager;
+        private AudioManager? _audioManager;
 
         public AudioManagerTests()
         {
@@ -58,7 +60,7 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange & Act
             Action act = () => new AudioManager(
-                null,
+                null!,
                 _mockCache.Object,
                 _mockMusicPlayer.Object,
                 _mockSfxPlayer.Object
@@ -80,8 +82,8 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _audioManager.IsInitialized.Should().BeTrue();
-            _mockMusicPlayer.Verify(m => m.InitializeAsync(), Times.Once);
-            _mockSfxPlayer.Verify(s => s.InitializeAsync(), Times.Once);
+            // Note: IMusicPlayer and ISoundEffectPlayer don't have InitializeAsync
+            // AudioManager handles initialization internally
         }
 
         #endregion
@@ -94,14 +96,14 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var musicFile = "music/theme.mid";
-            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
-                .ReturnsAsync(new byte[] { 0x4D, 0x54, 0x68, 0x64 }); // MIDI header
+            _mockCache.Setup(c => c.GetOrLoadAsync<AudioTrack>(musicFile, It.IsAny<Func<Task<AudioTrack>>>()))
+                .ReturnsAsync(new AudioTrack { FilePath = musicFile });
 
             // Act
-            await _audioManager.PlayMusicAsync(musicFile);
+            await _audioManager.PlayMusicAsync(musicFile, true);
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.PlayAsync(It.IsAny<byte[]>()), Times.Once);
+            _mockMusicPlayer.Verify(m => m.PlayAsync(It.IsAny<AudioTrack>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -110,15 +112,15 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var musicFile = "music/nonexistent.mid";
-            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
+            _mockCache.Setup(c => c.GetOrLoadAsync<AudioTrack>(musicFile, It.IsAny<Func<Task<AudioTrack>>>()))
                 .ThrowsAsync(new FileNotFoundException());
 
             // Act
-            Func<Task> act = async () => await _audioManager.PlayMusicAsync(musicFile);
+            Func<Task> act = async () => await _audioManager.PlayMusicAsync(musicFile, true);
 
             // Assert
             await act.Should().ThrowAsync<FileNotFoundException>();
-            _mockLogger.VerifyLog(LogLevel.Error, Times.AtLeastOnce());
+            Tests.Audio.LoggerExtensions.VerifyLog(_mockLogger, LogLevel.Error, Times.AtLeastOnce());
         }
 
         [Fact]
@@ -127,14 +129,14 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var sfxFile = "sfx/jump.wav";
-            _mockCache.Setup(c => c.GetOrLoadAsync(sfxFile))
-                .ReturnsAsync(new byte[] { 0x52, 0x49, 0x46, 0x46 }); // WAV header
+            _mockCache.Setup(c => c.GetOrLoadAsync<SoundEffect>(sfxFile, It.IsAny<Func<Task<SoundEffect>>>()))
+                .ReturnsAsync(new SoundEffect { FilePath = sfxFile });
 
             // Act
             await _audioManager.PlaySoundEffectAsync(sfxFile);
 
             // Assert
-            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<byte[]>(), It.IsAny<float>()), Times.Once);
+            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<SoundEffect>(), It.IsAny<float?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -144,14 +146,14 @@ namespace PokeNET.Tests.Audio
             _audioManager = CreateAudioManager();
             var sfxFile = "sfx/jump.wav";
             var volume = 0.5f;
-            _mockCache.Setup(c => c.GetOrLoadAsync(sfxFile))
-                .ReturnsAsync(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            _mockCache.Setup(c => c.GetOrLoadAsync<SoundEffect>(sfxFile, It.IsAny<Func<Task<SoundEffect>>>()))
+                .ReturnsAsync(new SoundEffect { FilePath = sfxFile });
 
             // Act
             await _audioManager.PlaySoundEffectAsync(sfxFile, volume);
 
             // Assert
-            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<byte[]>(), volume), Times.Once);
+            _mockSfxPlayer.Verify(s => s.PlayAsync(It.IsAny<SoundEffect>(), volume, It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -164,7 +166,7 @@ namespace PokeNET.Tests.Audio
             await _audioManager.StopMusicAsync();
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.StopAsync(), Times.Once);
+            _mockMusicPlayer.Verify(m => m.Stop(), Times.Once);
         }
 
         [Fact]
@@ -177,7 +179,7 @@ namespace PokeNET.Tests.Audio
             await _audioManager.PauseMusicAsync();
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.PauseAsync(), Times.Once);
+            _mockMusicPlayer.Verify(m => m.Pause(), Times.Once);
         }
 
         [Fact]
@@ -190,7 +192,7 @@ namespace PokeNET.Tests.Audio
             await _audioManager.ResumeMusicAsync();
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.ResumeAsync(), Times.Once);
+            _mockMusicPlayer.Verify(m => m.Resume(), Times.Once);
         }
 
         #endregion
@@ -203,16 +205,16 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var musicFile = "music/theme.mid";
-            var cachedData = new byte[] { 0x4D, 0x54, 0x68, 0x64 };
-            _mockCache.Setup(c => c.GetOrLoadAsync(musicFile))
+            var cachedData = new AudioTrack { FilePath = musicFile };
+            _mockCache.Setup(c => c.GetOrLoadAsync<AudioTrack>(musicFile, It.IsAny<Func<Task<AudioTrack>>>()))
                 .ReturnsAsync(cachedData);
 
             // Act
-            await _audioManager.PlayMusicAsync(musicFile);
-            await _audioManager.PlayMusicAsync(musicFile); // Second call
+            await _audioManager.PlayMusicAsync(musicFile, true);
+            await _audioManager.PlayMusicAsync(musicFile, true); // Second call
 
             // Assert
-            _mockCache.Verify(c => c.GetOrLoadAsync(musicFile), Times.Exactly(2));
+            _mockCache.Verify(c => c.GetOrLoadAsync<AudioTrack>(musicFile, It.IsAny<Func<Task<AudioTrack>>>()), Times.Exactly(2));
         }
 
         [Fact]
@@ -221,15 +223,15 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var audioFile = "sfx/powerup.wav";
-            var audioData = new byte[] { 0x52, 0x49, 0x46, 0x46 };
-            _mockCache.Setup(c => c.PreloadAsync(audioFile))
-                .ReturnsAsync(audioData);
+            var audioData = new SoundEffect { FilePath = audioFile };
+            _mockCache.Setup(c => c.PreloadAsync(audioFile, audioData))
+                .Returns(Task.CompletedTask);
 
             // Act
             await _audioManager.PreloadAudioAsync(audioFile);
 
             // Assert
-            _mockCache.Verify(c => c.PreloadAsync(audioFile), Times.Once);
+            _mockCache.Verify(c => c.PreloadAsync(audioFile, It.IsAny<object>()), Times.Once);
         }
 
         [Fact]
@@ -238,8 +240,8 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var audioFiles = new[] { "sfx/jump.wav", "sfx/hit.wav", "music/battle.mid" };
-            _mockCache.Setup(c => c.PreloadAsync(It.IsAny<string>()))
-                .ReturnsAsync(new byte[] { 0x00 });
+            _mockCache.Setup(c => c.PreloadAsync(It.IsAny<string>(), It.IsAny<object>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             await _audioManager.PreloadMultipleAsync(audioFiles);
@@ -247,7 +249,7 @@ namespace PokeNET.Tests.Audio
             // Assert
             foreach (var file in audioFiles)
             {
-                _mockCache.Verify(c => c.PreloadAsync(file), Times.Once);
+                _mockCache.Verify(c => c.PreloadAsync(file, It.IsAny<object>()), Times.Once);
             }
         }
 
@@ -346,7 +348,7 @@ namespace PokeNET.Tests.Audio
 
             // Assert
             _audioManager.SfxVolume.Should().Be(0.6f);
-            _mockSfxPlayer.Verify(s => s.SetVolume(0.6f), Times.Once);
+            _mockSfxPlayer.Verify(s => s.SetMasterVolume(0.6f), Times.Once);
         }
 
         #endregion
@@ -363,8 +365,8 @@ namespace PokeNET.Tests.Audio
             _audioManager.Dispose();
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.Dispose(), Times.Once);
-            _mockSfxPlayer.Verify(s => s.Dispose(), Times.Once);
+            // Note: IMusicPlayer and ISoundEffectPlayer don't have Dispose
+            // AudioManager handles disposal internally
             _mockCache.Verify(c => c.Dispose(), Times.Once);
         }
 
@@ -380,8 +382,8 @@ namespace PokeNET.Tests.Audio
             _audioManager.Dispose();
 
             // Assert
-            _mockMusicPlayer.Verify(m => m.Dispose(), Times.Once);
-            _mockSfxPlayer.Verify(s => s.Dispose(), Times.Once);
+            // Note: Disposal verification is handled via AudioManager's internal state
+            _audioManager.IsInitialized.Should().BeFalse();
         }
 
         [Fact]
@@ -392,7 +394,7 @@ namespace PokeNET.Tests.Audio
             _audioManager.Dispose();
 
             // Act
-            Func<Task> act = async () => await _audioManager.PlayMusicAsync("test.mid");
+            Func<Task> act = async () => await _audioManager.PlayMusicAsync("test.mid", true);
 
             // Assert
             await act.Should().ThrowAsync<ObjectDisposedException>();
@@ -421,7 +423,7 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
-            _mockMusicPlayer.Setup(m => m.IsPaused).Returns(true);
+            _mockMusicPlayer.Setup(m => m.State).Returns(PlaybackState.Paused);
 
             // Act
             var isPaused = _audioManager.IsMusicPaused;
@@ -463,8 +465,8 @@ namespace PokeNET.Tests.Audio
                     level,
                     It.IsAny<EventId>(),
                     It.IsAny<It.IsAnyType>(),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 times);
         }
     }

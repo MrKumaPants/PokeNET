@@ -1,505 +1,283 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using PokeNET.Audio.Abstractions;
-using PokeNET.Audio.Configuration;
-using PokeNET.Audio.Exceptions;
-using PokeNET.Audio.Models;
-using SoundEffect = PokeNET.Audio.Models.SoundEffect;
 
-namespace PokeNET.Audio.Services;
+namespace PokeNET.Audio;
 
 /// <summary>
-/// Sound effect player supporting WAV/OGG playback with concurrent instance management.
-/// SOLID PRINCIPLE: Single Responsibility - Manages sound effect playback only.
-/// SOLID PRINCIPLE: Dependency Inversion - Depends on abstractions (ILogger, IOptions).
+/// Sound effect player with pooling and priority-based playback.
+/// Manages concurrent sound playback with automatic eviction of low-priority sounds when pool is full.
 /// </summary>
-public sealed class SoundEffectPlayer : ISoundEffectPlayer
+public sealed class SoundEffectPlayer : IDisposable
 {
     private readonly ILogger<SoundEffectPlayer> _logger;
-    private readonly AudioSettings _settings;
-    private readonly AudioCache _cache;
-    private readonly ConcurrentDictionary<Guid, PlayingSoundInstance> _activeInstances;
-    private readonly ConcurrentDictionary<string, SoundEffect> _loadedEffects;
-    private readonly SemaphoreSlim _instanceLock;
-
-    private float _masterVolume;
-    private bool _isMuted;
+    private readonly IAudioEngine _audioEngine;
+    private readonly ConcurrentDictionary<int, SoundInstance> _activeSounds;
+    private int _nextSoundId = 1;
+    private float _volume = 1.0f;
+    private bool _isInitialized;
     private bool _disposed;
 
-    public int MaxSimultaneousSounds => _settings.MaxConcurrentSounds;
+    /// <summary>
+    /// Gets whether the player has been initialized.
+    /// </summary>
+    public bool IsInitialized => _isInitialized;
 
-    public int ActiveSoundCount
+    /// <summary>
+    /// Gets the maximum number of concurrent sounds (pool size).
+    /// </summary>
+    public int PoolSize { get; }
+
+    /// <summary>
+    /// Gets the number of currently playing sounds.
+    /// </summary>
+    public int ActiveSounds
     {
         get
         {
-            ThrowIfDisposed();
-            CleanupFinishedInstances();
-            return _activeInstances.Count(kvp => kvp.Value.IsPlaying);
+            CleanupFinishedSounds();
+            return _activeSounds.Count;
         }
     }
 
-    public bool IsMuted
+    /// <summary>
+    /// Gets or sets the master volume (0.0 to 1.0).
+    /// </summary>
+    public float Volume
     {
-        get
+        get => _volume;
+        private set => _volume = Math.Clamp(value, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the SoundEffectPlayer.
+    /// </summary>
+    /// <param name="logger">Logger for diagnostics</param>
+    /// <param name="audioEngine">Audio engine for low-level playback</param>
+    /// <param name="poolSize">Maximum number of concurrent sounds (default: 32)</param>
+    /// <exception cref="ArgumentException">Thrown when poolSize is less than 1</exception>
+    public SoundEffectPlayer(ILogger<SoundEffectPlayer> logger, IAudioEngine audioEngine, int poolSize = 32)
+    {
+        if (poolSize < 1)
         {
-            ThrowIfDisposed();
-            return _isMuted;
+            throw new ArgumentException("Pool size must be at least 1", nameof(poolSize));
         }
-    }
 
-    public event EventHandler<SoundEffectCompletedEventArgs>? SoundCompleted;
-    public event EventHandler<SoundEffectInterruptedEventArgs>? SoundInterrupted;
-
-    public SoundEffectPlayer(
-        ILogger<SoundEffectPlayer> logger,
-        IOptions<AudioSettings> settings,
-        AudioCache cache)
-    {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _audioEngine = audioEngine ?? throw new ArgumentNullException(nameof(audioEngine));
+        PoolSize = poolSize;
+        _activeSounds = new ConcurrentDictionary<int, SoundInstance>();
 
-        _activeInstances = new ConcurrentDictionary<Guid, PlayingSoundInstance>();
-        _loadedEffects = new ConcurrentDictionary<string, SoundEffect>();
-        _instanceLock = new SemaphoreSlim(1, 1);
-        _masterVolume = _settings.SoundEffectVolume;
-        _isMuted = false;
-
-        _logger.LogInformation("SoundEffectPlayer initialized with max concurrent sounds: {MaxSounds}",
-            _settings.MaxConcurrentSounds);
+        _logger.LogInformation("SoundEffectPlayer created with pool size: {PoolSize}", PoolSize);
     }
 
-    public Guid? Play(SoundEffect effect, float? volume = null, int priority = 0)
+    /// <summary>
+    /// Initializes the audio engine asynchronously.
+    /// </summary>
+    public async Task InitializeAsync()
     {
         ThrowIfDisposed();
 
-        if (effect == null)
+        if (_isInitialized)
         {
-            throw new ArgumentNullException(nameof(effect));
+            _logger.LogWarning("SoundEffectPlayer already initialized");
+            return;
+        }
+
+        _logger.LogInformation("Initializing SoundEffectPlayer...");
+        await _audioEngine.InitializeAsync();
+        _isInitialized = true;
+        _logger.LogInformation("SoundEffectPlayer initialized successfully");
+    }
+
+    /// <summary>
+    /// Plays audio data with optional volume, pitch, and priority.
+    /// </summary>
+    /// <param name="audioData">Raw audio data to play</param>
+    /// <param name="volume">Volume level (0.0 to 1.0, default: 1.0)</param>
+    /// <param name="pitch">Pitch adjustment (1.0 = normal, default: 1.0)</param>
+    /// <param name="priority">Priority level (higher = more important, default: 0)</param>
+    /// <returns>Unique sound ID, or 0 if playback failed</returns>
+    public async Task<int> PlayAsync(byte[] audioData, float volume = 1.0f, float pitch = 1.0f, int priority = 0)
+    {
+        ThrowIfDisposed();
+
+        if (audioData == null)
+        {
+            throw new ArgumentNullException(nameof(audioData));
+        }
+
+        CleanupFinishedSounds();
+
+        // Check if pool is full
+        if (_activeSounds.Count >= PoolSize)
+        {
+            _logger.LogDebug("Pool full ({Count}/{PoolSize}), attempting to evict low-priority sound",
+                _activeSounds.Count, PoolSize);
+
+            if (!TryEvictLowestPriority(priority))
+            {
+                _logger.LogWarning("Cannot play sound: pool full and no lower priority sounds to evict");
+                return 0;
+            }
         }
 
         try
         {
-            _instanceLock.Wait();
+            // Apply master volume
+            float effectiveVolume = Math.Clamp(volume * _volume, 0.0f, 1.0f);
 
-            _logger.LogDebug("Playing sound effect: {Name}, Volume: {Volume}, Priority: {Priority}",
-                effect.Name, volume ?? effect.Volume, priority);
+            // Play through audio engine
+            int engineSoundId = await _audioEngine.PlaySoundAsync(audioData, effectiveVolume, pitch);
 
-            // Clean up finished instances
-            CleanupFinishedInstances();
-
-            // Check if we've reached the max concurrent sounds limit
-            if (_activeInstances.Count >= MaxSimultaneousSounds)
+            // Track sound instance
+            int soundId = Interlocked.Increment(ref _nextSoundId);
+            var instance = new SoundInstance
             {
-                // Try to evict lowest priority sound
-                if (!TryEvictLowestPriority(priority))
-                {
-                    _logger.LogWarning("Cannot play sound effect {Name}: channel limit reached and no lower priority sounds to evict", effect.Name);
-                    return null;
-                }
-            }
-
-            // Create instance
-            var instanceId = Guid.NewGuid();
-            var effectiveVolume = (volume ?? effect.Volume) * _masterVolume;
-
-            if (_isMuted)
-            {
-                effectiveVolume = 0f;
-            }
-
-            var instance = new PlayingSoundInstance
-            {
-                Id = instanceId,
-                Effect = effect,
-                Volume = Math.Clamp(effectiveVolume, 0.0f, 1.0f),
+                Id = soundId,
+                EngineSoundId = engineSoundId,
                 Priority = priority,
-                StartTime = DateTime.UtcNow,
-                IsPlaying = true
+                Volume = volume,
+                StartTime = DateTime.UtcNow
             };
 
-            // TODO: When MonoGame is available:
-            // var soundInstance = effect.CreateInstance();
-            // soundInstance.Volume = instance.Volume;
-            // soundInstance.Play();
-            // instance.RuntimeInstance = soundInstance;
+            _activeSounds[soundId] = instance;
 
-            _activeInstances.TryAdd(instanceId, instance);
+            _logger.LogDebug("Playing sound {SoundId} (engine: {EngineSoundId}) with priority {Priority}",
+                soundId, engineSoundId, priority);
 
-            // Update effect statistics
-            effect.PlayCount++;
-            effect.LastPlayedAt = DateTime.UtcNow;
-
-            _logger.LogInformation("Sound effect started: {Name}, InstanceId: {InstanceId}", effect.Name, instanceId);
-
-            // Start monitoring for completion (TODO: integrate with MonoGame)
-            _ = MonitorInstanceAsync(instanceId);
-
-            return instanceId;
+            return soundId;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to play sound effect: {Name}", effect.Name);
-            return null;
-        }
-        finally
-        {
-            _instanceLock.Release();
+            _logger.LogError(ex, "Failed to play sound");
+            return 0;
         }
     }
 
-    public async Task PlayAsync(SoundEffect effect, float? volume = null, int priority = 0, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Stops a specific playing sound.
+    /// </summary>
+    /// <param name="soundId">ID of the sound to stop</param>
+    public async Task StopAsync(int soundId)
     {
         ThrowIfDisposed();
 
-        if (effect == null)
+        if (_activeSounds.TryRemove(soundId, out var instance))
         {
-            throw new ArgumentNullException(nameof(effect));
-        }
-
-        var instanceId = Play(effect, volume, priority);
-
-        if (instanceId == null)
-        {
-            _logger.LogWarning("PlayAsync failed for effect {Name}", effect.Name);
-            return;
-        }
-
-        // Wait for completion
-        while (IsPlaying(instanceId.Value) && !cancellationToken.IsCancellationRequested)
-        {
-            await Task.Delay(50, cancellationToken);
-        }
-    }
-
-    public bool Stop(Guid instanceId)
-    {
-        ThrowIfDisposed();
-
-        if (_activeInstances.TryRemove(instanceId, out var instance))
-        {
-            _logger.LogDebug("Stopping sound instance: {InstanceId}", instanceId);
-
-            // TODO: When MonoGame is available:
-            // if (instance.RuntimeInstance != null)
-            // {
-            //     instance.RuntimeInstance.Stop();
-            //     instance.RuntimeInstance.Dispose();
-            // }
-
-            instance.IsPlaying = false;
-
-            // Raise interruption event
-            SoundInterrupted?.Invoke(this, new SoundEffectInterruptedEventArgs
+            try
             {
-                InstanceId = instanceId,
-                Effect = instance.Effect,
-                Reason = InterruptionReason.ManualStop
-            });
+                await _audioEngine.StopSoundAsync(instance.EngineSoundId);
+                _logger.LogDebug("Stopped sound {SoundId}", soundId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to stop sound {SoundId}", soundId);
+            }
+        }
+    }
 
-            _logger.LogInformation("Sound instance stopped: {InstanceId}", instanceId);
+    /// <summary>
+    /// Stops all currently playing sounds.
+    /// </summary>
+    public async Task StopAllAsync()
+    {
+        ThrowIfDisposed();
+
+        _logger.LogInformation("Stopping all sounds ({Count} active)", _activeSounds.Count);
+
+        try
+        {
+            await _audioEngine.StopAllSoundsAsync();
+            _activeSounds.Clear();
+            _logger.LogInformation("All sounds stopped");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop all sounds");
+        }
+    }
+
+    /// <summary>
+    /// Sets the master volume for all sounds.
+    /// </summary>
+    /// <param name="volume">Volume level (0.0 to 1.0)</param>
+    public void SetVolume(float volume)
+    {
+        ThrowIfDisposed();
+        Volume = volume;
+        _logger.LogDebug("Master volume set to {Volume}", _volume);
+    }
+
+    /// <summary>
+    /// Sets the volume for a specific playing sound.
+    /// </summary>
+    /// <param name="soundId">ID of the sound</param>
+    /// <param name="volume">Volume level (0.0 to 1.0)</param>
+    public async Task SetVolumeAsync(int soundId, float volume)
+    {
+        ThrowIfDisposed();
+
+        if (_activeSounds.TryGetValue(soundId, out var instance))
+        {
+            try
+            {
+                float effectiveVolume = Math.Clamp(volume * _volume, 0.0f, 1.0f);
+                await _audioEngine.SetSoundVolumeAsync(instance.EngineSoundId, effectiveVolume);
+                instance.Volume = volume;
+                _logger.LogDebug("Set volume for sound {SoundId} to {Volume}", soundId, volume);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to set volume for sound {SoundId}", soundId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of available sound slots.
+    /// </summary>
+    /// <returns>Number of available slots in the pool</returns>
+    public int GetAvailableSlots()
+    {
+        ThrowIfDisposed();
+        CleanupFinishedSounds();
+        return Math.Max(0, PoolSize - _activeSounds.Count);
+    }
+
+    /// <summary>
+    /// Tries to evict the lowest priority sound to make room for a new one.
+    /// </summary>
+    /// <param name="newSoundPriority">Priority of the new sound</param>
+    /// <returns>True if a sound was evicted, false otherwise</returns>
+    private bool TryEvictLowestPriority(int newSoundPriority)
+    {
+        // Find lowest priority sound
+        var lowestPriority = _activeSounds.Values
+            .OrderBy(s => s.Priority)
+            .ThenBy(s => s.StartTime) // Evict oldest if same priority
+            .FirstOrDefault();
+
+        if (lowestPriority != null && lowestPriority.Priority < newSoundPriority)
+        {
+            _logger.LogDebug("Evicting sound {SoundId} with priority {Priority} for new sound with priority {NewPriority}",
+                lowestPriority.Id, lowestPriority.Priority, newSoundPriority);
+
+            _ = StopAsync(lowestPriority.Id); // Fire and forget
             return true;
         }
 
         return false;
     }
 
-    public void StopAll()
-    {
-        ThrowIfDisposed();
-
-        _logger.LogInformation("Stopping all sound effects");
-
-        foreach (var instanceId in _activeInstances.Keys.ToList())
-        {
-            if (_activeInstances.TryRemove(instanceId, out var instance))
-            {
-                instance.IsPlaying = false;
-
-                // Raise interruption event
-                SoundInterrupted?.Invoke(this, new SoundEffectInterruptedEventArgs
-                {
-                    InstanceId = instanceId,
-                    Effect = instance.Effect,
-                    Reason = InterruptionReason.GlobalStop
-                });
-            }
-        }
-    }
-
-    public int StopAllByName(string effectName)
-    {
-        ThrowIfDisposed();
-
-        if (string.IsNullOrWhiteSpace(effectName))
-        {
-            throw new ArgumentException("Effect name cannot be null or whitespace", nameof(effectName));
-        }
-
-        _logger.LogInformation("Stopping all instances of sound effect: {EffectName}", effectName);
-
-        var stoppedCount = 0;
-        foreach (var kvp in _activeInstances.ToList())
-        {
-            if (kvp.Value.Effect.Name == effectName)
-            {
-                if (Stop(kvp.Key))
-                {
-                    stoppedCount++;
-                }
-            }
-        }
-
-        _logger.LogInformation("Stopped {Count} instances of {EffectName}", stoppedCount, effectName);
-        return stoppedCount;
-    }
-
-    public void SetMasterVolume(float volume)
-    {
-        ThrowIfDisposed();
-
-        if (volume < 0.0f || volume > 1.0f)
-        {
-            throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be between 0.0 and 1.0");
-        }
-
-        _masterVolume = volume;
-
-        // Apply volume to all active instances
-        foreach (var instance in _activeInstances.Values)
-        {
-            UpdateInstanceVolume(instance);
-        }
-
-        _logger.LogDebug("Master sound effect volume set to {Volume}", _masterVolume);
-    }
-
-    public float GetMasterVolume()
-    {
-        ThrowIfDisposed();
-        return _masterVolume;
-    }
-
-    public void Mute()
-    {
-        ThrowIfDisposed();
-
-        _isMuted = true;
-
-        // Mute all active instances
-        foreach (var instance in _activeInstances.Values)
-        {
-            UpdateInstanceVolume(instance);
-        }
-
-        _logger.LogInformation("Sound effects muted");
-    }
-
-    public void Unmute()
-    {
-        ThrowIfDisposed();
-
-        _isMuted = false;
-
-        // Restore volume to all active instances
-        foreach (var instance in _activeInstances.Values)
-        {
-            UpdateInstanceVolume(instance);
-        }
-
-        _logger.LogInformation("Sound effects unmuted");
-    }
-
-    public bool IsPlaying(Guid instanceId)
-    {
-        ThrowIfDisposed();
-
-        if (_activeInstances.TryGetValue(instanceId, out var instance))
-        {
-            // TODO: When MonoGame is available:
-            // if (instance.RuntimeInstance != null)
-            // {
-            //     return instance.RuntimeInstance.State == SoundState.Playing;
-            // }
-
-            return instance.IsPlaying;
-        }
-
-        return false;
-    }
-
-    public async Task PreloadAsync(SoundEffect effect, CancellationToken cancellationToken = default)
-    {
-        ThrowIfDisposed();
-
-        if (effect == null)
-        {
-            throw new ArgumentNullException(nameof(effect));
-        }
-
-        if (effect.IsPreloaded)
-        {
-            _logger.LogDebug("Sound effect already preloaded: {Name}", effect.Name);
-            return;
-        }
-
-        _logger.LogInformation("Preloading sound effect: {Name}", effect.Name);
-
-        try
-        {
-            // TODO: When MonoGame is available:
-            // using var stream = File.OpenRead(effect.FilePath);
-            // var soundEffect = await Task.Run(() => MonoGame.SoundEffect.FromStream(stream), cancellationToken);
-            // _loadedEffects.TryAdd(effect.Name, effect);
-
-            await Task.CompletedTask; // Placeholder for now
-
-            effect.IsPreloaded = true;
-            _loadedEffects.TryAdd(effect.Name, effect);
-
-            _logger.LogInformation("Sound effect preloaded: {Name}", effect.Name);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to preload sound effect: {Name}", effect.Name);
-            throw new AudioLoadException(effect.FilePath, ex);
-        }
-    }
-
-    public void Unload(string effectName)
-    {
-        ThrowIfDisposed();
-
-        if (string.IsNullOrWhiteSpace(effectName))
-        {
-            throw new ArgumentException("Effect name cannot be null or whitespace", nameof(effectName));
-        }
-
-        _logger.LogInformation("Unloading sound effect: {Name}", effectName);
-
-        // Stop all instances of this effect
-        StopAllByName(effectName);
-
-        // Remove from loaded effects
-        if (_loadedEffects.TryRemove(effectName, out var effect))
-        {
-            // TODO: When MonoGame is available:
-            // effect.RuntimeEffect?.Dispose();
-
-            effect.IsPreloaded = false;
-            _logger.LogInformation("Sound effect unloaded: {Name}", effectName);
-        }
-    }
-
     /// <summary>
-    /// Monitors a sound instance for completion and raises events.
+    /// Removes finished sounds from the active sounds dictionary.
+    /// Note: In a real implementation, this would check sound state from the audio engine.
     /// </summary>
-    private async Task MonitorInstanceAsync(Guid instanceId)
+    private void CleanupFinishedSounds()
     {
-        try
-        {
-            // TODO: When MonoGame is available, this will monitor the actual runtime instance
-            // For now, simulate a duration-based completion
-            if (_activeInstances.TryGetValue(instanceId, out var instance))
-            {
-                await Task.Delay(instance.Effect.Duration);
-
-                if (_activeInstances.TryRemove(instanceId, out var completedInstance))
-                {
-                    completedInstance.IsPlaying = false;
-
-                    // Raise completion event
-                    SoundCompleted?.Invoke(this, new SoundEffectCompletedEventArgs
-                    {
-                        InstanceId = instanceId,
-                        Effect = completedInstance.Effect
-                    });
-
-                    _logger.LogDebug("Sound instance completed: {InstanceId}", instanceId);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error monitoring sound instance {InstanceId}", instanceId);
-        }
-    }
-
-    /// <summary>
-    /// Updates the volume of a sound instance.
-    /// </summary>
-    private void UpdateInstanceVolume(PlayingSoundInstance instance)
-    {
-        var effectiveVolume = instance.Volume * _masterVolume;
-
-        if (_isMuted)
-        {
-            effectiveVolume = 0f;
-        }
-
-        // TODO: When MonoGame is available:
-        // if (instance.RuntimeInstance != null)
-        // {
-        //     instance.RuntimeInstance.Volume = effectiveVolume;
-        // }
-    }
-
-    /// <summary>
-    /// Cleans up finished sound instances.
-    /// </summary>
-    private void CleanupFinishedInstances()
-    {
-        var finishedInstances = _activeInstances
-            .Where(kvp => !kvp.Value.IsPlaying)
-            .Select(kvp => kvp.Key)
-            .ToList();
-
-        foreach (var instanceId in finishedInstances)
-        {
-            if (_activeInstances.TryRemove(instanceId, out var instance))
-            {
-                // TODO: When MonoGame is available:
-                // instance.RuntimeInstance?.Dispose();
-
-                _logger.LogDebug("Cleaned up finished sound instance: {InstanceId}", instanceId);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Tries to evict the lowest priority sound to make room for a new one.
-    /// </summary>
-    private bool TryEvictLowestPriority(int newSoundPriority)
-    {
-        var lowestPriorityInstance = _activeInstances
-            .Where(kvp => kvp.Value.Priority < newSoundPriority)
-            .OrderBy(kvp => kvp.Value.Priority)
-            .ThenBy(kvp => kvp.Value.StartTime)
-            .FirstOrDefault();
-
-        if (lowestPriorityInstance.Key != Guid.Empty)
-        {
-            _logger.LogDebug("Evicting low-priority sound instance: {InstanceId}, Priority: {Priority}",
-                lowestPriorityInstance.Key, lowestPriorityInstance.Value.Priority);
-
-            if (_activeInstances.TryRemove(lowestPriorityInstance.Key, out var instance))
-            {
-                instance.IsPlaying = false;
-
-                // Raise interruption event
-                SoundInterrupted?.Invoke(this, new SoundEffectInterruptedEventArgs
-                {
-                    InstanceId = lowestPriorityInstance.Key,
-                    Effect = instance.Effect,
-                    Reason = InterruptionReason.ChannelLimitReached
-                });
-
-                return true;
-            }
-        }
-
-        return false;
+        // In a real implementation, we'd query the audio engine for finished sounds
+        // For now, this is a placeholder that could be enhanced with callbacks
     }
 
     private void ThrowIfDisposed()
@@ -510,6 +288,9 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer
         }
     }
 
+    /// <summary>
+    /// Releases all resources used by the SoundEffectPlayer.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
@@ -517,33 +298,34 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer
             return;
         }
 
-        StopAll();
-        _instanceLock.Dispose();
+        _logger.LogInformation("Disposing SoundEffectPlayer...");
 
-        // Dispose all loaded effects
-        foreach (var effect in _loadedEffects.Values)
+        // Stop all sounds synchronously
+        try
         {
-            // TODO: When MonoGame is available:
-            // effect.RuntimeEffect?.Dispose();
+            _audioEngine.StopAllSoundsAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error stopping sounds during disposal");
         }
 
-        _loadedEffects.Clear();
+        _activeSounds.Clear();
+        _audioEngine.Dispose();
         _disposed = true;
 
         _logger.LogInformation("SoundEffectPlayer disposed");
     }
-}
 
-/// <summary>
-/// Represents a currently playing sound instance.
-/// </summary>
-internal class PlayingSoundInstance
-{
-    public Guid Id { get; set; }
-    public SoundEffect Effect { get; set; } = null!;
-    public float Volume { get; set; }
-    public int Priority { get; set; }
-    public DateTime StartTime { get; set; }
-    public bool IsPlaying { get; set; }
-    public object? RuntimeInstance { get; set; } // Will be MonoGame.SoundEffectInstance
+    /// <summary>
+    /// Represents a playing sound instance with tracking metadata.
+    /// </summary>
+    private class SoundInstance
+    {
+        public int Id { get; set; }
+        public int EngineSoundId { get; set; }
+        public int Priority { get; set; }
+        public float Volume { get; set; }
+        public DateTime StartTime { get; set; }
+    }
 }

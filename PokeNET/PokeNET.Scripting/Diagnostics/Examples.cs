@@ -17,7 +17,7 @@ namespace PokeNET.Scripting.Diagnostics
         {
             // Create monitor with moderate budget
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate(),
                 enableProfiling: true);
 
@@ -56,7 +56,7 @@ namespace PokeNET.Scripting.Diagnostics
         public static async Task AdvancedProfilingExample(ILogger logger)
         {
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Strict(),
                 enableProfiling: true);
 
@@ -113,7 +113,7 @@ namespace PokeNET.Scripting.Diagnostics
         public static async Task HotReloadMonitoringExample(ILogger logger)
         {
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate());
 
             var metrics = monitor.StartMonitoring("DevelopmentScript.psl");
@@ -151,7 +151,7 @@ namespace PokeNET.Scripting.Diagnostics
         public static async Task HistoricalAnalysisExample(ILogger logger)
         {
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate());
 
             // Simulate multiple executions
@@ -205,7 +205,7 @@ namespace PokeNET.Scripting.Diagnostics
             };
 
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 customBudget,
                 enableProfiling: true);
 
@@ -243,7 +243,7 @@ namespace PokeNET.Scripting.Diagnostics
         public static async Task MemoryPressureExample(ILogger logger)
         {
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Strict(),
                 enableProfiling: true);
 
@@ -295,7 +295,7 @@ namespace PokeNET.Scripting.Diagnostics
         public static async Task ComparativeAnalysisExample(ILogger logger)
         {
             var monitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate(),
                 enableProfiling: true);
 
@@ -323,8 +323,10 @@ namespace PokeNET.Scripting.Diagnostics
             Console.WriteLine($"v1 Total: {results["v1"].Metrics?.TotalTime.TotalMilliseconds:F2}ms");
             Console.WriteLine($"v2 Total: {results["v2"].Metrics?.TotalTime.TotalMilliseconds:F2}ms");
 
-            var improvement = ((results["v1"].Metrics!.TotalTime - results["v2"].Metrics!.TotalTime)
-                             / results["v1"].Metrics.TotalTime) * 100;
+            var v1Metrics = results["v1"].Metrics!;
+            var v2Metrics = results["v2"].Metrics!;
+            var improvement = ((v1Metrics.TotalTime - v2Metrics.TotalTime)
+                             / v1Metrics.TotalTime) * 100;
             Console.WriteLine($"Improvement: {improvement:F1}%");
         }
 
@@ -366,7 +368,7 @@ namespace PokeNET.Scripting.Diagnostics
         {
             _logger = logger;
             _perfMonitor = new ScriptPerformanceMonitor(
-                logger as ILogger<ScriptPerformanceMonitor>,
+                (logger as ILogger<ScriptPerformanceMonitor>)!,
                 budget ?? PerformanceBudget.Moderate(),
                 enableProfiling: true);
         }

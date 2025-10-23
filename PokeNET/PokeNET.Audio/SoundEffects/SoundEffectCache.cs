@@ -93,7 +93,7 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Get a sound effect from the cache
         /// </summary>
-        public SoundEffect Get(string key)
+        public SoundEffect? Get(string key)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SoundEffectCache));
@@ -316,8 +316,8 @@ namespace PokeNET.Audio.SoundEffects
         public int TotalHits { get; set; }
         public int TotalMisses { get; set; }
         public float HitRate { get; set; }
-        public Dictionary<SoundCategory, int> CategoryBreakdown { get; set; }
-        public List<AccessInfo> MostAccessedEntries { get; set; }
+        public Dictionary<SoundCategory, int> CategoryBreakdown { get; set; } = null!;
+        public List<AccessInfo> MostAccessedEntries { get; set; } = null!;
 
         public override string ToString()
         {
@@ -332,7 +332,7 @@ namespace PokeNET.Audio.SoundEffects
     /// </summary>
     public class AccessInfo
     {
-        public string Key { get; set; }
+        public string Key { get; set; } = null!;
         public int AccessCount { get; set; }
         public SoundCategory Category { get; set; }
 

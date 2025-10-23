@@ -1,3 +1,4 @@
+using PokeNET.Audio.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace PokeNET.Audio.Procedural
     /// </summary>
     public class RhythmGenerator
     {
-        private readonly Random _random;
+        private readonly IRandomProvider _randomProvider;
 
         // Common rhythm patterns (in 16th note subdivisions per beat)
         private static readonly Dictionary<string, int[][]> _rhythmPatterns = new()
@@ -24,9 +25,9 @@ namespace PokeNET.Audio.Procedural
             ["ambient"] = new[] { new[] { 8, 8 }, new[] { 6, 2, 6, 2 } }
         };
 
-        public RhythmGenerator(int? seed = null)
+        public RhythmGenerator(IRandomProvider randomProvider)
         {
-            _random = seed.HasValue ? new Random(seed.Value) : new Random();
+            _randomProvider = randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace PokeNET.Audio.Procedural
                 // Energy affects note density
                 var noteProbability = 0.3 + (energy * 0.7);
 
-                if (_random.NextDouble() < noteProbability)
+                if (_randomProvider.NextDouble() < noteProbability)
                 {
                     // Complexity affects duration variation
                     var duration = SelectDuration(complexity, subdivisionsPerBeat);
@@ -160,7 +161,7 @@ namespace PokeNET.Audio.Procedural
             style = style.ToLower();
             if (_rhythmPatterns.TryGetValue(style, out var patterns))
             {
-                return patterns[_random.Next(patterns.Length)];
+                return patterns[_randomProvider.Next(patterns.Length)];
             }
 
             return _rhythmPatterns["straight"][0];
@@ -171,13 +172,13 @@ namespace PokeNET.Audio.Procedural
             if (complexity < 0.3f)
             {
                 // Simple: quarter and eighth notes
-                return _random.Next(2) == 0 ? subdivisionsPerBeat : subdivisionsPerBeat / 2;
+                return _randomProvider.Next(2) == 0 ? subdivisionsPerBeat : subdivisionsPerBeat / 2;
             }
             else if (complexity < 0.7f)
             {
                 // Medium: add 16th notes
                 var durations = new[] { subdivisionsPerBeat, subdivisionsPerBeat / 2, subdivisionsPerBeat / 4 };
-                return durations[_random.Next(durations.Length)];
+                return durations[_randomProvider.Next(durations.Length)];
             }
             else
             {
@@ -189,7 +190,7 @@ namespace PokeNET.Audio.Procedural
                     subdivisionsPerBeat / 3,  // Triplets
                     subdivisionsPerBeat * 3 / 4  // Dotted
                 };
-                return durations[_random.Next(durations.Length)];
+                return durations[_randomProvider.Next(durations.Length)];
             }
         }
 
@@ -276,7 +277,7 @@ namespace PokeNET.Audio.Procedural
             {
                 for (int i = 0; i < notesPerBar; i++)
                 {
-                    if (_random.NextDouble() < density)
+                    if (_randomProvider.NextDouble() < density)
                     {
                         var isOnBeat = (i % subdivisions) == 0;
                         pattern.Add(new RhythmicEvent

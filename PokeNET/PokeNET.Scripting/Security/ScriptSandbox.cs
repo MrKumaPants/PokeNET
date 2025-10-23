@@ -32,7 +32,7 @@ namespace PokeNET.Scripting.Security;
 ///    Layer 2: Compilation restrictions (limited API surface)
 ///    Layer 3: Runtime isolation (AssemblyLoadContext)
 ///    Layer 4: Resource limits (memory, CPU, timeout)
-///    Layer 5: Monitoring & logging (security events)
+///    Layer 5: Monitoring and logging (security events)
 ///
 /// 3. THREAT MITIGATION:
 ///    - Code Injection: Static analysis + compilation validation

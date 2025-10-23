@@ -2,8 +2,12 @@ using Xunit;
 using Moq;
 using FluentAssertions;
 using PokeNET.Audio;
+using PokeNET.Audio.Services;
+using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 using Melanchall.DryWetMidi.Core;
-using Melanchall.DryWetMidi.Devices;
+using Melanchall.DryWetMidi.Common;
+using Melanchall.DryWetMidi.Multimedia;
 using Melanchall.DryWetMidi.Interaction;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,15 +23,15 @@ namespace PokeNET.Tests.Audio
     public class MusicPlayerTests : IDisposable
     {
         private readonly Mock<ILogger<MusicPlayer>> _mockLogger;
-        private readonly Mock<IOutputDevice> _mockOutputDevice;
-        private readonly Mock<IPlayback> _mockPlayback;
-        private MusicPlayer _musicPlayer;
+        private readonly Mock<OutputDevice> _mockOutputDevice;
+        private readonly Mock<Playback> _mockPlayback;
+        private MusicPlayer? _musicPlayer;
 
         public MusicPlayerTests()
         {
             _mockLogger = new Mock<ILogger<MusicPlayer>>();
-            _mockOutputDevice = new Mock<IOutputDevice>();
-            _mockPlayback = new Mock<IPlayback>();
+            _mockOutputDevice = new Mock<OutputDevice>();
+            _mockPlayback = new Mock<Playback>();
         }
 
         private MusicPlayer CreateMusicPlayer()
@@ -67,7 +71,7 @@ namespace PokeNET.Tests.Audio
         public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
         {
             // Arrange & Act
-            Action act = () => new MusicPlayer(null, _mockOutputDevice.Object);
+            Action act = () => new MusicPlayer(null!, _mockOutputDevice.Object);
 
             // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
@@ -113,7 +117,7 @@ namespace PokeNET.Tests.Audio
             _musicPlayer = CreateMusicPlayer();
 
             // Act
-            Func<Task> act = async () => await _musicPlayer.LoadMidiAsync(null);
+            Func<Task> act = async () => await _musicPlayer.LoadMidiAsync(null!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();

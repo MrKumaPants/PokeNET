@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Domain", "PokeNET.Domain\PokeNET.Domain.csproj", "{1E6D92B6-63B7-4141-954E-F55A97A656DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Saving", "PokeNET.Saving\PokeNET.Saving.csproj", "{1C751F3D-DD6E-4604-99E4-62FA121B75DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,14 @@ Global
 		{1E6D92B6-63B7-4141-954E-F55A97A656DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1E6D92B6-63B7-4141-954E-F55A97A656DC}.Release|x64.ActiveCfg = Release|Any CPU
 		{1E6D92B6-63B7-4141-954E-F55A97A656DC}.Release|x64.Build.0 = Release|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Debug|x64.Build.0 = Debug|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Release|x64.ActiveCfg = Release|Any CPU
+		{1C751F3D-DD6E-4604-99E4-62FA121B75DD}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -38,6 +38,7 @@
     <ProjectReference Include="..\PokeNET\PokeNET.Core\PokeNET.Core.csproj" />
     <ProjectReference Include="..\PokeNET\PokeNET.Scripting\PokeNET.Scripting.csproj" />
     <ProjectReference Include="..\PokeNET\PokeNET.Audio\PokeNET.Audio.csproj" />
+    <ProjectReference Include="..\PokeNET\PokeNET.Saving\PokeNET.Saving.csproj" />
   </ItemGroup>
 
 </Project>

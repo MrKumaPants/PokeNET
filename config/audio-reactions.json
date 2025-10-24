@@ -1,0 +1,392 @@
+{
+  "reactions": [
+    {
+      "name": "WildBattleMusic",
+      "type": "MusicTransition",
+      "eventType": "BattleStartEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "IsWildBattle",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "FadeOut",
+          "channel": "Music",
+          "duration": 0.5
+        },
+        {
+          "type": "PlayMusic",
+          "path": "audio/music/battle_wild.ogg",
+          "volume": 1.0,
+          "fadeIn": 0.5,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "GymBattleMusic",
+      "type": "MusicTransition",
+      "eventType": "BattleStartEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "IsGymLeader",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "FadeOut",
+          "channel": "Music",
+          "duration": 0.5
+        },
+        {
+          "type": "PlayMusic",
+          "path": "audio/music/battle_gym.ogg",
+          "volume": 1.0,
+          "fadeIn": 0.5,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "TrainerBattleMusic",
+      "type": "MusicTransition",
+      "eventType": "BattleStartEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "IsWildBattle",
+          "operator": "equals",
+          "value": false
+        },
+        {
+          "property": "IsGymLeader",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "FadeOut",
+          "channel": "Music",
+          "duration": 0.5
+        },
+        {
+          "type": "PlayMusic",
+          "path": "audio/music/battle_trainer.ogg",
+          "volume": 1.0,
+          "fadeIn": 0.5,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "LowHealthBeep",
+      "type": "SoundEffect",
+      "eventType": "HealthChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "HealthPercentage",
+          "operator": "lessThan",
+          "value": 0.25
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/low_health.wav",
+          "volume": 0.8,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "CriticalHealthMusic",
+      "type": "MusicTransition",
+      "eventType": "HealthChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "HealthPercentage",
+          "operator": "lessThan",
+          "value": 0.15
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlayMusic",
+          "path": "audio/music/low_health.ogg",
+          "volume": 1.0,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "VictoryMusic",
+      "type": "MusicTransition",
+      "eventType": "BattleEndEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "PlayerWon",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "StopAll",
+          "channel": "Music"
+        },
+        {
+          "type": "PlayMusic",
+          "path": "audio/music/victory.ogg",
+          "volume": 1.0,
+          "loop": false
+        }
+      ]
+    },
+    {
+      "name": "PokemonFaintSound",
+      "type": "SoundEffect",
+      "eventType": "PokemonFaintEvent",
+      "enabled": true,
+      "conditions": [],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/faint.wav",
+          "volume": 1.0
+        }
+      ]
+    },
+    {
+      "name": "CriticalHitSound",
+      "type": "SoundEffect",
+      "eventType": "CriticalHitEvent",
+      "enabled": true,
+      "conditions": [],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/critical.wav",
+          "volume": 1.0
+        }
+      ]
+    },
+    {
+      "name": "FireAttackSound",
+      "type": "SoundEffect",
+      "eventType": "AttackEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "AttackType",
+          "operator": "equals",
+          "value": "Fire"
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/attack_fire.wav",
+          "volume": 0.8
+        }
+      ]
+    },
+    {
+      "name": "WaterAttackSound",
+      "type": "SoundEffect",
+      "eventType": "AttackEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "AttackType",
+          "operator": "equals",
+          "value": "Water"
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/attack_water.wav",
+          "volume": 0.8
+        }
+      ]
+    },
+    {
+      "name": "ElectricAttackSound",
+      "type": "SoundEffect",
+      "eventType": "AttackEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "AttackType",
+          "operator": "equals",
+          "value": "Electric"
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/attack_electric.wav",
+          "volume": 0.8
+        }
+      ]
+    },
+    {
+      "name": "RainAmbient",
+      "type": "Ambient",
+      "eventType": "WeatherChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "NewWeather",
+          "operator": "equals",
+          "value": 1
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/ambient/rain.ogg",
+          "volume": 0.6,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "SnowAmbient",
+      "type": "Ambient",
+      "eventType": "WeatherChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "NewWeather",
+          "operator": "equals",
+          "value": 2
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/ambient/snow.ogg",
+          "volume": 0.5,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "SandstormAmbient",
+      "type": "Ambient",
+      "eventType": "WeatherChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "NewWeather",
+          "operator": "equals",
+          "value": 3
+        }
+      ],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/ambient/sandstorm.ogg",
+          "volume": 0.65,
+          "loop": true
+        }
+      ]
+    },
+    {
+      "name": "ItemUseSound",
+      "type": "SoundEffect",
+      "eventType": "ItemUseEvent",
+      "enabled": true,
+      "conditions": [],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/item_use.wav",
+          "volume": 0.7
+        }
+      ]
+    },
+    {
+      "name": "PokemonCatchSound",
+      "type": "SoundEffect",
+      "eventType": "PokemonCaughtEvent",
+      "enabled": true,
+      "conditions": [],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/pokemon_catch.wav",
+          "volume": 1.0
+        }
+      ]
+    },
+    {
+      "name": "LevelUpSound",
+      "type": "SoundEffect",
+      "eventType": "LevelUpEvent",
+      "enabled": true,
+      "conditions": [],
+      "actions": [
+        {
+          "type": "PlaySound",
+          "path": "audio/sfx/level_up.wav",
+          "volume": 1.0
+        }
+      ]
+    },
+    {
+      "name": "MenuDucking",
+      "type": "VolumeControl",
+      "eventType": "GameStateChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "NewState",
+          "operator": "equals",
+          "value": 3
+        }
+      ],
+      "actions": [
+        {
+          "type": "SetVolume",
+          "channel": "Music",
+          "volume": 0.3,
+          "duration": 0.2
+        }
+      ]
+    },
+    {
+      "name": "MenuUnduck",
+      "type": "VolumeControl",
+      "eventType": "GameStateChangedEvent",
+      "enabled": true,
+      "conditions": [
+        {
+          "property": "PreviousState",
+          "operator": "equals",
+          "value": 3
+        }
+      ],
+      "actions": [
+        {
+          "type": "SetVolume",
+          "channel": "Music",
+          "volume": 1.0,
+          "duration": 0.2
+        }
+      ]
+    }
+  ]
+}

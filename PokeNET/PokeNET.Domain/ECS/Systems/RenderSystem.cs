@@ -233,6 +233,30 @@ public class RenderSystem : SystemBase
         var position = renderable.Position;
         var renderableComp = renderable.Renderable;
 
+        // Use GridPosition for world position if available, otherwise fall back to Position
+        Vector2 worldPos;
+        if (World.Has<GridPosition>(renderable.Entity))
+        {
+            var gridPos = World.Get<GridPosition>(renderable.Entity);
+            worldPos = MovementSystem.GetInterpolatedPosition(gridPos);
+        }
+        else
+        {
+            worldPos = new Vector2(position.X, position.Y);
+        }
+
+        // Apply sprite facing based on Direction component if available
+        SpriteEffects effects = SpriteEffects.None;
+        if (World.Has<Direction>(renderable.Entity))
+        {
+            var direction = World.Get<Direction>(renderable.Entity);
+            // Flip sprite horizontally when facing west/southwest/northwest
+            if (direction == Direction.West || direction == Direction.SouthWest || direction == Direction.NorthWest)
+            {
+                effects = SpriteEffects.FlipHorizontally;
+            }
+        }
+
         // Load texture (using placeholder for now, as we don't have ContentManager)
         var texture = GetOrLoadTexture(sprite.TexturePath);
         if (texture == null)
@@ -247,13 +271,13 @@ public class RenderSystem : SystemBase
         // Render sprite
         _spriteBatch.Draw(
             texture,
-            new Vector2(position.X, position.Y),
+            worldPos,
             sprite.SourceRectangle,
             color,
             sprite.Rotation,
             sprite.Origin,
             sprite.Scale,
-            SpriteEffects.None,
+            effects,
             sprite.LayerDepth
         );
 

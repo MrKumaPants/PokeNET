@@ -35,9 +35,10 @@ namespace SimpleCodeMod
                 // Apply all patches in this assembly
                 _harmony.PatchAll();
 
-                // Subscribe to game events
-                context.Events.OnBattleStart += OnBattleStart;
-                context.Events.OnDamageDealt += OnDamageDealt;
+                // Subscribe to game events (ISP-compliant: only depend on battle events)
+                // NEW: Use focused event APIs instead of context.Events
+                context.BattleEvents.OnBattleStart += OnBattleStart;
+                context.BattleEvents.OnDamageCalculated += OnDamageDealt;
 
                 context.Logger.Info($"{Name} v{Version} loaded successfully!");
                 context.Logger.Info("All Harmony patches applied.");
@@ -61,8 +62,8 @@ namespace SimpleCodeMod
                 // Unsubscribe from events
                 if (_context != null)
                 {
-                    _context.Events.OnBattleStart -= OnBattleStart;
-                    _context.Events.OnDamageDealt -= OnDamageDealt;
+                    _context.BattleEvents.OnBattleStart -= OnBattleStart;
+                    _context.BattleEvents.OnDamageCalculated -= OnDamageDealt;
                 }
 
                 _context?.Logger.Info($"{Name} unloaded successfully.");

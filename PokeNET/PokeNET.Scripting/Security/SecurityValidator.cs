@@ -98,14 +98,21 @@ public sealed class SecurityValidator
     };
 
     // Patterns that indicate potentially malicious code
+    // Using Compiled flag for better performance with repeated pattern matching
     private static readonly Regex[] MaliciousPatterns = new[]
     {
-        new Regex(@"while\s*\(\s*true\s*\)", RegexOptions.IgnoreCase), // Infinite loops
-        new Regex(@"for\s*\(\s*;\s*;\s*\)", RegexOptions.IgnoreCase), // Infinite loops
-        new Regex(@"goto\s+", RegexOptions.IgnoreCase), // Goto statements (code smell)
-        new Regex(@"#pragma\s+warning\s+disable", RegexOptions.IgnoreCase), // Suppressing warnings
-        new Regex(@"Activator\.CreateInstance", RegexOptions.IgnoreCase), // Dynamic type creation
-        new Regex(@"Type\.GetType", RegexOptions.IgnoreCase), // Type reflection
+        new Regex(@"while\s*\(\s*true\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
+        new Regex(@"for\s*\(\s*;\s*;\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
+        new Regex(@"goto\s+",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Goto statements (code smell)
+        new Regex(@"#pragma\s+warning\s+disable",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Suppressing warnings
+        new Regex(@"Activator\.CreateInstance",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Dynamic type creation
+        new Regex(@"Type\.GetType",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Type reflection
     };
 
     public SecurityValidator(ScriptPermissions permissions)

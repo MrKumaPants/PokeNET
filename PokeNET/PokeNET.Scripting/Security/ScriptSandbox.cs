@@ -399,11 +399,16 @@ public sealed class ScriptSandbox : IDisposable
 
             securityEvents.Add($"Invoking method: {type.FullName}.{methodName}");
 
-            // Execute in a separate task to enable timeout
+            // SECURITY FIX VULN-001: Process-level timeout enforcement
+            // Use Task.Run with hard timeout to prevent cooperative cancellation bypass
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var timeoutMs = (int)_permissions.MaxExecutionTime.TotalMilliseconds;
+            cts.CancelAfter(timeoutMs);
+
             var task = Task.Run(() =>
             {
                 // Check cancellation before execution
-                cancellationToken.ThrowIfCancellationRequested();
+                cts.Token.ThrowIfCancellationRequested();
 
                 try
                 {
@@ -414,7 +419,15 @@ public sealed class ScriptSandbox : IDisposable
                 {
                     return (false, (object?)null, ex);
                 }
-            }, cancellationToken);
+            }, cts.Token);
+
+            // Hard timeout check - if task doesn't complete within timeout, throw
+            if (!task.Wait(timeoutMs, cancellationToken))
+            {
+                _logger?.LogError("Script execution exceeded hard timeout for {ScriptId}", _permissions.ScriptId);
+                securityEvents.Add("Hard timeout exceeded - execution forcibly terminated");
+                throw new ScriptTimeoutException($"Script execution exceeded maximum time of {timeoutMs}ms");
+            }
 
             return await task;
         }
@@ -430,6 +443,14 @@ public sealed class ScriptSandbox : IDisposable
             securityEvents.Add($"Execution exception: {ex.Message}");
             return (false, null, ex);
         }
+    }
+
+    /// <summary>
+    /// Exception thrown when script execution exceeds timeout
+    /// </summary>
+    public sealed class ScriptTimeoutException : Exception
+    {
+        public ScriptTimeoutException(string message) : base(message) { }
     }
 
     public void Dispose()

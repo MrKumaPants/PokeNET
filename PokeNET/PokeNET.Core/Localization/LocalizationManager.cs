@@ -10,7 +10,7 @@ namespace PokeNET.Core.Localization;
 /// <summary>
 /// Manages localization settings for the game, including retrieving supported cultures and setting the current culture for localization.
 /// </summary>
-internal class LocalizationManager
+public class LocalizationManager
 {
     /// <summary>
     /// the culture code we default to
@@ -69,6 +69,8 @@ internal class LocalizationManager
     /// This method updates both the current culture and UI culture for the current thread.
     /// </summary>
     /// <param name="cultureCode">The culture code (e.g., "en-US", "fr-FR") to set for the game.</param>
+    /// <exception cref="ArgumentNullException">Thrown when cultureCode is null or empty.</exception>
+    /// <exception cref="ArgumentException">Thrown when cultureCode is invalid or not supported.</exception>
     /// <remarks>
     /// This method modifies the Thread.CurrentThread.CurrentCulture and Thread.CurrentThread.CurrentUICulture properties,
     /// which affect how dates, numbers, and other culture-specific values are formatted, as well as how localized resources are loaded.
@@ -78,11 +80,34 @@ internal class LocalizationManager
         if (string.IsNullOrEmpty(cultureCode))
             throw new ArgumentNullException(nameof(cultureCode), "A culture code must be provided.");
 
-        // Create a CultureInfo object from the culture code
-        CultureInfo culture = new CultureInfo(cultureCode);
+        try
+        {
+            // Create a CultureInfo object from the culture code
+            CultureInfo culture = new CultureInfo(cultureCode);
 
-        // Set the current culture and UI culture for the current thread
-        Thread.CurrentThread.CurrentCulture = culture;
-        Thread.CurrentThread.CurrentUICulture = culture;
+            // Validate against supported cultures
+            var supportedCultures = GetSupportedCultures();
+            bool isSupported = supportedCultures.Any(c =>
+                c.Name.Equals(cultureCode, StringComparison.OrdinalIgnoreCase) ||
+                c.Equals(CultureInfo.InvariantCulture));
+
+            if (!isSupported)
+            {
+                throw new NotSupportedException(
+                    $"Culture '{cultureCode}' is not supported by the game. " +
+                    $"Supported cultures: {string.Join(", ", supportedCultures.Select(c => c.Name))}");
+            }
+
+            // Set the current culture and UI culture for the current thread
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+        }
+        catch (CultureNotFoundException ex)
+        {
+            throw new ArgumentException(
+                $"Invalid culture code: '{cultureCode}'. Please provide a valid culture code (e.g., 'en-US', 'fr-FR').",
+                nameof(cultureCode),
+                ex);
+        }
     }
 }

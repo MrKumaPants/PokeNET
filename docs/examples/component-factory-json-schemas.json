@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Component Factory JSON Schemas",
+  "description": "JSON schema examples for creating components via ComponentFactory",
+
+  "definitions": {
+    "Position": {
+      "type": "object",
+      "properties": {
+        "TypeName": { "const": "Position" },
+        "Properties": {
+          "type": "object",
+          "properties": {
+            "X": { "type": "number", "description": "X coordinate in world space" },
+            "Y": { "type": "number", "description": "Y coordinate in world space" },
+            "Z": { "type": "number", "description": "Z coordinate for layer depth", "default": 0 }
+          },
+          "required": ["X", "Y"]
+        }
+      }
+    },
+
+    "Velocity": {
+      "type": "object",
+      "properties": {
+        "TypeName": { "const": "Velocity" },
+        "Properties": {
+          "type": "object",
+          "properties": {
+            "X": { "type": "number", "description": "X velocity in pixels/second" },
+            "Y": { "type": "number", "description": "Y velocity in pixels/second" }
+          },
+          "required": ["X", "Y"]
+        }
+      }
+    },
+
+    "Sprite": {
+      "type": "object",
+      "properties": {
+        "TypeName": { "const": "Sprite" },
+        "Properties": {
+          "type": "object",
+          "properties": {
+            "TexturePath": { "type": "string", "description": "Asset path to texture" },
+            "Width": { "type": "integer", "description": "Sprite width in pixels" },
+            "Height": { "type": "integer", "description": "Sprite height in pixels" },
+            "LayerDepth": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+            "SourceX": { "type": "integer", "description": "Source rectangle X" },
+            "SourceY": { "type": "integer", "description": "Source rectangle Y" },
+            "SourceWidth": { "type": "integer", "description": "Source rectangle width" },
+            "SourceHeight": { "type": "integer", "description": "Source rectangle height" },
+            "Scale": { "type": "number", "default": 1.0 },
+            "Rotation": { "type": "number", "default": 0 },
+            "IsVisible": { "type": "boolean", "default": true },
+            "ColorR": { "type": "integer", "minimum": 0, "maximum": 255, "default": 255 },
+            "ColorG": { "type": "integer", "minimum": 0, "maximum": 255, "default": 255 },
+            "ColorB": { "type": "integer", "minimum": 0, "maximum": 255, "default": 255 },
+            "ColorA": { "type": "integer", "minimum": 0, "maximum": 255, "default": 255 }
+          },
+          "required": ["TexturePath", "Width", "Height"]
+        }
+      }
+    },
+
+    "Health": {
+      "type": "object",
+      "properties": {
+        "TypeName": { "const": "Health" },
+        "Properties": {
+          "type": "object",
+          "properties": {
+            "Current": { "type": "integer", "minimum": 0 },
+            "Maximum": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["Maximum"]
+        }
+      }
+    },
+
+    "Stats": {
+      "type": "object",
+      "properties": {
+        "TypeName": { "const": "Stats" },
+        "Properties": {
+          "type": "object",
+          "properties": {
+            "Level": { "type": "integer", "minimum": 1, "default": 1 },
+            "Attack": { "type": "integer", "minimum": 0, "default": 10 },
+            "Defense": { "type": "integer", "minimum": 0, "default": 10 },
+            "SpecialAttack": { "type": "integer", "minimum": 0, "default": 10 },
+            "SpecialDefense": { "type": "integer", "minimum": 0, "default": 10 },
+            "Speed": { "type": "integer", "minimum": 0, "default": 10 }
+          }
+        }
+      }
+    }
+  },
+
+  "examples": {
+    "simple_position": {
+      "TypeName": "Position",
+      "Properties": {
+        "X": 100,
+        "Y": 200,
+        "Z": 0.5
+      }
+    },
+
+    "pikachu_entity": {
+      "EntityName": "Pikachu",
+      "Components": [
+        {
+          "TypeName": "Position",
+          "Properties": { "X": 400, "Y": 300, "Z": 0 }
+        },
+        {
+          "TypeName": "Sprite",
+          "Properties": {
+            "TexturePath": "textures/pikachu.png",
+            "Width": 64,
+            "Height": 64,
+            "LayerDepth": 0.5,
+            "Scale": 2.0
+          }
+        },
+        {
+          "TypeName": "Health",
+          "Properties": { "Current": 100, "Maximum": 100 }
+        },
+        {
+          "TypeName": "Stats",
+          "Properties": {
+            "Level": 25,
+            "Attack": 85,
+            "Defense": 70,
+            "SpecialAttack": 90,
+            "SpecialDefense": 75,
+            "Speed": 95
+          }
+        },
+        {
+          "TypeName": "Velocity",
+          "Properties": { "X": 0, "Y": 0 }
+        }
+      ]
+    },
+
+    "mod_component_batch": [
+      {
+        "TypeName": "Position",
+        "Properties": { "X": 0, "Y": 0 }
+      },
+      {
+        "TypeName": "Sprite",
+        "Properties": {
+          "TexturePath": "mods/mymod/textures/custom.png",
+          "Width": 32,
+          "Height": 32
+        }
+      },
+      {
+        "TypeName": "MovementConstraint",
+        "Properties": {
+          "MinX": -500,
+          "MaxX": 500,
+          "MinY": -500,
+          "MaxY": 500,
+          "MaxVelocity": 300
+        }
+      }
+    ]
+  }
+}

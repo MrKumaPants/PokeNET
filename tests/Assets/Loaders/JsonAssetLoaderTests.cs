@@ -14,12 +14,16 @@ namespace PokeNET.Tests.Assets.Loaders;
 public class JsonAssetLoaderTests : IDisposable
 {
     private readonly Mock<ILogger<JsonAssetLoader<TestData>>> _mockLogger;
+    private readonly Mock<ILogger<JsonAssetLoader<List<TestData>>>> _mockListLogger;
+    private readonly Mock<ILogger<JsonAssetLoader<NestedTestData>>> _mockNestedLogger;
     private readonly string _testDirectory;
     private readonly List<string> _testFiles;
 
     public JsonAssetLoaderTests()
     {
         _mockLogger = new Mock<ILogger<JsonAssetLoader<TestData>>>();
+        _mockListLogger = new Mock<ILogger<JsonAssetLoader<List<TestData>>>>();
+        _mockNestedLogger = new Mock<ILogger<JsonAssetLoader<NestedTestData>>>();
         _testDirectory = Path.Combine(Path.GetTempPath(), $"JsonAssetLoaderTests_{Guid.NewGuid()}");
         _testFiles = new List<string>();
         Directory.CreateDirectory(_testDirectory);
@@ -129,7 +133,7 @@ public class JsonAssetLoaderTests : IDisposable
     public void Load_JsonArray_SuccessfullyDeserializes()
     {
         // Arrange
-        var loader = new JsonAssetLoader<List<TestData>>(_mockLogger.Object);
+        var loader = new JsonAssetLoader<List<TestData>>(_mockListLogger.Object);
         var json = @"[
             {""id"": 1, ""name"": ""Test1"", ""value"": 10.0},
             {""id"": 2, ""name"": ""Test2"", ""value"": 20.0}
@@ -150,7 +154,7 @@ public class JsonAssetLoaderTests : IDisposable
     public void Load_NestedObjects_SuccessfullyDeserializes()
     {
         // Arrange
-        var loader = new JsonAssetLoader<NestedTestData>(_mockLogger.Object);
+        var loader = new JsonAssetLoader<NestedTestData>(_mockNestedLogger.Object);
         var json = @"{
             ""id"": 1,
             ""nested"": {
@@ -297,7 +301,7 @@ public class JsonAssetLoaderTests : IDisposable
     public void Load_TypeMismatch_ThrowsAssetLoadException()
     {
         // Arrange
-        var loader = new JsonAssetLoader<List<TestData>>(_mockLogger.Object);
+        var loader = new JsonAssetLoader<List<TestData>>(_mockListLogger.Object);
         var json = @"{""id"": 1, ""name"": ""Test""}"; // Object instead of array
         var jsonPath = CreateTestFile("type_mismatch.json", json);
 
@@ -327,7 +331,7 @@ public class JsonAssetLoaderTests : IDisposable
     {
         // Arrange
         var streamingThreshold = 100; // Low threshold to trigger streaming
-        var loader = new JsonAssetLoader<List<TestData>>(_mockLogger.Object, streamingThreshold);
+        var loader = new JsonAssetLoader<List<TestData>>(_mockListLogger.Object, streamingThreshold);
 
         // Create a JSON file larger than threshold
         var largeData = new List<TestData>();

@@ -22,6 +22,10 @@ namespace PokeNET.Tests.Audio
         private readonly Mock<IAudioCache> _mockCache;
         private readonly Mock<IMusicPlayer> _mockMusicPlayer;
         private readonly Mock<ISoundEffectPlayer> _mockSfxPlayer;
+        private readonly Mock<IAudioVolumeManager> _mockVolumeManager;
+        private readonly Mock<IAudioStateManager> _mockStateManager;
+        private readonly Mock<IAudioCacheCoordinator> _mockCacheCoordinator;
+        private readonly Mock<IAmbientAudioManager> _mockAmbientManager;
         private AudioManager? _audioManager;
 
         public AudioManagerTests()
@@ -30,6 +34,18 @@ namespace PokeNET.Tests.Audio
             _mockCache = new Mock<IAudioCache>();
             _mockMusicPlayer = new Mock<IMusicPlayer>();
             _mockSfxPlayer = new Mock<ISoundEffectPlayer>();
+            _mockVolumeManager = new Mock<IAudioVolumeManager>();
+            _mockStateManager = new Mock<IAudioStateManager>();
+            _mockCacheCoordinator = new Mock<IAudioCacheCoordinator>();
+            _mockAmbientManager = new Mock<IAmbientAudioManager>();
+
+            // Setup default mock behaviors
+            _mockStateManager.Setup(s => s.IsInitialized).Returns(true);
+            _mockVolumeManager.Setup(v => v.MasterVolume).Returns(1.0f);
+            _mockVolumeManager.Setup(v => v.MusicVolume).Returns(1.0f);
+            _mockVolumeManager.Setup(v => v.SfxVolume).Returns(1.0f);
+            _mockStateManager.Setup(s => s.CurrentMusicTrack).Returns(string.Empty);
+            _mockCacheCoordinator.Setup(c => c.GetSize()).Returns(0);
         }
 
         private AudioManager CreateAudioManager()
@@ -38,7 +54,11 @@ namespace PokeNET.Tests.Audio
                 _mockLogger.Object,
                 _mockCache.Object,
                 _mockMusicPlayer.Object,
-                _mockSfxPlayer.Object
+                _mockSfxPlayer.Object,
+                _mockVolumeManager.Object,
+                _mockStateManager.Object,
+                _mockCacheCoordinator.Object,
+                _mockAmbientManager.Object
             );
         }
 
@@ -63,7 +83,11 @@ namespace PokeNET.Tests.Audio
                 null!,
                 _mockCache.Object,
                 _mockMusicPlayer.Object,
-                _mockSfxPlayer.Object
+                _mockSfxPlayer.Object,
+                _mockVolumeManager.Object,
+                _mockStateManager.Object,
+                _mockCacheCoordinator.Object,
+                _mockAmbientManager.Object
             );
 
             // Assert
@@ -223,15 +247,14 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var audioFile = "sfx/powerup.wav";
-            var audioData = new SoundEffect { FilePath = audioFile };
-            _mockCache.Setup(c => c.PreloadAsync(audioFile, audioData))
+            _mockCacheCoordinator.Setup(c => c.PreloadAsync(audioFile, It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             // Act
             await _audioManager.PreloadAudioAsync(audioFile);
 
             // Assert
-            _mockCache.Verify(c => c.PreloadAsync(audioFile, It.IsAny<object>()), Times.Once);
+            _mockCacheCoordinator.Verify(c => c.PreloadAsync(audioFile, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -240,17 +263,14 @@ namespace PokeNET.Tests.Audio
             // Arrange
             _audioManager = CreateAudioManager();
             var audioFiles = new[] { "sfx/jump.wav", "sfx/hit.wav", "music/battle.mid" };
-            _mockCache.Setup(c => c.PreloadAsync(It.IsAny<string>(), It.IsAny<object>()))
+            _mockCacheCoordinator.Setup(c => c.PreloadMultipleAsync(It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             // Act
             await _audioManager.PreloadMultipleAsync(audioFiles);
 
             // Assert
-            foreach (var file in audioFiles)
-            {
-                _mockCache.Verify(c => c.PreloadAsync(file, It.IsAny<object>()), Times.Once);
-            }
+            _mockCacheCoordinator.Verify(c => c.PreloadMultipleAsync(audioFiles, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -258,12 +278,14 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockCacheCoordinator.Setup(c => c.ClearAsync())
+                .Returns(Task.CompletedTask);
 
             // Act
             await _audioManager.ClearCacheAsync();
 
             // Assert
-            _mockCache.Verify(c => c.ClearAsync(), Times.Once);
+            _mockCacheCoordinator.Verify(c => c.ClearAsync(), Times.Once);
         }
 
         [Fact]
@@ -271,7 +293,7 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
-            _mockCache.Setup(c => c.GetSize()).Returns(1024 * 1024); // 1MB
+            _mockCacheCoordinator.Setup(c => c.GetSize()).Returns(1024 * 1024); // 1MB
 
             // Act
             var size = _audioManager.GetCacheSize();
@@ -289,12 +311,13 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockVolumeManager.Setup(v => v.MasterVolume).Returns(0.7f);
 
             // Act
             _audioManager.SetMasterVolume(0.7f);
 
             // Assert
-            _audioManager.MasterVolume.Should().Be(0.7f);
+            _mockVolumeManager.Verify(v => v.SetMasterVolume(0.7f), Times.Once);
         }
 
         [Fact]
@@ -302,12 +325,14 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockVolumeManager.Setup(v => v.MasterVolume).Returns(1.0f);
 
             // Act
             _audioManager.SetMasterVolume(1.5f);
 
             // Assert
-            _audioManager.MasterVolume.Should().Be(1.0f);
+            // Volume manager is responsible for clamping
+            _mockVolumeManager.Verify(v => v.SetMasterVolume(1.5f), Times.Once);
         }
 
         [Fact]
@@ -315,12 +340,14 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockVolumeManager.Setup(v => v.MasterVolume).Returns(0.0f);
 
             // Act
             _audioManager.SetMasterVolume(-0.5f);
 
             // Assert
-            _audioManager.MasterVolume.Should().Be(0.0f);
+            // Volume manager is responsible for clamping
+            _mockVolumeManager.Verify(v => v.SetMasterVolume(-0.5f), Times.Once);
         }
 
         [Fact]
@@ -328,13 +355,13 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockVolumeManager.Setup(v => v.MusicVolume).Returns(0.8f);
 
             // Act
             _audioManager.SetMusicVolume(0.8f);
 
             // Assert
-            _audioManager.MusicVolume.Should().Be(0.8f);
-            _mockMusicPlayer.Verify(m => m.SetVolume(0.8f), Times.Once);
+            _mockVolumeManager.Verify(v => v.SetMusicVolume(0.8f), Times.Once);
         }
 
         [Fact]
@@ -342,13 +369,13 @@ namespace PokeNET.Tests.Audio
         {
             // Arrange
             _audioManager = CreateAudioManager();
+            _mockVolumeManager.Setup(v => v.SfxVolume).Returns(0.6f);
 
             // Act
             _audioManager.SetSfxVolume(0.6f);
 
             // Assert
-            _audioManager.SfxVolume.Should().Be(0.6f);
-            _mockSfxPlayer.Verify(s => s.SetMasterVolume(0.6f), Times.Once);
+            _mockVolumeManager.Verify(v => v.SetSfxVolume(0.6f), Times.Once);
         }
 
         #endregion

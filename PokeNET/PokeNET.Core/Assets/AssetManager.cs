@@ -65,6 +65,21 @@ public class AssetManager : IAssetManager
 
         // Clear cache when mod paths change as assets may resolve differently
         UnloadAll();
+
+        // Also dispose loaders if they implement IDisposable
+        // This prevents memory leaks when mod paths change multiple times
+        foreach (var loader in _loaders.Values.OfType<IDisposable>())
+        {
+            try
+            {
+                loader.Dispose();
+                _logger.LogDebug("Disposed asset loader");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing asset loader");
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -198,27 +213,105 @@ public class AssetManager : IAssetManager
     /// <returns>The resolved absolute path, or null if not found.</returns>
     private string? ResolvePath(string path)
     {
+        // SECURITY FIX VULN-011: Validate asset path before resolution
+        var validatedPath = ValidateAssetPath(path);
+
         // Check mod paths first (in order of priority)
         foreach (var modPath in _modPaths)
         {
-            var fullPath = Path.Combine(modPath, path);
-            if (File.Exists(fullPath))
+            var fullPath = Path.Combine(modPath, validatedPath);
+
+            // SECURITY: Double-check the resolved path stays within mod directory
+            try
             {
-                _logger.LogTrace("Resolved asset {Path} to mod path: {FullPath}", path, fullPath);
-                return fullPath;
+                var resolvedFullPath = Path.GetFullPath(fullPath);
+                var modFullPath = Path.GetFullPath(modPath);
+
+                if (!resolvedFullPath.StartsWith(modFullPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Asset path traversal blocked in mod path: {Path}", path);
+                    continue;
+                }
+
+                if (File.Exists(resolvedFullPath))
+                {
+                    _logger.LogTrace("Resolved asset {Path} to mod path: {FullPath}", path, resolvedFullPath);
+                    return resolvedFullPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resolving asset path in mod directory: {Path}", fullPath);
+                continue;
             }
         }
 
         // Fall back to base path
-        var basePath = Path.Combine(_basePath, path);
-        if (File.Exists(basePath))
+        var basePath = Path.Combine(_basePath, validatedPath);
+        try
         {
-            _logger.LogTrace("Resolved asset {Path} to base path: {BasePath}", path, basePath);
-            return basePath;
+            var resolvedBasePath = Path.GetFullPath(basePath);
+            var contentPath = Path.GetFullPath(_basePath);
+
+            // SECURITY: Ensure resolved path is within base content directory
+            if (!resolvedBasePath.StartsWith(contentPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Asset path traversal detected: {Path}", path);
+                throw new AssetLoadException(path, "Asset path traversal detected");
+            }
+
+            if (File.Exists(resolvedBasePath))
+            {
+                _logger.LogTrace("Resolved asset {Path} to base path: {BasePath}", path, resolvedBasePath);
+                return resolvedBasePath;
+            }
+        }
+        catch (AssetLoadException)
+        {
+            throw; // Re-throw security exceptions
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resolving asset path in base directory: {Path}", basePath);
         }
 
         _logger.LogWarning("Asset not found in any search path: {Path}", path);
         return null;
+    }
+
+    /// <summary>
+    /// SECURITY: Validates asset path to prevent directory traversal attacks
+    /// </summary>
+    private string ValidateAssetPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new AssetLoadException(path, "Asset path cannot be null or empty");
+        }
+
+        // Check for path traversal patterns
+        if (path.Contains(".."))
+        {
+            throw new AssetLoadException(path, "Asset path contains directory traversal sequence (..)");
+        }
+
+        // Check for absolute paths
+        if (Path.IsPathRooted(path))
+        {
+            throw new AssetLoadException(path, "Asset path must be relative, not absolute");
+        }
+
+        // Normalize path separators
+        var normalizedPath = path.Replace('\\', Path.DirectorySeparatorChar)
+                                .Replace('/', Path.DirectorySeparatorChar);
+
+        // Additional validation - ensure path doesn't start with separator
+        if (normalizedPath.StartsWith(Path.DirectorySeparatorChar))
+        {
+            normalizedPath = normalizedPath.TrimStart(Path.DirectorySeparatorChar);
+        }
+
+        return normalizedPath;
     }
 
     /// <inheritdoc/>
@@ -229,8 +322,22 @@ public class AssetManager : IAssetManager
 
         _logger.LogInformation("Disposing AssetManager");
         UnloadAll();
-        _disposed = true;
 
+        // Dispose all loaders
+        foreach (var loader in _loaders.Values.OfType<IDisposable>())
+        {
+            try
+            {
+                loader.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing asset loader during AssetManager disposal");
+            }
+        }
+        _loaders.Clear();
+
+        _disposed = true;
         GC.SuppressFinalize(this);
     }
 }

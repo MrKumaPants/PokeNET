@@ -1,150 +1,49 @@
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
-/// Represents the metadata and configuration for a mod, parsed from modinfo.json.
+/// Complete mod manifest interface combining all capabilities (ISP-compliant).
 /// </summary>
 /// <remarks>
-/// This interface provides read-only access to mod metadata. The manifest is
-/// loaded and validated before mod initialization.
+/// <para>
+/// This interface inherits from all focused interfaces, providing backwards compatibility
+/// while following the Interface Segregation Principle (ISP). Components should depend
+/// on the specific interfaces they need rather than this combined interface:
+/// </para>
+/// <list type="bullet">
+/// <item><description><see cref="IModManifestCore"/> - Core identity (Id, Name, Version, ApiVersion)</description></item>
+/// <item><description><see cref="IModMetadata"/> - Descriptive metadata (Author, Description, Tags, etc.)</description></item>
+/// <item><description><see cref="IModDependencies"/> - Dependency and load order management</description></item>
+/// <item><description><see cref="ICodeMod"/> - Code execution and assembly loading</description></item>
+/// <item><description><see cref="IContentMod"/> - Asset and content management</description></item>
+/// <item><description><see cref="IModSecurity"/> - Security and trust verification</description></item>
+/// </list>
+/// <para>
+/// The manifest is loaded and validated before mod initialization.
+/// </para>
 /// </remarks>
-public interface IModManifest
+/// <example>
+/// Prefer focused interfaces for better ISP compliance:
+/// <code>
+/// // ❌ Bad: Depends on entire interface when only needing core properties
+/// void DisplayModInfo(IModManifest manifest) { ... }
+///
+/// // ✅ Good: Depends only on what's needed
+/// void DisplayModInfo(IModManifestCore core, IModMetadata metadata) { ... }
+/// void ResolveLoadOrder(IEnumerable&lt;IModDependencies&gt; mods) { ... }
+/// void LoadCodeMod(IModManifestCore core, ICodeMod codeMod) { ... }
+/// </code>
+/// </example>
+public interface IModManifest : IModManifestCore, IModMetadata, IModDependencies, ICodeMod, IContentMod, IModSecurity
 {
-    /// <summary>
-    /// Unique identifier for the mod (e.g., "com.example.mymod").
-    /// </summary>
-    /// <remarks>
-    /// This should follow reverse domain notation and be lowercase.
-    /// It is used for dependency resolution and as the default Harmony instance ID.
-    /// </remarks>
-    string Id { get; }
-
-    /// <summary>
-    /// Human-readable name of the mod.
-    /// </summary>
-    string Name { get; }
-
-    /// <summary>
-    /// Mod version following semantic versioning (e.g., "1.2.3").
-    /// </summary>
-    ModVersion Version { get; }
-
-    /// <summary>
-    /// Required PokeNET.ModApi version (supports version ranges like "^1.0.0").
-    /// </summary>
-    string ApiVersion { get; }
-
-    /// <summary>
-    /// Author name or organization.
-    /// </summary>
-    string? Author { get; }
-
-    /// <summary>
-    /// Brief description of mod functionality.
-    /// </summary>
-    string? Description { get; }
-
-    /// <summary>
-    /// URL to mod's homepage or repository.
-    /// </summary>
-    Uri? Homepage { get; }
-
-    /// <summary>
-    /// SPDX license identifier (e.g., "MIT", "GPL-3.0").
-    /// </summary>
-    string? License { get; }
-
-    /// <summary>
-    /// Tags for categorizing the mod (e.g., "creatures", "balance", "ui").
-    /// </summary>
-    IReadOnlyList<string> Tags { get; }
-
-    /// <summary>
-    /// Required mods that must be loaded before this mod.
-    /// </summary>
-    IReadOnlyList<ModDependency> Dependencies { get; }
-
-    /// <summary>
-    /// Mods that should be loaded before this mod (soft dependency).
-    /// </summary>
-    /// <remarks>
-    /// If the specified mods are present, they will be loaded before this mod.
-    /// If they are not present, the mod will still load.
-    /// </remarks>
-    IReadOnlyList<string> LoadAfter { get; }
-
-    /// <summary>
-    /// Mods that should be loaded after this mod.
-    /// </summary>
-    IReadOnlyList<string> LoadBefore { get; }
-
-    /// <summary>
-    /// Mods that cannot be loaded together with this mod.
-    /// </summary>
-    IReadOnlyList<ModIncompatibility> IncompatibleWith { get; }
-
-    /// <summary>
-    /// Primary type of mod (data, content, code, or hybrid).
-    /// </summary>
-    ModType ModType { get; }
-
-    /// <summary>
-    /// Fully qualified name of the mod's entry class (for code mods).
-    /// </summary>
-    /// <remarks>
-    /// Must be a class that implements <see cref="IMod"/>.
-    /// Example: "MyMod.ModEntry"
-    /// </remarks>
-    string? EntryPoint { get; }
-
-    /// <summary>
-    /// Additional assemblies to load (for code mods).
-    /// </summary>
-    IReadOnlyList<string> Assemblies { get; }
-
-    /// <summary>
-    /// Custom Harmony instance ID (defaults to mod ID if not specified).
-    /// </summary>
-    string? HarmonyId { get; }
-
-    /// <summary>
-    /// Custom asset directory mappings.
-    /// </summary>
-    AssetPathConfiguration AssetPaths { get; }
-
-    /// <summary>
-    /// Assets to preload during mod initialization.
-    /// </summary>
-    IReadOnlyList<string> Preload { get; }
-
-    /// <summary>
-    /// Security trust level for the mod.
-    /// </summary>
-    ModTrustLevel TrustLevel { get; }
-
-    /// <summary>
-    /// SHA256 checksum of mod assembly (for verification).
-    /// </summary>
-    string? Checksum { get; }
-
-    /// <summary>
-    /// Age-appropriate content rating.
-    /// </summary>
-    ContentRating ContentRating { get; }
-
-    /// <summary>
-    /// Localization support information.
-    /// </summary>
-    LocalizationConfiguration? Localization { get; }
-
     /// <summary>
     /// Directory path where the mod is located.
     /// </summary>
+    /// <remarks>
+    /// This is a runtime property set by the ModLoader and is not part of the
+    /// serialized manifest file. It provides the absolute path to the mod's directory
+    /// for loading assets and additional files.
+    /// </remarks>
     string Directory { get; }
-
-    /// <summary>
-    /// Additional custom metadata (mod-specific).
-    /// </summary>
-    IReadOnlyDictionary<string, object> Metadata { get; }
 }
 
 /// <summary>

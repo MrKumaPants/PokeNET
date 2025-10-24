@@ -284,7 +284,6 @@ public class EventBusTests : IDisposable
     public void Publish_HandlerThrowsException_LogsErrorAndContinues()
     {
         // Arrange
-        var handler1Called = false;
         var handler2Called = false;
         var exception = new InvalidOperationException("Handler error");
 
@@ -376,7 +375,7 @@ public class EventBusTests : IDisposable
     }
 
     [Fact]
-    public void SubscribeAndPublish_ConcurrentOperations_MaintainsConsistency()
+    public async Task SubscribeAndPublish_ConcurrentOperations_MaintainsConsistency()
     {
         // Arrange
         var totalCalls = 0;
@@ -401,7 +400,7 @@ public class EventBusTests : IDisposable
             }));
         }
 
-        Task.WaitAll(subscriberTasks.Concat(publisherTasks).ToArray());
+        await Task.WhenAll(subscriberTasks.Concat(publisherTasks).ToArray());
 
         // Assert - Should complete without deadlocks or exceptions
         totalCalls.Should().BeGreaterThan(0);
@@ -430,7 +429,7 @@ public class EventBusTests : IDisposable
     }
 
     [Fact]
-    public void Clear_ConcurrentWithPublish_HandlesGracefully()
+    public async Task Clear_ConcurrentWithPublish_HandlesGracefully()
     {
         // Arrange
         var callCount = 0;
@@ -453,7 +452,7 @@ public class EventBusTests : IDisposable
             _eventBus.Clear();
         });
 
-        Task.WaitAll(publishTask, clearTask);
+        await Task.WhenAll(publishTask, clearTask);
 
         // Assert - Should complete without deadlocks
         callCount.Should().BeGreaterThan(0);

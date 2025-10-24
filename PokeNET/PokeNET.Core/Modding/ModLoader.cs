@@ -58,6 +58,24 @@ public sealed class ModLoader : IModLoader
 
         foreach (var modDir in modDirectories)
         {
+            // SECURITY FIX VULN-006: Validate mod directory is within ModsDirectory
+            try
+            {
+                var fullModDir = Path.GetFullPath(modDir);
+                var fullModsDir = Path.GetFullPath(ModsDirectory);
+
+                if (!fullModDir.StartsWith(fullModsDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Skipping directory outside mod path: {Directory}", modDir);
+                    continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating mod directory: {Directory}", modDir);
+                continue;
+            }
+
             var manifestPath = Path.Combine(modDir, "modinfo.json");
             if (!File.Exists(manifestPath))
             {
@@ -125,17 +143,21 @@ public sealed class ModLoader : IModLoader
 
     private void LoadMod(ModManifest manifest)
     {
-        var modDir = Path.Combine(ModsDirectory, manifest.Id);
+        // SECURITY FIX VULN-006: Sanitize and validate mod path to prevent directory traversal
+        var modDir = SanitizeModPath(manifest.Id, ModsDirectory);
         var assemblyPath = Path.Combine(modDir, manifest.GetAssemblyFileName());
 
-        if (!File.Exists(assemblyPath))
+        // Additional validation for assembly path
+        var sanitizedAssemblyPath = ValidateModFilePath(assemblyPath, modDir);
+
+        if (!File.Exists(sanitizedAssemblyPath))
         {
             throw new ModLoadException(manifest.Id,
-                $"Assembly not found: {assemblyPath}");
+                $"Assembly not found: {sanitizedAssemblyPath}");
         }
 
-        _logger.LogDebug("Loading assembly: {Path}", assemblyPath);
-        var assembly = Assembly.LoadFrom(assemblyPath);
+        _logger.LogDebug("Loading assembly: {Path}", sanitizedAssemblyPath);
+        var assembly = Assembly.LoadFrom(sanitizedAssemblyPath);
 
         // Find the IMod implementation
         var modType = assembly.GetTypes()
@@ -162,8 +184,8 @@ public sealed class ModLoader : IModLoader
         _logger.LogInformation("Initializing mod: {Name} ({Id}) v{Version}",
             manifest.Name, manifest.Id, manifest.Version);
 
-        // Initialize the mod asynchronously
-        modInstance.InitializeAsync(context, CancellationToken.None).GetAwaiter().GetResult();
+        // Initialize the mod asynchronously with ConfigureAwait to prevent deadlocks
+        modInstance.InitializeAsync(context, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
         var loadedMod = new LoadedMod(manifest, modInstance, context, assembly);
         _loadedMods.Add(loadedMod);
@@ -183,7 +205,7 @@ public sealed class ModLoader : IModLoader
             try
             {
                 _logger.LogDebug("Unloading mod: {Id}", mod.Manifest.Id);
-                mod.Instance.ShutdownAsync(CancellationToken.None).GetAwaiter().GetResult();
+                mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -211,15 +233,20 @@ public sealed class ModLoader : IModLoader
     {
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             DiscoverMods();
+
+            cancellationToken.ThrowIfCancellationRequested();
             LoadMods();
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ReloadModAsync(string modId, CancellationToken cancellationToken = default)
     {
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
             if (mod == null)
             {
@@ -228,19 +255,23 @@ public sealed class ModLoader : IModLoader
 
             // Unload the mod
             _logger.LogInformation("Reloading mod: {ModId}", modId);
-            mod.Instance.ShutdownAsync(CancellationToken.None).GetAwaiter().GetResult();
+            mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
             _loadedMods.Remove(mod);
             _modInstances.Remove(modId);
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Reload it
             LoadMod(mod.Manifest);
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task UnloadModAsync(string modId, CancellationToken cancellationToken = default)
     {
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
             if (mod == null)
             {
@@ -248,10 +279,10 @@ public sealed class ModLoader : IModLoader
             }
 
             _logger.LogInformation("Unloading mod: {ModId}", modId);
-            mod.Instance.ShutdownAsync(CancellationToken.None).GetAwaiter().GetResult();
+            mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
             _loadedMods.Remove(mod);
             _modInstances.Remove(modId);
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     public IReadOnlyList<string> GetLoadOrder()
@@ -483,12 +514,126 @@ public sealed class ModLoader : IModLoader
         // Check for circular dependencies
         if (result.Count != mods.Count)
         {
-            var unresolved = mods.Where(m => !result.Contains(m)).Select(m => m.Id);
+            var unresolved = mods.Where(m => !result.Contains(m)).ToList();
+            var unresolvedIds = unresolved.Select(m => m.Id).ToList();
+
+            // Try to detect the actual circular dependency chain
+            var cycles = DetectDependencyCycles(unresolved, modMap, adjacency);
+
             throw new ModLoadException(
-                $"Circular dependency detected among mods: {string.Join(", ", unresolved)}");
+                $"Circular dependency detected: {cycles}. Unresolved mods: {string.Join(", ", unresolvedIds)}");
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Detects and reports the actual circular dependency chain for better error messages.
+    /// </summary>
+    private string DetectDependencyCycles(
+        List<ModManifest> unresolved,
+        Dictionary<string, ModManifest> modMap,
+        Dictionary<string, List<string>> adjacency)
+    {
+        // Use depth-first search to find cycles
+        var visited = new HashSet<string>();
+        var recursionStack = new HashSet<string>();
+        var cyclePath = new List<string>();
+
+        foreach (var mod in unresolved)
+        {
+            if (FindCycle(mod.Id, visited, recursionStack, cyclePath, adjacency))
+            {
+                // Found a cycle, return the chain
+                return string.Join(" -> ", cyclePath) + " -> " + cyclePath[0];
+            }
+        }
+
+        // No specific cycle found, return generic message
+        return "Unable to determine exact cycle path";
+    }
+
+    private bool FindCycle(
+        string modId,
+        HashSet<string> visited,
+        HashSet<string> recursionStack,
+        List<string> path,
+        Dictionary<string, List<string>> adjacency)
+    {
+        if (recursionStack.Contains(modId))
+        {
+            // Found a cycle, build the path
+            path.Add(modId);
+            return true;
+        }
+
+        if (visited.Contains(modId))
+        {
+            return false;
+        }
+
+        visited.Add(modId);
+        recursionStack.Add(modId);
+        path.Add(modId);
+
+        if (adjacency.TryGetValue(modId, out var dependencies))
+        {
+            foreach (var dep in dependencies)
+            {
+                if (FindCycle(dep, visited, recursionStack, path, adjacency))
+                {
+                    return true;
+                }
+            }
+        }
+
+        path.RemoveAt(path.Count - 1);
+        recursionStack.Remove(modId);
+        return false;
+    }
+
+    /// <summary>
+    /// SECURITY: Sanitizes mod path to prevent directory traversal attacks
+    /// </summary>
+    private static string SanitizeModPath(string modId, string modsDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(modId))
+        {
+            throw new System.Security.SecurityException("Mod ID cannot be null or empty");
+        }
+
+        // Remove any path traversal characters
+        if (modId.Contains("..") || modId.Contains('/') || modId.Contains('\\'))
+        {
+            throw new System.Security.SecurityException($"Mod path traversal detected in ID: {modId}");
+        }
+
+        var modPath = Path.Combine(modsDirectory, modId);
+        var fullPath = Path.GetFullPath(modPath);
+        var modsFullPath = Path.GetFullPath(modsDirectory);
+
+        if (!fullPath.StartsWith(modsFullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new System.Security.SecurityException($"Mod path traversal detected: {modId}");
+        }
+
+        return fullPath;
+    }
+
+    /// <summary>
+    /// SECURITY: Validates that a mod file path is within the mod's directory
+    /// </summary>
+    private static string ValidateModFilePath(string filePath, string modDirectory)
+    {
+        var fullPath = Path.GetFullPath(filePath);
+        var modFullPath = Path.GetFullPath(modDirectory);
+
+        if (!fullPath.StartsWith(modFullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new System.Security.SecurityException($"File path traversal detected: {filePath}");
+        }
+
+        return fullPath;
     }
 
     private sealed record LoadedMod(

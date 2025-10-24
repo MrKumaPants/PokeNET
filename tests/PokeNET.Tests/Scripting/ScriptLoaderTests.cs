@@ -294,7 +294,7 @@ Console.WriteLine(""Hello, World!"");
         Assert.Equal(2, metadata.Dependencies.Count);
         Assert.Contains("dep1", metadata.Dependencies);
         Assert.Contains("dep2", metadata.Dependencies);
-        Assert.Equal(2, metadata.Permissions.Count);
+        Assert.Equal(2, metadata.RequiredPermissions.Count);
         Assert.Equal(sourceCode, loadedCode);
     }
 
@@ -341,7 +341,7 @@ Console.WriteLine();
         var (metadata, _) = await _loader.LoadScriptAsync(scriptPath);
 
         // Assert
-        Assert.False(metadata.Enabled);
+        Assert.False(metadata.IsEnabled);
     }
 
     [Fact]
@@ -358,7 +358,7 @@ Console.WriteLine();
         var (metadata, _) = await _loader.LoadScriptAsync(scriptPath);
 
         // Assert
-        Assert.Equal(4, metadata.Permissions.Count);
+        Assert.Equal(4, metadata.RequiredPermissions.Count);
     }
 
     #endregion
@@ -489,7 +489,7 @@ Console.WriteLine();
     {
         CreateTestScript("perms.csx", "// @permissions: read, write, execute\nConsole.WriteLine();");
         var scripts = _loader.DiscoverScripts(_testDirectory);
-        Assert.Equal(3, scripts[0].Permissions.Count);
+        Assert.Equal(3, scripts[0].RequiredPermissions.Count);
     }
 
     [Fact]
@@ -604,7 +604,7 @@ Console.WriteLine();
     }
 
     [Fact]
-    public void DiscoverScripts_ConcurrentDiscovery_HandlesCorrectly()
+    public async Task DiscoverScripts_ConcurrentDiscovery_HandlesCorrectly()
     {
         // Arrange
         for (int i = 0; i < 20; i++)
@@ -617,7 +617,7 @@ Console.WriteLine();
             .Select(_ => Task.Run(() => _loader.DiscoverScripts(_testDirectory)))
             .ToArray();
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         // Assert - all should find the same scripts
         var results = tasks.Select(t => t.Result).ToArray();

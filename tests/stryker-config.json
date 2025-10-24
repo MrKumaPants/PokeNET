@@ -1,0 +1,40 @@
+{
+  "stryker-config": {
+    "project": "PokeNET.Tests.csproj",
+    "test-projects": ["PokeNET.Tests.csproj"],
+    "mutate": [
+      "!**/obj/**/*.cs",
+      "!**/bin/**/*.cs",
+      "!**/*Tests.cs",
+      "!**/Program.cs",
+      "**/PokeNET.Audio/Services/*.cs",
+      "**/PokeNET.Audio/Mixing/*.cs",
+      "**/PokeNET.Core/ECS/**/*.cs",
+      "**/PokeNET.Core/Modding/**/*.cs",
+      "**/PokeNET.Core/Assets/**/*.cs"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 60
+    },
+    "reporters": [
+      "html",
+      "progress",
+      "cleartext",
+      "json"
+    ],
+    "concurrency": 4,
+    "log-level": "info",
+    "timeout-ms": 10000,
+    "disable-bail": false,
+    "ignore-methods": [
+      "*Dispose",
+      "*ToString",
+      "*GetHashCode",
+      "*Equals"
+    ],
+    "mutation-level": "complete",
+    "break-on-initial-test-failure": true
+  }
+}

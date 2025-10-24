@@ -11,7 +11,18 @@ namespace PokeNET.Domain.ECS.Systems;
 public abstract class SystemBase : ISystem
 {
     protected readonly ILogger Logger;
-    protected World World = null!;
+    private World? _world;
+
+    /// <summary>
+    /// Gets the world associated with this system.
+    /// Throws InvalidOperationException if accessed before Initialize() is called.
+    /// </summary>
+    protected World World
+    {
+        get => _world ?? throw new InvalidOperationException(
+            $"System '{GetType().Name}' not initialized. Call Initialize() before accessing World.");
+        private set => _world = value;
+    }
 
     /// <inheritdoc/>
     public virtual int Priority => 0;
@@ -25,12 +36,13 @@ public abstract class SystemBase : ISystem
     /// <param name="logger">Logger instance for this system.</param>
     protected SystemBase(ILogger logger)
     {
-        Logger = logger;
+        Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
     public virtual void Initialize(World world)
     {
+        ArgumentNullException.ThrowIfNull(world);
         World = world;
         Logger.LogInformation("System {SystemName} initialized", GetType().Name);
         OnInitialize();

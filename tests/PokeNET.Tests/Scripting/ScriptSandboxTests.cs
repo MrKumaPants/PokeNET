@@ -220,8 +220,16 @@ public class Script
     public async Task ExecuteAsync_ExceedsTimeout_Terminates()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -248,8 +256,16 @@ public class Script
     public async Task ExecuteAsync_InfiniteLoop_Terminates()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -278,8 +294,16 @@ public class Script
     public async Task ExecuteAsync_CPUBomb_Terminates()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -309,8 +333,16 @@ public class Script
     public async Task ExecuteAsync_NestedLoops_Terminates()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -340,8 +372,16 @@ public class Script
     public async Task ExecuteAsync_TimeoutBypass_StillTerminates()
     {
         // Arrange - attempt to bypass cancellation token
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -382,8 +422,16 @@ public class Script
     public async Task ExecuteAsync_ExceedsMemoryLimit_DetectsViolation()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxMemoryBytes = 10 * 1024 * 1024; // 10MB limit
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(5))
+            .WithMaxMemory(10 * 1024 * 1024) // 10MB limit
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -409,9 +457,16 @@ public class Script
     public async Task ExecuteAsync_MemoryBomb_DetectsExcessiveAllocation()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxMemoryBytes = 10 * 1024 * 1024; // 10MB limit
-        permissions.MaxExecutionTime = TimeSpan.FromSeconds(2);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(2))
+            .WithMaxMemory(10 * 1024 * 1024) // 10MB limit
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -440,9 +495,16 @@ public class Script
     public async Task ExecuteAsync_GCEvasion_StillDetected()
     {
         // Arrange - attempt to evade GC by holding references
-        var permissions = CreateBasicPermissions();
-        permissions.MaxMemoryBytes = 10 * 1024 * 1024; // 10MB limit
-        permissions.MaxExecutionTime = TimeSpan.FromSeconds(2);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(2))
+            .WithMaxMemory(10 * 1024 * 1024) // 10MB limit
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -660,9 +722,16 @@ public class Script
     public async Task ExecuteAsync_ExcessiveAllocations_Handled()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxMemoryBytes = 50 * 1024 * 1024; // 50MB
-        permissions.MaxExecutionTime = TimeSpan.FromSeconds(3);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(3))
+            .WithMaxMemory(50 * 1024 * 1024) // 50MB
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -689,8 +758,16 @@ public class Script
     public async Task ExecuteAsync_StackOverflow_Caught()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromSeconds(2);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(2))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -718,9 +795,16 @@ public class Script
     public async Task ExecuteAsync_StringConcatenationBomb_Handled()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxMemoryBytes = 20 * 1024 * 1024; // 20MB
-        permissions.MaxExecutionTime = TimeSpan.FromSeconds(3);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(3))
+            .WithMaxMemory(20 * 1024 * 1024) // 20MB
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var code = @"
 public class Script
@@ -848,8 +932,16 @@ public class Script
     public async Task ExecuteAsync_ConcurrentWithTimeout_HandlesCorrectly()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(500);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(500))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var fastCode = @"
 public class Script { public static int Execute() { return 42; } }
@@ -1036,8 +1128,16 @@ public class Script
     public async Task ExecuteAsync_AfterTimeout_RecoverCorrectly()
     {
         // Arrange
-        var permissions = CreateBasicPermissions();
-        permissions.MaxExecutionTime = TimeSpan.FromMilliseconds(200);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromMilliseconds(200))
+            .WithMaxMemory(100 * 1024 * 1024)
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
         using var sandbox = new ScriptSandbox(permissions);
         var slowCode = @"
 public class Script
@@ -1067,19 +1167,16 @@ public class Script
 
     private ScriptPermissions CreateBasicPermissions()
     {
-        var permissions = new ScriptPermissions("test-script")
-        {
-            MaxExecutionTime = TimeSpan.FromSeconds(5),
-            MaxMemoryBytes = 100 * 1024 * 1024, // 100MB
-            Level = ScriptPermissions.PermissionLevel.Basic
-        };
-
-        permissions.AllowNamespace("System");
-        permissions.AllowNamespace("System.Collections.Generic");
-        permissions.AllowNamespace("System.Linq");
-        permissions.AllowApi(ScriptPermissions.ApiCategory.Collections);
-
-        return permissions;
+        return ScriptPermissions.CreateBuilder()
+            .WithScriptId("test-script")
+            .WithTimeout(TimeSpan.FromSeconds(5))
+            .WithMaxMemory(100 * 1024 * 1024) // 100MB
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .AllowApi(ScriptPermissions.ApiCategory.Collections)
+            .Build();
     }
 
     #endregion

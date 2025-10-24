@@ -114,7 +114,7 @@ public class FileSystemSaveFileProvider : ISaveFileProvider
     }
 
     /// <inheritdoc/>
-    public async Task<bool> DeleteAsync(string slotId, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAsync(string slotId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(slotId))
             throw new ArgumentException("Slot ID cannot be null or empty", nameof(slotId));
@@ -125,7 +125,7 @@ public class FileSystemSaveFileProvider : ISaveFileProvider
         if (!File.Exists(saveFilePath))
         {
             _logger.LogWarning("Save file not found for deletion, slot {SlotId}", slotId);
-            return false;
+            return Task.FromResult(false);
         }
 
         try
@@ -142,7 +142,7 @@ public class FileSystemSaveFileProvider : ISaveFileProvider
             }
 
             _logger.LogInformation("Successfully deleted save file for slot {SlotId}", slotId);
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {

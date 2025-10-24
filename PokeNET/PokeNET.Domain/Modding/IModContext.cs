@@ -46,9 +46,44 @@ public interface IModContext
     IEntityApi Entities { get; }
 
     /// <summary>
-    /// Event API for subscribing to game events.
+    /// Gameplay-related events (game updates, location changes, items).
     /// </summary>
-    IEventApi Events { get; }
+    /// <remarks>
+    /// Follows Interface Segregation Principle - only exposes gameplay events.
+    /// </remarks>
+    IGameplayEvents GameplayEvents { get; }
+
+    /// <summary>
+    /// Battle system events (battle start/end, moves, damage, fainting).
+    /// </summary>
+    /// <remarks>
+    /// Follows Interface Segregation Principle - only exposes battle events.
+    /// </remarks>
+    IBattleEvents BattleEvents { get; }
+
+    /// <summary>
+    /// UI and input events (menu open/close, dialogs).
+    /// </summary>
+    /// <remarks>
+    /// Follows Interface Segregation Principle - only exposes UI events.
+    /// </remarks>
+    IUIEvents UIEvents { get; }
+
+    /// <summary>
+    /// Save/load events (saving, saved, loading, loaded).
+    /// </summary>
+    /// <remarks>
+    /// Follows Interface Segregation Principle - only exposes save events.
+    /// </remarks>
+    ISaveEvents SaveEvents { get; }
+
+    /// <summary>
+    /// Mod lifecycle events (all mods loaded, mod unloaded).
+    /// </summary>
+    /// <remarks>
+    /// Follows Interface Segregation Principle - only exposes mod events.
+    /// </remarks>
+    IModEvents ModEvents { get; }
 
     /// <summary>
     /// Configuration API for reading mod configuration.

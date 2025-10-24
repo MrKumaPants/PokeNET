@@ -502,6 +502,109 @@ public class AudioMod : IMod
 }
 ```
 
+### Real-World Example: Event API Refactoring
+
+**Problem Identified (ISP Violation):**
+
+The original `IEventApi` forced all mods to depend on all event categories:
+
+```csharp
+// ❌ BAD: Monolithic interface
+public interface IModContext
+{
+    IEventApi Events { get; } // Exposes ALL event categories
+}
+
+public interface IEventApi
+{
+    IGameplayEvents Gameplay { get; }
+    IBattleEvents Battle { get; }
+    IUIEvents UI { get; }
+    ISaveEvents Save { get; }
+    IModEvents Mod { get; }
+}
+
+// Problem: UI-only mod depends on ALL events
+public class UIThemeMod : IMod
+{
+    public void Initialize(IModContext context)
+    {
+        // Only needs UI events...
+        context.Events.UI.OnMenuOpened += HandleMenu;
+
+        // ...but forced to depend on battle events too!
+        // This is unnecessary coupling
+    }
+}
+```
+
+**Solution (ISP Compliant):**
+
+Expose event categories independently through `IModContext`:
+
+```csharp
+// ✅ GOOD: Focused interfaces
+public interface IModContext
+{
+    // OLD (deprecated):
+    [Obsolete("Use specific event properties instead")]
+    IEventApi Events { get; }
+
+    // NEW (ISP-compliant):
+    IGameplayEvents GameplayEvents { get; }
+    IBattleEvents BattleEvents { get; }
+    IUIEvents UIEvents { get; }
+    ISaveEvents SaveEvents { get; }
+    IModEvents ModEvents { get; }
+}
+
+// UI-only mod now depends ONLY on UI events
+public class UIThemeMod : IMod
+{
+    public void Initialize(IModContext context)
+    {
+        // Clear dependency - only UI events needed
+        context.UIEvents.OnMenuOpened += HandleMenu;
+        context.UIEvents.OnDialogShown += HandleDialog;
+
+        // No unwanted dependencies on battle/gameplay events!
+    }
+}
+
+// Battle-only mod depends ONLY on battle events
+public class CombatLoggerMod : IMod
+{
+    public void Initialize(IModContext context)
+    {
+        // Clear dependency - only battle events needed
+        context.BattleEvents.OnBattleStart += LogBattleStart;
+        context.BattleEvents.OnDamageCalculated += LogDamage;
+
+        // No unwanted dependencies on UI/save events!
+    }
+}
+```
+
+**Benefits Achieved:**
+
+1. **Reduced Coupling**: UI mods don't depend on battle event definitions
+2. **Clear Dependencies**: Code explicitly shows which event domains are used
+3. **Better Modularity**: Event categories can evolve independently
+4. **Easier Testing**: Mock only the events you need
+5. **Backwards Compatible**: Old API still works (with deprecation warning)
+
+**Migration Path:**
+
+```csharp
+// Old code (still works but deprecated):
+context.Events.Battle.OnBattleStart += handler;
+
+// New code (ISP-compliant):
+context.BattleEvents.OnBattleStart += handler;
+```
+
+See [ADR-004](/docs/architecture/adrs/ADR-004-Event-API-ISP-Fix.md) and [Migration Guide](/docs/migration-guides/IEventApi-Migration-Guide.md) for full details.
+
 ### Benefits in PokeNET
 
 - **Flexibility**: Implement only what's needed

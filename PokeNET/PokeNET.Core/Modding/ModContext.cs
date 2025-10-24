@@ -18,7 +18,13 @@ public sealed class ModContext : IModContext
     public string ModDirectory { get; }
     public IAssetApi Assets { get; }
     public IEntityApi Entities { get; }
-    public IEventApi Events { get; }
+
+    public IGameplayEvents GameplayEvents { get; }
+    public IBattleEvents BattleEvents { get; }
+    public IUIEvents UIEvents { get; }
+    public ISaveEvents SaveEvents { get; }
+    public IModEvents ModEvents { get; }
+
     public IConfigurationApi Configuration { get; }
     public IModRegistry ModRegistry => _modRegistry.Value;
 
@@ -47,7 +53,14 @@ public sealed class ModContext : IModContext
         // These will be implemented in future phases
         Assets = new AssetApiStub();
         Entities = new EntityApiStub();
-        Events = new EventApiStub();
+
+        // Event API implementations (stubs for now)
+        GameplayEvents = new GameplayEventsStub();
+        BattleEvents = new BattleEventsStub();
+        UIEvents = new UIEventsStub();
+        SaveEvents = new SaveEventsStub();
+        ModEvents = new ModEventsStub();
+
         Configuration = new ConfigurationApiStub(modDirectory);
 
         _modRegistry = new Lazy<IModRegistry>(() => new ModRegistry(modLoader));
@@ -107,15 +120,7 @@ public sealed class ModContext : IModContext
         public IEnumerable<Entity> GetAllEntities() => Array.Empty<Entity>();
     }
 
-    private class EventApiStub : IEventApi
-    {
-        public IGameplayEvents Gameplay { get; } = new GameplayEventsStub();
-        public IBattleEvents Battle { get; } = new BattleEventsStub();
-        public IUIEvents UI { get; } = new UIEventsStub();
-        public ISaveEvents Save { get; } = new SaveEventsStub();
-        public IModEvents Mod { get; } = new ModEventsStub();
-
-        private class GameplayEventsStub : IGameplayEvents
+    private class GameplayEventsStub : IGameplayEvents
         {
             public event EventHandler<GameUpdateEventArgs>? OnUpdate;
             public event EventHandler<NewGameEventArgs>? OnNewGameStarted;
@@ -124,37 +129,36 @@ public sealed class ModContext : IModContext
             public event EventHandler<ItemUsedEventArgs>? OnItemUsed;
         }
 
-        private class BattleEventsStub : IBattleEvents
-        {
-            public event EventHandler<BattleStartEventArgs>? OnBattleStart;
-            public event EventHandler<BattleEndEventArgs>? OnBattleEnd;
-            public event EventHandler<TurnStartEventArgs>? OnTurnStart;
-            public event EventHandler<MoveUsedEventArgs>? OnMoveUsed;
-            public event EventHandler<DamageCalculatedEventArgs>? OnDamageCalculated;
-            public event EventHandler<CreatureFaintedEventArgs>? OnCreatureFainted;
-            public event EventHandler<CreatureCaughtEventArgs>? OnCreatureCaught;
-        }
+    private class BattleEventsStub : IBattleEvents
+    {
+        public event EventHandler<BattleStartEventArgs>? OnBattleStart;
+        public event EventHandler<BattleEndEventArgs>? OnBattleEnd;
+        public event EventHandler<TurnStartEventArgs>? OnTurnStart;
+        public event EventHandler<MoveUsedEventArgs>? OnMoveUsed;
+        public event EventHandler<DamageCalculatedEventArgs>? OnDamageCalculated;
+        public event EventHandler<CreatureFaintedEventArgs>? OnCreatureFainted;
+        public event EventHandler<CreatureCaughtEventArgs>? OnCreatureCaught;
+    }
 
-        private class UIEventsStub : IUIEvents
+    private class UIEventsStub : IUIEvents
         {
             public event EventHandler<MenuOpenedEventArgs>? OnMenuOpened;
             public event EventHandler<MenuClosedEventArgs>? OnMenuClosed;
             public event EventHandler<DialogShownEventArgs>? OnDialogShown;
         }
 
-        private class SaveEventsStub : ISaveEvents
-        {
-            public event EventHandler<SavingEventArgs>? OnSaving;
-            public event EventHandler<SavedEventArgs>? OnSaved;
-            public event EventHandler<LoadingEventArgs>? OnLoading;
-            public event EventHandler<LoadedEventArgs>? OnLoaded;
-        }
+    private class SaveEventsStub : ISaveEvents
+    {
+        public event EventHandler<SavingEventArgs>? OnSaving;
+        public event EventHandler<SavedEventArgs>? OnSaved;
+        public event EventHandler<LoadingEventArgs>? OnLoading;
+        public event EventHandler<LoadedEventArgs>? OnLoaded;
+    }
 
-        private class ModEventsStub : IModEvents
-        {
-            public event EventHandler<AllModsLoadedEventArgs>? OnAllModsLoaded;
-            public event EventHandler<ModUnloadedEventArgs>? OnModUnloaded;
-        }
+    private class ModEventsStub : IModEvents
+    {
+        public event EventHandler<AllModsLoadedEventArgs>? OnAllModsLoaded;
+        public event EventHandler<ModUnloadedEventArgs>? OnModUnloaded;
     }
 
     private class ConfigurationApiStub : IConfigurationApi

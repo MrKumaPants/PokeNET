@@ -7,8 +7,21 @@ namespace PokeNET.Core.Modding;
 /// <summary>
 /// Implementation of IModManifest for deserializing modinfo.json files.
 /// </summary>
+/// <remarks>
+/// Properties are organized by interface responsibility following ISP:
+/// - IModManifestCore: Core identity
+/// - IModMetadata: Descriptive metadata
+/// - IModDependencies: Load order management
+/// - ICodeMod: Code execution
+/// - IContentMod: Asset loading
+/// - IModSecurity: Trust and verification
+/// </remarks>
 public sealed class ModManifest : IModManifest
 {
+    // ============================================================================
+    // IModManifestCore: Core Identity Properties
+    // ============================================================================
+
     [JsonPropertyName("id")]
     public required string Id { get; init; }
 
@@ -21,6 +34,10 @@ public sealed class ModManifest : IModManifest
 
     [JsonPropertyName("apiVersion")]
     public string ApiVersion { get; init; } = "1.0.0";
+
+    // ============================================================================
+    // IModMetadata: Descriptive Metadata
+    // ============================================================================
 
     [JsonPropertyName("author")]
     public string? Author { get; init; }
@@ -37,6 +54,17 @@ public sealed class ModManifest : IModManifest
     [JsonPropertyName("tags")]
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
 
+    [JsonPropertyName("localization")]
+    public LocalizationConfiguration? Localization { get; init; }
+
+    [JsonPropertyName("metadata")]
+    public IReadOnlyDictionary<string, object> Metadata { get; init; } =
+        new Dictionary<string, object>();
+
+    // ============================================================================
+    // IModDependencies: Load Order Management
+    // ============================================================================
+
     [JsonPropertyName("dependencies")]
     public IReadOnlyList<ModDependency> Dependencies { get; init; } = Array.Empty<ModDependency>();
 
@@ -49,6 +77,10 @@ public sealed class ModManifest : IModManifest
     [JsonPropertyName("incompatibleWith")]
     public IReadOnlyList<ModIncompatibility> IncompatibleWith { get; init; } = Array.Empty<ModIncompatibility>();
 
+    // ============================================================================
+    // ICodeMod: Code Execution
+    // ============================================================================
+
     [JsonPropertyName("modType")]
     public ModType ModType { get; init; } = ModType.Code;
 
@@ -58,17 +90,28 @@ public sealed class ModManifest : IModManifest
     [JsonPropertyName("assemblies")]
     public IReadOnlyList<string> Assemblies { get; init; } = Array.Empty<string>();
 
-    [JsonPropertyName("assemblyName")]
-    public string? AssemblyName { get; init; }
-
     [JsonPropertyName("harmonyId")]
     public string? HarmonyId { get; init; }
+
+    /// <summary>
+    /// Internal property for assembly name (not part of public interfaces).
+    /// </summary>
+    [JsonPropertyName("assemblyName")]
+    internal string? AssemblyName { get; init; }
+
+    // ============================================================================
+    // IContentMod: Asset Loading
+    // ============================================================================
 
     [JsonPropertyName("assetPaths")]
     public AssetPathConfiguration AssetPaths { get; init; } = new();
 
     [JsonPropertyName("preload")]
     public IReadOnlyList<string> Preload { get; init; } = Array.Empty<string>();
+
+    // ============================================================================
+    // IModSecurity: Trust and Verification
+    // ============================================================================
 
     [JsonPropertyName("trustLevel")]
     public ModTrustLevel TrustLevel { get; init; } = ModTrustLevel.Untrusted;
@@ -79,15 +122,16 @@ public sealed class ModManifest : IModManifest
     [JsonPropertyName("contentRating")]
     public ContentRating ContentRating { get; init; } = ContentRating.Everyone;
 
-    [JsonPropertyName("localization")]
-    public LocalizationConfiguration? Localization { get; init; }
+    // ============================================================================
+    // IModManifest: Runtime Properties
+    // ============================================================================
 
     [JsonPropertyName("directory")]
     public string Directory { get; set; } = string.Empty;
 
-    [JsonPropertyName("metadata")]
-    public IReadOnlyDictionary<string, object> Metadata { get; init; } =
-        new Dictionary<string, object>();
+    // ============================================================================
+    // Helper Methods
+    // ============================================================================
 
     /// <summary>
     /// Gets the assembly file name to load for this mod.

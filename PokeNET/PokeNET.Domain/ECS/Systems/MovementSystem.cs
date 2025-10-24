@@ -3,39 +3,39 @@ using Arch.Core.Extensions;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.ECS.Components;
 using PokeNET.Domain.ECS.Events;
+using System.Numerics;
 
 namespace PokeNET.Domain.ECS.Systems;
 
 /// <summary>
-/// System responsible for updating entity positions based on velocity, acceleration, and constraints.
-/// Implements frame-rate independent movement with optional physics features.
+/// System responsible for Pokemon-style tile-based movement with smooth interpolation.
+/// Implements discrete tile-to-tile movement with collision detection and 8-directional support.
 ///
 /// Architecture:
-/// - Queries entities with Position + Velocity components
-/// - Optionally processes Acceleration, Friction, and MovementConstraint components
+/// - Queries entities with GridPosition + Direction + MovementState components
+/// - Checks collision with TileCollider before movement
+/// - Smoothly interpolates between tiles for animation
 /// - Emits MovementEvent for other systems to react to position changes
 ///
 /// Features:
-/// - Frame-rate independent (delta time based)
-/// - Maximum velocity clamping
-/// - Boundary constraints
-/// - Acceleration integration
-/// - Friction/damping
-/// - Movement event emission for collision detection and animations
+/// - 8-directional movement (cardinal + diagonal)
+/// - Tile-based collision detection
+/// - Smooth interpolation animation
+/// - Frame-rate independent
+/// - Support for different movement speeds (walk, run, surf, etc.)
 ///
 /// Performance:
 /// - Uses efficient Arch queries with component filtering
-/// - Processes entities in parallel-safe batches
+/// - Collision checks only against entities on target tile
 /// - Zero allocation for component updates
 /// </summary>
 public class MovementSystem : SystemBase
 {
     private readonly IEventBus? _eventBus;
     private QueryDescription _movementQuery;
-    private QueryDescription _acceleratedMovementQuery;
-    private QueryDescription _frictionMovementQuery;
-    private QueryDescription _constrainedMovementQuery;
+    private QueryDescription _colliderQuery;
     private int _entitiesProcessed;
+    private int _movementBlocked;
 
     /// <inheritdoc/>
     public override int Priority => 10; // Early in update cycle, before rendering
@@ -54,178 +54,153 @@ public class MovementSystem : SystemBase
     /// <inheritdoc/>
     protected override void OnInitialize()
     {
-        // Basic movement: Position + Velocity
+        // Grid movement: GridPosition + Direction + MovementState
         _movementQuery = new QueryDescription()
-            .WithAll<Position, Velocity>();
+            .WithAll<GridPosition, Direction, MovementState>();
 
-        // Accelerated movement: Position + Velocity + Acceleration
-        _acceleratedMovementQuery = new QueryDescription()
-            .WithAll<Position, Velocity, Acceleration>();
+        // Collision detection: GridPosition + TileCollider
+        _colliderQuery = new QueryDescription()
+            .WithAll<GridPosition, TileCollider>();
 
-        // Movement with friction: Position + Velocity + Friction
-        _frictionMovementQuery = new QueryDescription()
-            .WithAll<Position, Velocity, Friction>();
-
-        // Constrained movement: Position + Velocity + MovementConstraint
-        _constrainedMovementQuery = new QueryDescription()
-            .WithAll<Position, Velocity, MovementConstraint>();
-
-        Logger.LogInformation("MovementSystem initialized with event bus: {HasEventBus}", _eventBus != null);
+        Logger.LogInformation("MovementSystem initialized for Pokemon-style tile-based movement");
     }
 
     /// <inheritdoc/>
     protected override void OnUpdate(float deltaTime)
     {
         _entitiesProcessed = 0;
+        _movementBlocked = 0;
 
-        // Process acceleration first (affects velocity)
-        ProcessAcceleration(deltaTime);
+        // Process tile-to-tile movement with interpolation
+        ProcessGridMovement(deltaTime);
 
-        // Apply friction (affects velocity)
-        ProcessFriction(deltaTime);
-
-        // Apply velocity to position with constraints
-        ProcessConstrainedMovement(deltaTime);
-
-        // Apply basic movement to remaining entities
-        ProcessBasicMovement(deltaTime);
-
-        if (_entitiesProcessed > 0)
+        if (_entitiesProcessed > 0 || _movementBlocked > 0)
         {
-            Logger.LogDebug("MovementSystem processed {Count} entities in {Time:F4}s", _entitiesProcessed, deltaTime);
+            Logger.LogDebug("MovementSystem processed {Moved} entities, blocked {Blocked} movements",
+                _entitiesProcessed, _movementBlocked);
         }
     }
 
     /// <summary>
-    /// Applies acceleration to velocity.
-    /// Formula: velocity += acceleration * deltaTime
+    /// Processes grid-based movement with collision detection and smooth interpolation.
     /// </summary>
-    private void ProcessAcceleration(float deltaTime)
+    private void ProcessGridMovement(float deltaTime)
     {
-        World.Query(in _acceleratedMovementQuery, (ref Velocity velocity, ref Acceleration acceleration) =>
+        World.Query(in _movementQuery, (Entity entity, ref GridPosition gridPos, ref Direction direction, ref MovementState movementState) =>
         {
-            velocity.X += acceleration.X * deltaTime;
-            velocity.Y += acceleration.Y * deltaTime;
-        });
-    }
+            // Skip if movement is disabled
+            if (!movementState.CanMove)
+                return;
 
-    /// <summary>
-    /// Applies friction/damping to velocity.
-    /// Formula: velocity *= (1 - friction * deltaTime)
-    /// </summary>
-    private void ProcessFriction(float deltaTime)
-    {
-        World.Query(in _frictionMovementQuery, (ref Velocity velocity, ref Friction friction) =>
-        {
-            var dampingFactor = 1f - (friction.Coefficient * deltaTime);
-            dampingFactor = Math.Max(0f, dampingFactor); // Prevent negative
-
-            velocity.X *= dampingFactor;
-            velocity.Y *= dampingFactor;
-
-            // Stop very slow velocities to prevent floating point drift
-            const float minVelocity = 0.01f;
-            if (MathF.Abs(velocity.X) < minVelocity) velocity.X = 0f;
-            if (MathF.Abs(velocity.Y) < minVelocity) velocity.Y = 0f;
-        });
-    }
-
-    /// <summary>
-    /// Applies velocity to position with boundary and speed constraints.
-    /// </summary>
-    private void ProcessConstrainedMovement(float deltaTime)
-    {
-        World.Query(in _constrainedMovementQuery, (Entity entity, ref Position position, ref Velocity velocity, ref MovementConstraint constraint) =>
-        {
-            var oldX = position.X;
-            var oldY = position.Y;
-            var wasConstrained = false;
-
-            // Apply velocity clamping if specified
-            if (constraint.HasVelocityLimit)
+            // If not moving, check if we should start moving based on direction
+            if (!gridPos.IsMoving && direction != Direction.None)
             {
-                var speed = velocity.Magnitude;
-                if (speed > constraint.MaxVelocity!.Value)
+                // Calculate target tile based on direction
+                var (dx, dy) = direction.ToOffset();
+                int targetX = gridPos.TileX + dx;
+                int targetY = gridPos.TileY + dy;
+
+                // Check collision at target tile
+                if (CanMoveTo(targetX, targetY, gridPos.MapId, entity))
                 {
-                    var normalized = velocity.Normalized();
-                    velocity.X = normalized.X * constraint.MaxVelocity.Value;
-                    velocity.Y = normalized.Y * constraint.MaxVelocity.Value;
-                    wasConstrained = true;
+                    // Start movement to target tile
+                    gridPos.TargetTileX = targetX;
+                    gridPos.TargetTileY = targetY;
+                    gridPos.InterpolationProgress = 0.0f;
+                    _entitiesProcessed++;
+                }
+                else
+                {
+                    _movementBlocked++;
                 }
             }
-
-            // Calculate new position
-            var newX = position.X + velocity.X * deltaTime;
-            var newY = position.Y + velocity.Y * deltaTime;
-
-            // Apply boundary constraints
-            if (constraint.HasBoundaries)
+            // Continue interpolation if already moving
+            else if (gridPos.IsMoving)
             {
-                if (constraint.MinX.HasValue && newX < constraint.MinX.Value)
-                {
-                    newX = constraint.MinX.Value;
-                    velocity.X = 0f; // Stop horizontal movement
-                    wasConstrained = true;
-                }
-                if (constraint.MaxX.HasValue && newX > constraint.MaxX.Value)
-                {
-                    newX = constraint.MaxX.Value;
-                    velocity.X = 0f;
-                    wasConstrained = true;
-                }
-                if (constraint.MinY.HasValue && newY < constraint.MinY.Value)
-                {
-                    newY = constraint.MinY.Value;
-                    velocity.Y = 0f; // Stop vertical movement
-                    wasConstrained = true;
-                }
-                if (constraint.MaxY.HasValue && newY > constraint.MaxY.Value)
-                {
-                    newY = constraint.MaxY.Value;
-                    velocity.Y = 0f;
-                    wasConstrained = true;
-                }
-            }
+                // Calculate interpolation progress based on movement speed
+                float progressPerSecond = movementState.MovementSpeed; // tiles per second
+                gridPos.InterpolationProgress += progressPerSecond * deltaTime;
 
-            // Update position
-            position.X = newX;
-            position.Y = newY;
-            _entitiesProcessed++;
+                // Clamp to 1.0 and snap to target tile when complete
+                if (gridPos.InterpolationProgress >= 1.0f)
+                {
+                    gridPos.InterpolationProgress = 1.0f;
+                    gridPos.TileX = gridPos.TargetTileX;
+                    gridPos.TileY = gridPos.TargetTileY;
 
-            // Emit movement event if position changed
-            if ((position.X != oldX || position.Y != oldY) && _eventBus != null)
-            {
-                _eventBus.Publish(new MovementEvent(entity, oldX, oldY, position.X, position.Y, deltaTime, wasConstrained));
+                    // Emit movement complete event
+                    if (_eventBus != null)
+                    {
+                        _eventBus.Publish(new MovementEvent(
+                            entity,
+                            gridPos.TileX - direction.ToOffset().dx,
+                            gridPos.TileY - direction.ToOffset().dy,
+                            gridPos.TileX,
+                            gridPos.TileY,
+                            deltaTime,
+                            true));
+                    }
+                }
             }
         });
     }
 
     /// <summary>
-    /// Applies basic movement (velocity to position) for entities without constraints.
+    /// Checks if an entity can move to the specified tile coordinates.
+    /// Performs collision detection against solid colliders.
     /// </summary>
-    private void ProcessBasicMovement(float deltaTime)
+    /// <param name="targetX">Target tile X coordinate</param>
+    /// <param name="targetY">Target tile Y coordinate</param>
+    /// <param name="mapId">Map ID to check</param>
+    /// <param name="movingEntity">Entity attempting to move</param>
+    /// <returns>True if movement is allowed, false if blocked</returns>
+    private bool CanMoveTo(int targetX, int targetY, int mapId, Entity movingEntity)
     {
-        // Query entities that have Position + Velocity but NOT MovementConstraint
-        var basicQuery = new QueryDescription()
-            .WithAll<Position, Velocity>()
-            .WithNone<MovementConstraint>();
+        bool canMove = true;
 
-        World.Query(in basicQuery, (Entity entity, ref Position position, ref Velocity velocity) =>
+        // Check all entities with colliders at the target position
+        World.Query(in _colliderQuery, (Entity entity, ref GridPosition gridPos, ref TileCollider collider) =>
         {
-            var oldX = position.X;
-            var oldY = position.Y;
+            // Skip self-collision
+            if (entity == movingEntity)
+                return;
 
-            // Apply velocity
-            position.X += velocity.X * deltaTime;
-            position.Y += velocity.Y * deltaTime;
-            _entitiesProcessed++;
+            // Skip if different map
+            if (gridPos.MapId != mapId)
+                return;
 
-            // Emit movement event if position changed
-            if ((position.X != oldX || position.Y != oldY) && _eventBus != null)
+            // Check if collider is at target tile and is solid
+            if (gridPos.TileX == targetX && gridPos.TileY == targetY && collider.IsSolid)
             {
-                _eventBus.Publish(new MovementEvent(entity, oldX, oldY, position.X, position.Y, deltaTime, false));
+                canMove = false;
+                // Trigger collision event
+                collider.TriggerCollision((uint)movingEntity.Id);
             }
         });
+
+        return canMove;
+    }
+
+    /// <summary>
+    /// Gets the interpolated world position for smooth animation between tiles.
+    /// </summary>
+    /// <param name="gridPos">Grid position with interpolation data</param>
+    /// <returns>Interpolated world position in pixels</returns>
+    public static Vector2 GetInterpolatedPosition(GridPosition gridPos)
+    {
+        if (!gridPos.IsMoving)
+            return gridPos.WorldPosition;
+
+        // Linear interpolation between current and target tile
+        float startX = gridPos.TileX * 16f;
+        float startY = gridPos.TileY * 16f;
+        float endX = gridPos.TargetTileX * 16f;
+        float endY = gridPos.TargetTileY * 16f;
+
+        float interpolatedX = startX + (endX - startX) * gridPos.InterpolationProgress;
+        float interpolatedY = startY + (endY - startY) * gridPos.InterpolationProgress;
+
+        return new Vector2(interpolatedX, interpolatedY);
     }
 
     /// <summary>
@@ -233,4 +208,9 @@ public class MovementSystem : SystemBase
     /// Useful for debugging and performance monitoring.
     /// </summary>
     public int GetProcessedCount() => _entitiesProcessed;
+
+    /// <summary>
+    /// Gets the number of movement attempts that were blocked by collision.
+    /// </summary>
+    public int GetBlockedCount() => _movementBlocked;
 }

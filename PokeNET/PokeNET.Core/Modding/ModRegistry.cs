@@ -8,7 +8,7 @@ namespace PokeNET.Core.Modding;
 /// <summary>
 /// Provides access to information about loaded mods.
 /// </summary>
-internal class ModRegistry : IModRegistry
+public class ModRegistry : IModRegistry
 {
     private readonly ModLoader _modLoader;
 
@@ -35,7 +35,33 @@ internal class ModRegistry : IModRegistry
     public TApi? GetApi<TApi>(string modId) where TApi : class
     {
         var mod = _modLoader.GetMod(modId);
-        return mod as TApi;
+        if (mod == null)
+            return null;
+
+        // Check if mod itself implements the API interface
+        if (mod is TApi api)
+            return api;
+
+        // Check if the mod exposes an API through a GetApi method
+        // This allows mods to implement separate API interfaces
+        var getApiMethod = mod.GetType().GetMethod("GetApi",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+            Type.EmptyTypes);
+
+        if (getApiMethod != null && typeof(TApi).IsAssignableFrom(getApiMethod.ReturnType))
+        {
+            try
+            {
+                return getApiMethod.Invoke(mod, null) as TApi;
+            }
+            catch
+            {
+                // Failed to invoke GetApi method
+                return null;
+            }
+        }
+
+        return null;
     }
 
     public IReadOnlyList<IModManifest> GetDependentMods(string modId)

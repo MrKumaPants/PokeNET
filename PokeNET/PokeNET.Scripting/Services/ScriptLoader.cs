@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PokeNET.Scripting.Interfaces;
@@ -31,6 +32,9 @@ public sealed class ScriptLoader : IScriptLoader
 {
     private readonly ILogger<ScriptLoader> _logger;
     private static readonly string[] DefaultExtensions = { ".csx", ".cs" };
+
+    // Cache compiled regex patterns for better performance
+    private static readonly ConcurrentDictionary<string, Regex> _regexCache = new();
 
     /// <inheritdoc/>
     public IReadOnlyList<string> SupportedExtensions => DefaultExtensions;
@@ -178,6 +182,7 @@ public sealed class ScriptLoader : IScriptLoader
 
     /// <summary>
     /// Extracts a single metadata tag from the source code.
+    /// Uses compiled regex cache for improved performance.
     /// </summary>
     /// <param name="sourceCode">The script source code.</param>
     /// <param name="tagName">The tag name to extract.</param>
@@ -185,7 +190,12 @@ public sealed class ScriptLoader : IScriptLoader
     private static string? ExtractTag(string sourceCode, string tagName)
     {
         var pattern = $@"//\s*@{tagName}:\s*(.+)";
-        var match = Regex.Match(sourceCode, pattern, RegexOptions.IgnoreCase);
+
+        // Get or create cached compiled regex
+        var regex = _regexCache.GetOrAdd(pattern,
+            p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+
+        var match = regex.Match(sourceCode);
         return match.Success ? match.Groups[1].Value.Trim() : null;
     }
 

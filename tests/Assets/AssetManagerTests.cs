@@ -531,7 +531,7 @@ namespace PokeNET.Tests.Assets
         #region Thread Safety Tests
 
         [Fact]
-        public void Load_ConcurrentSameAsset_ShouldHandleThreadSafely()
+        public async Task Load_ConcurrentSameAsset_ShouldHandleThreadSafely()
         {
             // Arrange
             _assetManager = CreateAssetManager();
@@ -552,14 +552,14 @@ namespace PokeNET.Tests.Assets
             var tasks = Enumerable.Range(0, 10)
                 .Select(_ => Task.Run(() => _assetManager.Load<TestAsset>("concurrent.json")))
                 .ToArray();
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
 
             // Assert - should load only once due to caching
             tasks.Select(t => t.Result).Distinct().Should().HaveCount(1);
         }
 
         [Fact]
-        public void Load_ConcurrentDifferentAssets_ShouldLoadAllSuccessfully()
+        public async Task Load_ConcurrentDifferentAssets_ShouldLoadAllSuccessfully()
         {
             // Arrange
             _assetManager = CreateAssetManager();
@@ -575,7 +575,7 @@ namespace PokeNET.Tests.Assets
             var tasks = Enumerable.Range(0, fileCount)
                 .Select(i => Task.Run(() => _assetManager.Load<TestAsset>($"asset{i}.json")))
                 .ToArray();
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
 
             // Assert
             tasks.Should().AllSatisfy(t => t.Result.Should().NotBeNull());

@@ -63,10 +63,10 @@ public sealed class AudioAssetLoaderTests : IDisposable
     [InlineData(".aac", false)]
     [InlineData("", false)]
     [InlineData(null, false)]
-    public void CanHandle_WithVariousExtensions_ReturnsExpectedResult(string extension, bool expected)
+    public void CanHandle_WithVariousExtensions_ReturnsExpectedResult(string? extension, bool expected)
     {
         // Act
-        var result = _loader.CanHandle(extension);
+        var result = _loader.CanHandle(extension!);
 
         // Assert
         Assert.Equal(expected, result);
@@ -174,11 +174,11 @@ public sealed class AudioAssetLoaderTests : IDisposable
     }
 
     [Fact]
-    public void Load_SynchronousWrapper_LoadsSuccessfully()
+    public async Task Load_SynchronousWrapper_LoadsSuccessfully()
     {
         // Arrange
         var wavPath = Path.Combine(_testDataDirectory, "sync_valid.wav");
-        CreateValidWavFile(wavPath).GetAwaiter().GetResult();
+        await CreateValidWavFile(wavPath);
 
         // Act
         var soundEffect = _loader.Load(wavPath);

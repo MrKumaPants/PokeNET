@@ -7,7 +7,7 @@ namespace PokeNET.Domain.ECS.Systems;
 /// Follows the Interface Segregation Principle by defining minimal contract.
 /// Systems process entities and their components each frame.
 /// </summary>
-public interface ISystem
+public interface ISystem : IDisposable
 {
     /// <summary>
     /// Gets the execution priority of this system.
@@ -32,10 +32,4 @@ public interface ISystem
     /// </summary>
     /// <param name="deltaTime">Time elapsed since last frame in seconds.</param>
     void Update(float deltaTime);
-
-    /// <summary>
-    /// Disposes of system resources.
-    /// Called when the system is being removed or game is shutting down.
-    /// </summary>
-    void Dispose();
 }

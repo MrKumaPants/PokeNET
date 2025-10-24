@@ -93,13 +93,13 @@ public class TextureAssetLoaderTests : IDisposable
     [InlineData(".xml")]
     [InlineData("")]
     [InlineData(null)]
-    public void CanHandle_WithUnsupportedExtension_ReturnsFalse(string extension)
+    public void CanHandle_WithUnsupportedExtension_ReturnsFalse(string? extension)
     {
         // Arrange
         using var loader = new TextureAssetLoader(_logger, _graphicsDevice);
 
         // Act
-        var result = loader.CanHandle(extension);
+        var result = loader.CanHandle(extension!);
 
         // Assert
         result.Should().BeFalse();

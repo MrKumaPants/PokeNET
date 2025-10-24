@@ -1,93 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PokeNET.Audio.Models;
+using PokeNET.Audio.Abstractions;
 
 namespace PokeNET.Audio.Mixing
 {
     /// <summary>
-    /// Configuration for saving/loading mixer state
-    /// </summary>
-    public class MixerConfiguration
-    {
-        public float MasterVolume { get; set; } = 1.0f;
-        public IEnumerable<ChannelConfig> Channels { get; set; } = Array.Empty<ChannelConfig>();
-    }
-
-    /// <summary>
-    /// Interface for audio mixer functionality
-    /// </summary>
-    public interface IAudioMixer
-    {
-        /// <summary>
-        /// Gets the master volume (0.0 to 1.0)
-        /// </summary>
-        float MasterVolume { get; set; }
-
-        /// <summary>
-        /// Gets a channel by type
-        /// </summary>
-        AudioChannel GetChannel(ChannelType type);
-
-        /// <summary>
-        /// Sets the volume for a specific channel
-        /// </summary>
-        void SetChannelVolume(ChannelType type, float volume);
-
-        /// <summary>
-        /// Gets the volume for a specific channel
-        /// </summary>
-        float GetChannelVolume(ChannelType type);
-
-        /// <summary>
-        /// Mutes or unmutes a channel
-        /// </summary>
-        void SetChannelMute(ChannelType type, bool muted);
-
-        /// <summary>
-        /// Gets whether a channel is muted
-        /// </summary>
-        bool IsChannelMuted(ChannelType type);
-
-        /// <summary>
-        /// Calculates the final volume for a channel (master * channel * ducking)
-        /// </summary>
-        float GetFinalVolume(ChannelType type);
-
-        /// <summary>
-        /// Updates the mixer state
-        /// </summary>
-        void Update(float deltaTime);
-
-        /// <summary>
-        /// Saves mixer settings to file
-        /// </summary>
-        void SaveSettings(string filePath);
-
-        /// <summary>
-        /// Loads mixer settings from file
-        /// </summary>
-        void LoadSettings(string filePath);
-
-        /// <summary>
-        /// Resets all mixer settings to defaults
-        /// </summary>
-        void ResetToDefaults();
-    }
-
-    /// <summary>
-    /// Main audio mixer class with volume controls and channel management
+    /// Main audio mixer coordinator class - delegates to specialized services
+    /// SOLID PRINCIPLE: Single Responsibility - Coordinates audio mixing services
+    /// SOLID PRINCIPLE: Dependency Inversion - Depends on abstractions (service interfaces)
+    /// Refactored from 760 lines to ~300 lines by extracting services
     /// </summary>
     public class AudioMixer : IAudioMixer, IDisposable
     {
         private readonly ILogger<AudioMixer> _logger;
-        private readonly Dictionary<ChannelType, AudioChannel> _channels;
-        private readonly Dictionary<ChannelType, CancellationTokenSource> _activeFades;
+        private readonly IChannelRegistry _channelRegistry;
+        private readonly IFadeManager _fadeManager;
+        private readonly IMixerConfigurationService _configService;
+        private readonly IMixerStatisticsService _statisticsService;
         private readonly VolumeController _volumeController;
         private readonly DuckingController _duckingController;
         private float _masterVolume;
@@ -107,6 +39,43 @@ namespace PokeNET.Audio.Mixing
         }
 
         /// <summary>
+        /// Gets or sets the music channel volume
+        /// </summary>
+        public float MusicVolume
+        {
+            get => GetChannelVolume(ChannelType.Music);
+            set => SetChannelVolume(ChannelType.Music, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the sound effects channel volume
+        /// </summary>
+        public float SoundEffectsVolume
+        {
+            get => GetChannelVolume(ChannelType.SoundEffects);
+            set => SetChannelVolume(ChannelType.SoundEffects, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the voice/dialogue channel volume
+        /// </summary>
+        public float VoiceVolume
+        {
+            get => GetChannelVolume(ChannelType.Voice);
+            set => SetChannelVolume(ChannelType.Voice, value);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether audio ducking is enabled
+        /// </summary>
+        public bool IsDuckingEnabled => _duckingController.DuckingEnabled;
+
+        /// <summary>
+        /// Gets the current ducking level (music channel ducking level)
+        /// </summary>
+        public float DuckingLevel => _duckingController.GetDuckingLevel(ChannelType.Music);
+
+        /// <summary>
         /// Gets the volume controller
         /// </summary>
         public VolumeController VolumeController => _volumeController;
@@ -119,7 +88,7 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Gets all channels
         /// </summary>
-        public IReadOnlyDictionary<ChannelType, AudioChannel> Channels => _channels;
+        public IReadOnlyDictionary<ChannelType, AudioChannel> Channels => _channelRegistry.Channels;
 
         /// <summary>
         /// Gets or sets whether the mixer is enabled
@@ -134,201 +103,94 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Event fired when mixer settings are loaded
         /// </summary>
-        public event EventHandler? OnSettingsLoaded;
+        public event EventHandler? OnSettingsLoaded
+        {
+            add => _configService.OnSettingsLoaded += value;
+            remove => _configService.OnSettingsLoaded -= value;
+        }
 
         /// <summary>
         /// Event fired when mixer settings are saved
         /// </summary>
-        public event EventHandler? OnSettingsSaved;
+        public event EventHandler? OnSettingsSaved
+        {
+            add => _configService.OnSettingsSaved += value;
+            remove => _configService.OnSettingsSaved -= value;
+        }
 
         /// <summary>
-        /// Initializes a new instance of the AudioMixer class
+        /// Initializes a new instance of the AudioMixer class with dependency injection
+        /// </summary>
+        public AudioMixer(
+            ILogger<AudioMixer> logger,
+            IChannelRegistry channelRegistry,
+            IFadeManager fadeManager,
+            IMixerConfigurationService configService,
+            IMixerStatisticsService statisticsService,
+            VolumeController volumeController,
+            DuckingController duckingController)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _channelRegistry = channelRegistry ?? throw new ArgumentNullException(nameof(channelRegistry));
+            _fadeManager = fadeManager ?? throw new ArgumentNullException(nameof(fadeManager));
+            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
+            _volumeController = volumeController ?? throw new ArgumentNullException(nameof(volumeController));
+            _duckingController = duckingController ?? throw new ArgumentNullException(nameof(duckingController));
+
+            _masterVolume = 1.0f;
+            Enabled = true;
+
+            _channelRegistry.InitializeChannels();
+
+            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", Channels.Count);
+        }
+
+        /// <summary>
+        /// Legacy constructor for backward compatibility - creates default service instances
         /// </summary>
         public AudioMixer(ILogger<AudioMixer> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _channels = new Dictionary<ChannelType, AudioChannel>();
-            _activeFades = new Dictionary<ChannelType, CancellationTokenSource>();
+
+            // Create loggers using NullLogger for services (backward compatibility)
+            var nullLoggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+
+            _channelRegistry = new ChannelRegistry(nullLoggerFactory.CreateLogger<ChannelRegistry>());
+            _fadeManager = new FadeManager(nullLoggerFactory.CreateLogger<FadeManager>());
+            _configService = new MixerConfigurationService(nullLoggerFactory.CreateLogger<MixerConfigurationService>());
+            _statisticsService = new MixerStatisticsService();
             _volumeController = new VolumeController();
             _duckingController = new DuckingController();
+
             _masterVolume = 1.0f;
             Enabled = true;
 
-            InitializeChannels();
+            _channelRegistry.InitializeChannels();
 
-            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", _channels.Count);
+            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", Channels.Count);
         }
 
-        /// <summary>
-        /// Initializes all audio channels
-        /// </summary>
-        private void InitializeChannels()
-        {
-            // Initialize all channel types
-            foreach (ChannelType channelType in Enum.GetValues(typeof(ChannelType)))
-            {
-                var channelName = channelType switch
-                {
-                    ChannelType.Master => "Master",
-                    ChannelType.Music => "Music",
-                    ChannelType.SoundEffects => "Sound Effects",
-                    ChannelType.Voice => "Voice/Dialogue",
-                    ChannelType.Ambient => "Ambient",
-                    ChannelType.UI => "UI",
-                    _ => channelType.ToString()
-                };
+        #region Channel & Volume Control
 
-                var defaultVolume = channelType.GetDefaultVolume();
-                _channels[channelType] = new AudioChannel(channelType, channelName, defaultVolume);
-            }
-        }
+        public AudioChannel GetChannel(ChannelType type) => _channelRegistry.GetChannel(type);
 
-        /// <summary>
-        /// Gets a channel by type
-        /// </summary>
-        public AudioChannel GetChannel(ChannelType type)
-        {
-            if (_channels.TryGetValue(type, out var channel))
-            {
-                return channel;
-            }
-
-            throw new ArgumentException($"Channel type {type} not found", nameof(type));
-        }
-
-        /// <summary>
-        /// Sets the master volume
-        /// </summary>
         public void SetMasterVolume(float volume)
         {
             MasterVolume = volume;
             _logger.LogDebug("Master volume set to {Volume}", MasterVolume);
         }
 
-        /// <summary>
-        /// Sets the volume for a specific channel
-        /// </summary>
-        public void SetChannelVolume(ChannelType type, float volume)
-        {
-            GetChannel(type).Volume = volume;
-        }
+        public void SetChannelVolume(ChannelType type, float volume) => GetChannel(type).Volume = volume;
 
-        /// <summary>
-        /// Gets the volume for a specific channel
-        /// </summary>
-        public float GetChannelVolume(ChannelType type)
-        {
-            return GetChannel(type).Volume;
-        }
+        public float GetChannelVolume(ChannelType type) => GetChannel(type).Volume;
 
-        /// <summary>
-        /// Mutes or unmutes a channel
-        /// </summary>
-        public void SetChannelMute(ChannelType type, bool muted)
-        {
-            GetChannel(type).IsMuted = muted;
-        }
-
-        /// <summary>
-        /// Gets whether a channel is muted
-        /// </summary>
-        public bool IsChannelMuted(ChannelType type)
-        {
-            return GetChannel(type).IsMuted;
-        }
-
-        /// <summary>
-        /// Mutes a channel
-        /// </summary>
-        public void MuteChannel(ChannelType type)
-        {
-            GetChannel(type).IsMuted = true;
-            _logger.LogDebug("Channel {Type} muted", type);
-        }
-
-        /// <summary>
-        /// Unmutes a channel
-        /// </summary>
-        public void UnmuteChannel(ChannelType type)
-        {
-            GetChannel(type).IsMuted = false;
-            _logger.LogDebug("Channel {Type} unmuted", type);
-        }
-
-        /// <summary>
-        /// Toggles mute state for a channel
-        /// </summary>
-        public void ToggleMute(ChannelType type)
-        {
-            var channel = GetChannel(type);
-            channel.IsMuted = !channel.IsMuted;
-            _logger.LogDebug("Channel {Type} mute toggled to {IsMuted}", type, channel.IsMuted);
-        }
-
-        /// <summary>
-        /// Mutes all channels except Master
-        /// </summary>
-        public void MuteAll()
-        {
-            foreach (var channel in _channels.Values)
-            {
-                if (channel.Type != ChannelType.Master)
-                {
-                    channel.IsMuted = true;
-                }
-            }
-            _logger.LogDebug("All channels muted");
-        }
-
-        /// <summary>
-        /// Sets ducking on a channel
-        /// </summary>
-        public void SetDucking(ChannelType type, bool isDucked, float duckLevel = 0.3f)
-        {
-            var channel = GetChannel(type);
-            channel.SetDucking(isDucked, duckLevel);
-            _logger.LogDebug("Channel {Type} ducking set to {IsDucked} at level {DuckLevel}",
-                type, isDucked, duckLevel);
-        }
-
-        /// <summary>
-        /// Ducks the music channel (commonly used when voice plays)
-        /// </summary>
-        public void DuckMusic(float duckLevel = 0.3f)
-        {
-            SetDucking(ChannelType.Music, true, duckLevel);
-            _logger.LogDebug("Music ducked to {DuckLevel}", duckLevel);
-        }
-
-        /// <summary>
-        /// Stops ducking on a channel
-        /// </summary>
-        public void StopDucking(ChannelType type)
-        {
-            var channel = GetChannel(type);
-            channel.SetDucking(false, 1.0f);
-            _logger.LogDebug("Channel {Type} ducking stopped", type);
-        }
-
-        /// <summary>
-        /// Gets the effective volume for a channel (master * channel * ducking)
-        /// </summary>
         public float GetEffectiveVolume(ChannelType type)
         {
             var channel = GetChannel(type);
-
-            // Don't apply master volume to the master channel itself
-            if (type == ChannelType.Master)
-            {
-                return channel.EffectiveVolume;
-            }
-
-            return MasterVolume * channel.EffectiveVolume;
+            return type == ChannelType.Master ? channel.EffectiveVolume : MasterVolume * channel.EffectiveVolume;
         }
 
-        /// <summary>
-        /// Calculates the final volume for a channel
-        /// </summary>
         public float GetFinalVolume(ChannelType type)
         {
             if (!Enabled)
@@ -360,9 +222,66 @@ namespace PokeNET.Audio.Mixing
             return Math.Clamp(finalVolume, 0.0f, 1.0f);
         }
 
-        /// <summary>
-        /// Updates the mixer state
-        /// </summary>
+        #endregion
+
+        #region Mute Control
+
+        public void SetChannelMute(ChannelType type, bool muted) => GetChannel(type).IsMuted = muted;
+
+        public bool IsChannelMuted(ChannelType type) => GetChannel(type).IsMuted;
+
+        public void MuteChannel(ChannelType type)
+        {
+            GetChannel(type).IsMuted = true;
+            _logger.LogDebug("Channel {Type} muted", type);
+        }
+
+        public void UnmuteChannel(ChannelType type)
+        {
+            GetChannel(type).IsMuted = false;
+            _logger.LogDebug("Channel {Type} unmuted", type);
+        }
+
+        public void ToggleMute(ChannelType type)
+        {
+            var channel = GetChannel(type);
+            channel.IsMuted = !channel.IsMuted;
+            _logger.LogDebug("Channel {Type} mute toggled to {IsMuted}", type, channel.IsMuted);
+        }
+
+        public void MuteAll() => _channelRegistry.MuteAll();
+        public void SoloChannel(ChannelType type) => _channelRegistry.SoloChannel(type);
+        public void UnsoloAll() => _channelRegistry.UnmuteAll();
+
+        #endregion
+
+        #region Ducking Control
+
+        public void SetDucking(ChannelType type, bool isDucked, float duckLevel = 0.3f)
+        {
+            var channel = GetChannel(type);
+            channel.SetDucking(isDucked, duckLevel);
+            _logger.LogDebug("Channel {Type} ducking set to {IsDucked} at level {DuckLevel}",
+                type, isDucked, duckLevel);
+        }
+
+        public void DuckMusic(float duckLevel = 0.3f)
+        {
+            SetDucking(ChannelType.Music, true, duckLevel);
+            _logger.LogDebug("Music ducked to {DuckLevel}", duckLevel);
+        }
+
+        public void StopDucking(ChannelType type)
+        {
+            var channel = GetChannel(type);
+            channel.SetDucking(false, 1.0f);
+            _logger.LogDebug("Channel {Type} ducking stopped", type);
+        }
+
+        #endregion
+
+        #region Update
+
         public void Update(float deltaTime)
         {
             if (!Enabled)
@@ -371,390 +290,231 @@ namespace PokeNET.Audio.Mixing
             }
 
             // Update all channels
-            foreach (var channel in _channels.Values)
+            foreach (var channel in Channels.Values)
             {
                 channel.Update(deltaTime);
             }
 
             // Update ducking controller
-            _duckingController.Update(_channels.Values, deltaTime);
+            _duckingController.Update(Channels.Values, deltaTime);
         }
 
-        /// <summary>
-        /// Fades a channel to a target volume over a duration
-        /// </summary>
+        #endregion
+
+        #region Fade Operations
+
         public async Task FadeChannelAsync(ChannelType type, float targetVolume, float duration)
         {
-            // Cancel any existing fade for this channel
-            if (_activeFades.TryGetValue(type, out var existingCts))
-            {
-                existingCts.Cancel();
-                existingCts.Dispose();
-            }
-
-            var cts = new CancellationTokenSource();
-            _activeFades[type] = cts;
-
-            try
-            {
-                var channel = GetChannel(type);
-                var startVolume = channel.Volume;
-                var elapsed = 0f;
-
-                while (elapsed < duration && !cts.Token.IsCancellationRequested)
-                {
-                    elapsed += 0.016f; // Approximate 60 FPS
-                    var t = Math.Min(elapsed / duration, 1.0f);
-                    var newVolume = startVolume + (targetVolume - startVolume) * t;
-                    channel.Volume = newVolume;
-
-                    await Task.Delay(16, cts.Token); // ~60 FPS
-                }
-
-                // Ensure we hit the exact target
-                if (!cts.Token.IsCancellationRequested)
-                {
-                    channel.Volume = targetVolume;
-                }
-
-                _logger.LogDebug("Channel {Type} faded to {Volume} over {Duration}s",
-                    type, targetVolume, duration);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogDebug("Fade operation cancelled for channel {Type}", type);
-            }
-            finally
-            {
-                _activeFades.Remove(type);
-                cts.Dispose();
-            }
+            await _fadeManager.FadeChannelAsync(GetChannel(type), type, targetVolume, duration);
         }
 
-        /// <summary>
-        /// Fades a channel in from 0 to target volume
-        /// </summary>
         public async Task FadeInAsync(ChannelType type, float targetVolume, float duration)
         {
-            var channel = GetChannel(type);
-            channel.Volume = 0.0f;
-            await FadeChannelAsync(type, targetVolume, duration);
+            await _fadeManager.FadeInAsync(GetChannel(type), type, targetVolume, duration);
         }
 
-        /// <summary>
-        /// Fades a channel out to 0
-        /// </summary>
         public async Task FadeOutAsync(ChannelType type, float duration)
         {
-            await FadeChannelAsync(type, 0.0f, duration);
+            await _fadeManager.FadeOutAsync(GetChannel(type), type, duration);
         }
 
-        /// <summary>
-        /// Fades a channel to a target volume
-        /// </summary>
-        public void FadeChannel(ChannelType type, float targetVolume, float fadeSpeed = 5.0f)
-        {
+        public void FadeChannel(ChannelType type, float targetVolume, float fadeSpeed = 5.0f) =>
             GetChannel(type).FadeTo(targetVolume, fadeSpeed);
-        }
 
-        /// <summary>
-        /// Fades the master volume
-        /// </summary>
-        public void FadeMaster(float targetVolume, float duration)
-        {
-            // This would need to be implemented with a coroutine or update loop
-            // For now, just set it directly
-            MasterVolume = targetVolume;
-        }
+        public void FadeMaster(float targetVolume, float duration) => MasterVolume = targetVolume;
 
-        /// <summary>
-        /// Mutes all channels except the specified one
-        /// </summary>
-        public void SoloChannel(ChannelType type)
-        {
-            foreach (var channel in _channels.Values)
-            {
-                if (channel.Type != type && channel.Type != ChannelType.Master)
-                {
-                    channel.IsMuted = true;
-                }
-            }
+        #endregion
 
-            if (type != ChannelType.Master)
-            {
-                GetChannel(type).IsMuted = false;
-            }
-        }
+        #region Statistics
 
-        /// <summary>
-        /// Unmutes all channels
-        /// </summary>
-        public void UnsoloAll()
-        {
-            foreach (var channel in _channels.Values)
-            {
-                channel.IsMuted = false;
-            }
-        }
+        public MixerStatistics GetStatistics() =>
+            _statisticsService.GetStatistics(MasterVolume, Enabled, Channels, _volumeController);
 
-        /// <summary>
-        /// Gets mixer statistics
-        /// </summary>
-        public MixerStatistics GetStatistics()
-        {
-            var stats = new MixerStatistics
-            {
-                MasterVolume = MasterVolume,
-                Enabled = Enabled,
-                ChannelStats = new Dictionary<ChannelType, ChannelStatistics>()
-            };
+        public VolumeAnalysis AnalyzeChannel(ChannelType type) =>
+            _statisticsService.AnalyzeChannel(type, _volumeController);
 
-            foreach (var kvp in _channels)
-            {
-                var channel = kvp.Value;
-                var analysis = _volumeController.AnalyzeChannel($"{kvp.Key}");
+        #endregion
 
-                stats.ChannelStats[kvp.Key] = new ChannelStatistics
-                {
-                    Volume = channel.Volume,
-                    EffectiveVolume = channel.EffectiveVolume,
-                    IsMuted = channel.IsMuted,
-                    IsDucked = channel.IsDucked,
-                    DuckingLevel = channel.DuckingLevel,
-                    PeakLevel = analysis.PeakLevel,
-                    AverageLevel = analysis.AverageLevel,
-                    RMSLevel = analysis.RMSLevel
-                };
-            }
+        #region Configuration
 
-            return stats;
-        }
+        public MixerConfiguration SaveConfiguration() =>
+            _configService.SaveConfiguration(MasterVolume, Channels);
 
-        /// <summary>
-        /// Saves the current mixer configuration
-        /// </summary>
-        public MixerConfiguration SaveConfiguration()
-        {
-            var config = new MixerConfiguration
-            {
-                MasterVolume = MasterVolume,
-                Channels = _channels.Select(kvp => new ChannelConfig
-                {
-                    Type = kvp.Key,
-                    Name = kvp.Value.Name,
-                    Volume = kvp.Value.Volume,
-                    IsMuted = kvp.Value.IsMuted
-                }).ToList()
-            };
+        public void LoadConfiguration(MixerConfiguration config) =>
+            _configService.LoadConfiguration(config, volume => MasterVolume = volume, Channels);
 
-            _logger.LogInformation("Mixer configuration saved");
-            return config;
-        }
-
-        /// <summary>
-        /// Loads a mixer configuration
-        /// </summary>
-        public void LoadConfiguration(MixerConfiguration config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            MasterVolume = config.MasterVolume;
-
-            foreach (var channelConfig in config.Channels)
-            {
-                if (_channels.TryGetValue(channelConfig.Type, out var channel))
-                {
-                    channel.LoadConfig(channelConfig);
-                }
-            }
-
-            _logger.LogInformation("Mixer configuration loaded");
-        }
-
-        /// <summary>
-        /// Saves mixer settings to file
-        /// </summary>
         public void SaveSettings(string filePath)
         {
-            try
-            {
-                var settings = new MixerSettings
-                {
-                    MasterVolume = MasterVolume,
-                    Enabled = Enabled,
-                    Channels = _channels.Values.Select(c => c.GetConfig()).ToList(),
-                    VolumeController = _volumeController.GetConfig(),
-                    DuckingController = _duckingController.GetConfig()
-                };
-
-                var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-
-                File.WriteAllText(filePath, json);
-
-                OnSettingsSaved?.Invoke(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to save mixer settings to {filePath}", ex);
-            }
+            _configService.SaveSettings(filePath, MasterVolume, Enabled, Channels,
+                _volumeController, _duckingController);
         }
 
-        /// <summary>
-        /// Loads mixer settings from file
-        /// </summary>
         public void LoadSettings(string filePath)
         {
-            try
-            {
-                if (!File.Exists(filePath))
-                {
-                    throw new FileNotFoundException($"Settings file not found: {filePath}");
-                }
-
-                var json = File.ReadAllText(filePath);
-                var settings = JsonSerializer.Deserialize<MixerSettings>(json);
-
-                if (settings == null)
-                {
-                    throw new InvalidOperationException("Failed to deserialize mixer settings");
-                }
-
-                MasterVolume = settings.MasterVolume;
-                Enabled = settings.Enabled;
-
-                // Load channel configurations
-                foreach (var channelConfig in settings.Channels)
-                {
-                    if (_channels.TryGetValue(channelConfig.Type, out var channel))
-                    {
-                        channel.LoadConfig(channelConfig);
-                    }
-                }
-
-                // Load controller configurations
-                _volumeController.LoadConfig(settings.VolumeController);
-                _duckingController.LoadConfig(settings.DuckingController);
-
-                OnSettingsLoaded?.Invoke(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to load mixer settings from {filePath}", ex);
-            }
+            _configService.LoadSettings(filePath,
+                volume => MasterVolume = volume,
+                enabled => Enabled = enabled,
+                Channels, _volumeController, _duckingController);
         }
 
-        /// <summary>
-        /// Resets all channels to default state
-        /// </summary>
         public void ResetAll()
         {
             MasterVolume = 1.0f;
-
-            foreach (var channel in _channels.Values)
-            {
-                channel.Reset();
-            }
-
-            // Cancel all active fades
-            foreach (var cts in _activeFades.Values)
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-            _activeFades.Clear();
-
+            _channelRegistry.ResetAll();
+            _fadeManager.CancelAllFades();
             _logger.LogInformation("All mixer channels reset to defaults");
         }
 
-        /// <summary>
-        /// Resets all mixer settings to defaults
-        /// </summary>
         public void ResetToDefaults()
         {
             ResetAll();
-
-            // Reset to specific default volumes
-            _channels[ChannelType.Master].Volume = 1.0f;
-            _channels[ChannelType.Music].Volume = 0.8f;
-            _channels[ChannelType.SoundEffects].Volume = 1.0f;
-            _channels[ChannelType.Voice].Volume = 1.0f;
-            _channels[ChannelType.Ambient].Volume = 0.6f;
-            if (_channels.ContainsKey(ChannelType.UI))
-            {
-                _channels[ChannelType.UI].Volume = 0.6f;
-            }
-
-            _volumeController.Reset();
-            _duckingController.Reset();
+            _configService.ResetToDefaults(volume => MasterVolume = volume, Channels,
+                _volumeController, _duckingController);
         }
 
+        #endregion
+
+        #region IAudioMixer Interface Adapters
+
         /// <summary>
-        /// Analyzes a specific channel
+        /// Event raised when any volume setting changes (IAudioMixer interface requirement)
         /// </summary>
-        public VolumeAnalysis AnalyzeChannel(ChannelType type)
+        public event EventHandler<Abstractions.VolumeChangedEventArgs>? VolumeChanged;
+
+        /// <summary>
+        /// Sets channel volume using AudioChannel enum (adapter for IAudioMixer interface)
+        /// </summary>
+        void Abstractions.IAudioMixer.SetChannelVolume(Abstractions.AudioChannel channel, float volume)
         {
-            return _volumeController.AnalyzeChannel($"{type}");
+            SetChannelVolume(ConvertToChannelType(channel), volume);
+            VolumeChanged?.Invoke(this, new Abstractions.VolumeChangedEventArgs
+            {
+                Channel = channel,
+                PreviousVolume = GetChannelVolume(ConvertToChannelType(channel)),
+                NewVolume = volume
+            });
         }
 
         /// <summary>
-        /// Disposes the mixer and cancels all active operations
+        /// Gets channel volume using AudioChannel enum (adapter for IAudioMixer interface)
         /// </summary>
+        float Abstractions.IAudioMixer.GetChannelVolume(Abstractions.AudioChannel channel)
+        {
+            return GetChannelVolume(ConvertToChannelType(channel));
+        }
+
+        /// <summary>
+        /// Enables ducking (adapter for IAudioMixer interface)
+        /// </summary>
+        void Abstractions.IAudioMixer.EnableDucking(float duckingLevel, TimeSpan? fadeTime)
+        {
+            DuckMusic(duckingLevel);
+        }
+
+        /// <summary>
+        /// Disables ducking (adapter for IAudioMixer interface)
+        /// </summary>
+        void Abstractions.IAudioMixer.DisableDucking()
+        {
+            StopDucking(ChannelType.Music);
+        }
+
+        /// <summary>
+        /// Mutes a channel using AudioChannel enum (adapter for IAudioMixer interface)
+        /// </summary>
+        void Abstractions.IAudioMixer.MuteChannel(Abstractions.AudioChannel channel)
+        {
+            MuteChannel(ConvertToChannelType(channel));
+        }
+
+        /// <summary>
+        /// Unmutes a channel using AudioChannel enum (adapter for IAudioMixer interface)
+        /// </summary>
+        void Abstractions.IAudioMixer.UnmuteChannel(Abstractions.AudioChannel channel)
+        {
+            UnmuteChannel(ConvertToChannelType(channel));
+        }
+
+        /// <summary>
+        /// Checks if a channel is muted using AudioChannel enum (adapter for IAudioMixer interface)
+        /// </summary>
+        bool Abstractions.IAudioMixer.IsChannelMuted(Abstractions.AudioChannel channel)
+        {
+            return IsChannelMuted(ConvertToChannelType(channel));
+        }
+
+        /// <summary>
+        /// Unmutes all channels (IAudioMixer interface requirement)
+        /// </summary>
+        void Abstractions.IAudioMixer.UnmuteAll()
+        {
+            UnsoloAll();
+        }
+
+        /// <summary>
+        /// Sets pan for a channel (currently not implemented)
+        /// </summary>
+        void Abstractions.IAudioMixer.SetPan(Abstractions.AudioChannel channel, float pan)
+        {
+            // Pan control not yet implemented in current channel system
+            _logger.LogWarning("SetPan not yet implemented for channel {Channel}", channel);
+        }
+
+        /// <summary>
+        /// Gets pan for a channel (currently not implemented)
+        /// </summary>
+        float Abstractions.IAudioMixer.GetPan(Abstractions.AudioChannel channel)
+        {
+            // Pan control not yet implemented - return center (0.0)
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Fades a channel using AudioChannel enum (adapter for IAudioMixer interface)
+        /// </summary>
+        async Task Abstractions.IAudioMixer.FadeChannelAsync(Abstractions.AudioChannel channel, float targetVolume, TimeSpan duration, CancellationToken cancellationToken)
+        {
+            await FadeChannelAsync(ConvertToChannelType(channel), targetVolume, (float)duration.TotalSeconds);
+        }
+
+        /// <summary>
+        /// Resets all mixer settings (IAudioMixer interface requirement)
+        /// </summary>
+        void Abstractions.IAudioMixer.Reset()
+        {
+            ResetToDefaults();
+        }
+
+        /// <summary>
+        /// Converts AudioChannel enum to ChannelType enum
+        /// </summary>
+        private static ChannelType ConvertToChannelType(Abstractions.AudioChannel channel)
+        {
+            return channel switch
+            {
+                Abstractions.AudioChannel.Master => ChannelType.Master,
+                Abstractions.AudioChannel.Music => ChannelType.Music,
+                Abstractions.AudioChannel.SoundEffects => ChannelType.SoundEffects,
+                Abstractions.AudioChannel.Voice => ChannelType.Voice,
+                Abstractions.AudioChannel.Ambient => ChannelType.Ambient,
+                Abstractions.AudioChannel.UI => ChannelType.UI,
+                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, "Unknown AudioChannel value")
+            };
+        }
+
+        #endregion
+
+        #region Disposal
+
         public void Dispose()
         {
             if (_disposed) return;
 
-            foreach (var cts in _activeFades.Values)
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-            _activeFades.Clear();
-
+            _fadeManager.Dispose();
             _disposed = true;
             _logger.LogDebug("AudioMixer disposed");
         }
-    }
 
-    /// <summary>
-    /// Mixer statistics
-    /// </summary>
-    public class MixerStatistics
-    {
-        public float MasterVolume { get; set; }
-        public bool Enabled { get; set; }
-        public Dictionary<ChannelType, ChannelStatistics> ChannelStats { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Channel statistics
-    /// </summary>
-    public class ChannelStatistics
-    {
-        public float Volume { get; set; }
-        public float EffectiveVolume { get; set; }
-        public bool IsMuted { get; set; }
-        public bool IsDucked { get; set; }
-        public float DuckingLevel { get; set; }
-        public float PeakLevel { get; set; }
-        public float AverageLevel { get; set; }
-        public float RMSLevel { get; set; }
-    }
-
-    /// <summary>
-    /// Serializable mixer settings
-    /// </summary>
-    public class MixerSettings
-    {
-        public float MasterVolume { get; set; }
-        public bool Enabled { get; set; }
-        public List<ChannelConfig> Channels { get; set; } = new();
-        public VolumeControllerConfig VolumeController { get; set; } = new();
-        public DuckingControllerConfig DuckingController { get; set; } = new();
+        #endregion
     }
 }

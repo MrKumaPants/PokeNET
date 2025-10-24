@@ -134,7 +134,7 @@ return 100;
 
         // Assert
         Assert.NotNull(compiled);
-        Assert.True(compiled.Diagnostics.Any(d => d.Severity == PokeNET.Scripting.Models.DiagnosticSeverity.Warning));
+        Assert.Contains(compiled.Diagnostics, d => d.Severity == PokeNET.Scripting.Models.DiagnosticSeverity.Warning);
     }
 
     #endregion
@@ -536,8 +536,8 @@ return 42;
 
         // Assert
         Assert.NotNull(diagnostics);
-        Assert.True(diagnostics.AdditionalMetrics.ContainsKey("CacheHits"));
-        Assert.True((long)diagnostics.AdditionalMetrics["CacheHits"] >= 1);
+        Assert.True(diagnostics.AdditionalMetrics!.ContainsKey("CacheHits"));
+        Assert.True((long)diagnostics.AdditionalMetrics!["CacheHits"] >= 1);
     }
 
     [Fact]
@@ -820,6 +820,25 @@ return text.ToUpper().Replace(""WORLD"", ""POKENET"");
     private class SimpleScriptContext : IScriptContext
     {
         public int Value { get; set; }
+
+        // IScriptContext implementation
+        public Guid ContextId { get; } = Guid.NewGuid();
+        public string ScriptId { get; } = "test-script";
+        public DateTimeOffset CreatedAt { get; } = DateTimeOffset.UtcNow;
+        public IScriptApi Api => throw new NotImplementedException();
+        public IDictionary<string, object?> Data { get; } = new Dictionary<string, object?>();
+        public ISharedScriptData SharedData => throw new NotImplementedException();
+        public IScriptLogger Logger => throw new NotImplementedException();
+        public IReadOnlyDictionary<string, object> Metadata { get; } = new Dictionary<string, object>();
+
+        public T GetService<T>() where T : notnull => throw new NotImplementedException();
+        public bool TryGetService<T>(out T? service) where T : notnull
+        {
+            service = default;
+            return false;
+        }
+        public object GetService(Type serviceType) => throw new NotImplementedException();
+        public void RegisterCleanupCallback(Action callback) { }
     }
 
     #endregion

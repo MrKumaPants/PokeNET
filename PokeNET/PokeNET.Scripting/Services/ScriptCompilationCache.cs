@@ -76,6 +76,7 @@ public sealed class ScriptCompilationCache
 
     /// <summary>
     /// Adds a compiled script to the cache with LRU eviction if necessary.
+    /// Thread-safe implementation prevents race conditions during eviction.
     /// </summary>
     /// <param name="sourceHash">The hash of the source code.</param>
     /// <param name="compiledScript">The compiled script to cache.</param>
@@ -86,20 +87,30 @@ public sealed class ScriptCompilationCache
         if (compiledScript == null)
             throw new ArgumentNullException(nameof(compiledScript));
 
-        // Evict oldest entry if cache is full
-        if (_cache.Count >= _maxCacheSize)
-        {
-            EvictOldestEntry();
-        }
-
         var entry = new CacheEntry(compiledScript);
-        _cache.TryAdd(sourceHash, entry);
 
-        _logger.LogDebug(
-            "Added script to cache. Hash: {SourceHash}, Cache size: {CurrentSize}/{MaxSize}",
-            sourceHash,
-            _cache.Count,
-            _maxCacheSize);
+        // Atomic add operation - prevents race condition
+        if (_cache.TryAdd(sourceHash, entry))
+        {
+            // After successful add, check if we need eviction
+            // Use while loop to handle concurrent additions
+            while (_cache.Count > _maxCacheSize)
+            {
+                EvictOldestEntry();
+            }
+
+            _logger.LogDebug(
+                "Added script to cache. Hash: {SourceHash}, Cache size: {CurrentSize}/{MaxSize}",
+                sourceHash,
+                _cache.Count,
+                _maxCacheSize);
+        }
+        else
+        {
+            // Entry already exists, update it
+            _cache[sourceHash] = entry;
+            _logger.LogDebug("Updated existing cache entry for hash: {SourceHash}", sourceHash);
+        }
     }
 
     /// <summary>

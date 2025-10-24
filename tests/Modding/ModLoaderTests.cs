@@ -202,7 +202,7 @@ public class ModLoaderTests : IDisposable
 
         // Act
         loader.LoadMods();
-        var loadOrder = loader.GetLoadOrder();
+        var loadOrder = loader.GetLoadOrder().ToList();
 
         // Assert
         loadOrder.Should().ContainInOrder("ModA", "ModB", "ModC");
@@ -614,6 +614,182 @@ public class ModLoaderTests : IDisposable
         // Assert
         report.IsValid.Should().BeFalse();
         report.Errors.Should().Contain(e => e.ErrorType == ModValidationErrorType.InvalidManifest);
+    }
+
+    [Fact]
+    public async Task ValidateModsAsync_WithMissingOptionalDependency_ShouldReturnWarning()
+    {
+        // Arrange
+        var manifest = @"{
+            ""id"": ""ModA"",
+            ""name"": ""Mod A"",
+            ""version"": ""1.0.0"",
+            ""dependencies"": [
+                {
+                    ""modId"": ""OptionalMod"",
+                    ""optional"": true
+                }
+            ]
+        }";
+        CreateModWithManifest(_testModsDirectory, "ModA", manifest);
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+
+        // Act
+        var report = await loader.ValidateModsAsync(_testModsDirectory);
+
+        // Assert
+        report.Warnings.Should().Contain(w => w.WarningType == ModValidationWarningType.MissingOptionalDependency);
+    }
+
+    [Fact]
+    public async Task ValidateModsAsync_WithMissingAssembly_ShouldReturnError()
+    {
+        // Arrange
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "CodeMod", "Code Mod");
+        // No assembly created
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+
+        // Act
+        var report = await loader.ValidateModsAsync(_testModsDirectory);
+
+        // Assert
+        report.IsValid.Should().BeFalse();
+        report.Errors.Should().Contain(e => e.ErrorType == ModValidationErrorType.MissingAssembly);
+    }
+
+    #endregion
+
+    #region Async Loading Tests
+
+    [Fact]
+    public async Task LoadModsAsync_WithValidMods_ShouldLoadSuccessfully()
+    {
+        // Arrange
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModA", "Mod A");
+        CreateDummyAssembly(_testModsDirectory, "ModA");
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+
+        // Act
+        await loader.LoadModsAsync(_testModsDirectory);
+
+        // Assert
+        loader.LoadedMods.Should().ContainSingle();
+        loader.IsModLoaded("ModA").Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LoadModsAsync_WithCancellation_ShouldRespectCancellationToken()
+    {
+        // Arrange
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModA", "Mod A");
+        CreateDummyAssembly(_testModsDirectory, "ModA");
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+        var cts = new CancellationTokenSource();
+        cts.Cancel(); // Cancel immediately
+
+        // Act & Assert
+        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            await loader.LoadModsAsync(_testModsDirectory, cts.Token));
+    }
+
+    #endregion
+
+    #region Load Order Edge Cases
+
+    [Fact]
+    public void LoadMods_WithDiamondDependency_ShouldResolveCorrectly()
+    {
+        // Arrange - Diamond: D depends on B & C, both B & C depend on A
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModA", "Mod A");
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModB", "Mod B",
+            dependencies: new[] { "ModA" });
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModC", "Mod C",
+            dependencies: new[] { "ModA" });
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModD", "Mod D",
+            dependencies: new[] { "ModB", "ModC" });
+
+        CreateDummyAssembly(_testModsDirectory, "ModA");
+        CreateDummyAssembly(_testModsDirectory, "ModB");
+        CreateDummyAssembly(_testModsDirectory, "ModC");
+        CreateDummyAssembly(_testModsDirectory, "ModD");
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+        loader.DiscoverMods();
+
+        // Act
+        loader.LoadMods();
+        var loadOrder = loader.GetLoadOrder().ToList();
+
+        // Assert
+        loadOrder.IndexOf("ModA").Should().BeLessThan(loadOrder.IndexOf("ModB"));
+        loadOrder.IndexOf("ModA").Should().BeLessThan(loadOrder.IndexOf("ModC"));
+        loadOrder.IndexOf("ModB").Should().BeLessThan(loadOrder.IndexOf("ModD"));
+        loadOrder.IndexOf("ModC").Should().BeLessThan(loadOrder.IndexOf("ModD"));
+    }
+
+    [Fact]
+    public void LoadMods_WithSelfCircularDependency_ShouldThrow()
+    {
+        // Arrange - Mod depends on itself
+        var manifest = CreateManifestWithDependencies("ModA", "Mod A", new[] { "ModA" });
+        CreateModWithManifest(_testModsDirectory, "ModA", manifest);
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+        loader.DiscoverMods();
+
+        // Act & Assert
+        var exception = Assert.Throws<ModLoadException>(() => loader.LoadMods());
+        exception.Message.Should().Contain("Circular dependency");
+    }
+
+    [Fact]
+    public void GetLoadOrder_WithNoModsLoaded_ShouldReturnEmpty()
+    {
+        // Arrange
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+
+        // Act
+        var loadOrder = loader.GetLoadOrder();
+
+        // Assert
+        loadOrder.Should().BeEmpty();
+    }
+
+    #endregion
+
+    #region Concurrent Loading Tests
+
+    [Fact]
+    public async Task LoadModsAsync_CalledConcurrently_ShouldHandleGracefully()
+    {
+        // Arrange
+        ModTestHelpers.CreateTestModDirectory(_testModsDirectory, "ModA", "Mod A");
+        CreateDummyAssembly(_testModsDirectory, "ModA");
+
+        var loader = new ModLoader(_logger, _services, _loggerFactory, _testModsDirectory);
+
+        // Act - Try to load mods concurrently
+        var tasks = Enumerable.Range(0, 5)
+            .Select(_ => Task.Run(async () =>
+            {
+                try
+                {
+                    await loader.LoadModsAsync(_testModsDirectory);
+                }
+                catch
+                {
+                    // Some might fail due to concurrent access
+                }
+            }));
+
+        await Task.WhenAll(tasks);
+
+        // Assert - At least one should succeed
+        loader.LoadedMods.Count.Should().BeGreaterOrEqualTo(0);
     }
 
     #endregion

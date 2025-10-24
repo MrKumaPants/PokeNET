@@ -17,17 +17,26 @@ public sealed class SecurityValidatorTests
 
     public SecurityValidatorTests()
     {
-        _basicPermissions = new ScriptPermissions("basic-script")
-        {
-            AllowedNamespaces = { "System", "System.Collections.Generic", "System.Linq" },
-            Level = ScriptPermissions.PermissionLevel.Basic
-        };
+        _basicPermissions = ScriptPermissions.CreateBuilder()
+            .WithLevel(ScriptPermissions.PermissionLevel.Restricted)
+            .WithApis(ScriptPermissions.ApiCategory.Core | ScriptPermissions.ApiCategory.Collections)
+            .AllowNamespace("System")
+            .AllowNamespace("System.Collections.Generic")
+            .AllowNamespace("System.Linq")
+            .WithScriptId("basic-script")
+            .Build();
 
-        _unrestrictedPermissions = new ScriptPermissions("unrestricted-script")
-        {
-            Level = ScriptPermissions.PermissionLevel.Unrestricted
-        };
-        _unrestrictedPermissions.AllowAll();
+        _unrestrictedPermissions = ScriptPermissions.CreateBuilder()
+            .WithLevel(ScriptPermissions.PermissionLevel.Unrestricted)
+            .WithApis(ScriptPermissions.ApiCategory.Core | ScriptPermissions.ApiCategory.Collections |
+                     ScriptPermissions.ApiCategory.GameStateRead | ScriptPermissions.ApiCategory.GameStateWrite |
+                     ScriptPermissions.ApiCategory.Logging | ScriptPermissions.ApiCategory.Random |
+                     ScriptPermissions.ApiCategory.DateTime | ScriptPermissions.ApiCategory.Serialization |
+                     ScriptPermissions.ApiCategory.FileIO | ScriptPermissions.ApiCategory.Network |
+                     ScriptPermissions.ApiCategory.Reflection | ScriptPermissions.ApiCategory.Threading |
+                     ScriptPermissions.ApiCategory.Unsafe)
+            .WithScriptId("unrestricted-script")
+            .Build();
     }
 
     #region Constructor Tests
@@ -739,11 +748,11 @@ malicious = System.IO.File; // Try to bypass type checking
     public void Validate_WithUnrestrictedPermissions_AllowsUnsafeCode()
     {
         // Arrange
-        var permissions = new ScriptPermissions("unrestricted")
-        {
-            Level = ScriptPermissions.PermissionLevel.Unrestricted
-        };
-        permissions.AllowApi(ScriptPermissions.ApiCategory.Unsafe);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithLevel(ScriptPermissions.PermissionLevel.Unrestricted)
+            .WithApis(ScriptPermissions.ApiCategory.Core | ScriptPermissions.ApiCategory.Unsafe)
+            .WithScriptId("unrestricted")
+            .Build();
 
         var validator = new SecurityValidator(permissions);
         var code = @"
@@ -765,12 +774,12 @@ public unsafe void UnsafeOperation()
     public void Validate_WithFileIOPermission_AllowsFileOperations()
     {
         // Arrange
-        var permissions = new ScriptPermissions("file-script")
-        {
-            Level = ScriptPermissions.PermissionLevel.Standard
-        };
-        permissions.AllowNamespace("System.IO");
-        permissions.AllowApi(ScriptPermissions.ApiCategory.FileIO);
+        var permissions = ScriptPermissions.CreateBuilder()
+            .WithLevel(ScriptPermissions.PermissionLevel.Elevated)
+            .WithApis(ScriptPermissions.ApiCategory.Core | ScriptPermissions.ApiCategory.FileIO)
+            .AllowNamespace("System.IO")
+            .WithScriptId("file-script")
+            .Build();
 
         var validator = new SecurityValidator(permissions);
         var code = @"

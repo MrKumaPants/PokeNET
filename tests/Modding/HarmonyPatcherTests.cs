@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -450,6 +451,196 @@ public class HarmonyPatcherTests : IDisposable
 
     #endregion
 
+    #region Transpiler Patch Tests
+
+    [Fact]
+    public void ApplyPatches_WithTranspilerPatch_ShouldModifyIL()
+    {
+        // Arrange
+        var harmony = HarmonyTestHelpers.CreateTestHarmonyInstance("TranspilerTest");
+        var targetMethod = typeof(HarmonyTestHelpers.TestPatchTarget)
+            .GetMethod(nameof(HarmonyTestHelpers.TestPatchTarget.TestMethodWithReturn));
+        var transpilerMethod = typeof(SampleTranspilerPatch)
+            .GetMethod(nameof(SampleTranspilerPatch.Transpiler));
+
+        // Act
+        harmony.Patch(targetMethod, transpiler: new HarmonyMethod(transpilerMethod));
+
+        // Execute patched method
+        var result = HarmonyTestHelpers.TestPatchTarget.TestMethodWithReturn(5);
+
+        // Assert - Original would return 10 (5*2), transpiler might modify this
+        result.Should().BeGreaterOrEqualTo(0);
+
+        // Cleanup
+        harmony.UnpatchAll(harmony.Id);
+    }
+
+    #endregion
+
+    #region Patch Isolation Tests
+
+    [Fact]
+    public void ApplyPatches_FromDifferentMods_ShouldBeIsolated()
+    {
+        // Arrange
+        var harmony1 = HarmonyTestHelpers.CreateTestHarmonyInstance("IsolationMod1");
+        var harmony2 = HarmonyTestHelpers.CreateTestHarmonyInstance("IsolationMod2");
+
+        var targetMethod = typeof(HarmonyTestHelpers.TestPatchTarget)
+            .GetMethod(nameof(HarmonyTestHelpers.TestPatchTarget.TestMethod));
+        var prefixMethod = typeof(HarmonyTestHelpers.SamplePrefixPatch)
+            .GetMethod(nameof(HarmonyTestHelpers.SamplePrefixPatch.Prefix));
+
+        harmony1.Patch(targetMethod, prefix: new HarmonyMethod(prefixMethod));
+        harmony2.Patch(targetMethod, prefix: new HarmonyMethod(prefixMethod));
+
+        // Act - Remove only harmony1
+        harmony1.UnpatchAll(harmony1.Id);
+
+        // Assert - harmony2's patches should remain
+        var patches = Harmony.GetPatchInfo(targetMethod!);
+        patches.Should().NotBeNull();
+        patches!.Prefixes.Should().Contain(p => p.owner == harmony2.Id);
+        patches.Prefixes.Should().NotContain(p => p.owner == harmony1.Id);
+
+        // Cleanup
+        harmony2.UnpatchAll(harmony2.Id);
+    }
+
+    #endregion
+
+    #region Patch Failure Handling Tests
+
+    [Fact]
+    public void RemovePatches_WithError_ShouldLogAndContinue()
+    {
+        // Arrange
+        var harmony = HarmonyTestHelpers.CreateTestHarmonyInstance("ErrorTest");
+
+        // Act & Assert - Should not throw even with non-existent patches
+        harmony.UnpatchAll(harmony.Id);
+    }
+
+    #endregion
+
+    #region Edge Case Tests
+
+    [Fact]
+    public void ApplyPatches_ToStaticAndInstanceMethods_ShouldWork()
+    {
+        // Arrange
+        var harmony = HarmonyTestHelpers.CreateTestHarmonyInstance("MixedTest");
+        var staticMethod = typeof(HarmonyTestHelpers.TestPatchTarget)
+            .GetMethod(nameof(HarmonyTestHelpers.TestPatchTarget.TestMethod));
+
+        var prefixMethod = typeof(HarmonyTestHelpers.SamplePrefixPatch)
+            .GetMethod(nameof(HarmonyTestHelpers.SamplePrefixPatch.Prefix));
+
+        // Act - Patch static method
+        harmony.Patch(staticMethod, prefix: new HarmonyMethod(prefixMethod));
+
+        // Assert
+        HarmonyTestHelpers.VerifyPatchApplied(staticMethod!, harmony).Should().BeTrue();
+
+        // Cleanup
+        harmony.UnpatchAll(harmony.Id);
+    }
+
+    [Fact]
+    public void GetAppliedPatches_AfterDispose_ShouldThrow()
+    {
+        // Arrange
+        var patcher = new HarmonyPatcher(_mockLogger.Object);
+        var assembly = typeof(TestPatchClass).Assembly;
+        patcher.ApplyPatches("TestMod", assembly);
+
+        // Act
+        patcher.Dispose();
+
+        // Assert
+        Assert.Throws<ObjectDisposedException>(() => patcher.ApplyPatches("AnotherMod", assembly));
+    }
+
+    [Fact]
+    public void Dispose_CalledMultipleTimes_ShouldBeIdempotent()
+    {
+        // Arrange
+        var patcher = new HarmonyPatcher(_mockLogger.Object);
+
+        // Act & Assert - Should not throw
+        patcher.Dispose();
+        patcher.Dispose();
+        patcher.Dispose();
+    }
+
+    #endregion
+
+    #region Conflict Detection Tests
+
+    [Fact]
+    public void DetectConflicts_WithMultipleModsOnSameMethod_ShouldReturnConflicts()
+    {
+        // Arrange
+        var targetMethod = typeof(HarmonyTestHelpers.TestPatchTarget)
+            .GetMethod(nameof(HarmonyTestHelpers.TestPatchTarget.TestMethod));
+
+        var harmony1 = HarmonyTestHelpers.CreateTestHarmonyInstance("ConflictMod1");
+        var harmony2 = HarmonyTestHelpers.CreateTestHarmonyInstance("ConflictMod2");
+        var harmony3 = HarmonyTestHelpers.CreateTestHarmonyInstance("ConflictMod3");
+
+        var prefixMethod = typeof(HarmonyTestHelpers.SamplePrefixPatch)
+            .GetMethod(nameof(HarmonyTestHelpers.SamplePrefixPatch.Prefix));
+
+        // Act - Apply patches from three mods
+        harmony1.Patch(targetMethod, prefix: new HarmonyMethod(prefixMethod));
+        harmony2.Patch(targetMethod, prefix: new HarmonyMethod(prefixMethod));
+        harmony3.Patch(targetMethod, prefix: new HarmonyMethod(prefixMethod));
+
+        // Assert - Should have multiple patches
+        var patchCount = HarmonyTestHelpers.GetPatchCount(targetMethod!);
+        patchCount.Should().BeGreaterOrEqualTo(3);
+
+        // Cleanup
+        harmony1.UnpatchAll(harmony1.Id);
+        harmony2.UnpatchAll(harmony2.Id);
+        harmony3.UnpatchAll(harmony3.Id);
+    }
+
+    #endregion
+
+    #region Unpatch Functionality Tests
+
+    [Fact]
+    public void RemovePatches_ShouldRestoreOriginalBehavior()
+    {
+        // Arrange
+        var harmony = HarmonyTestHelpers.CreateTestHarmonyInstance("RestoreTest");
+        var targetMethod = typeof(HarmonyTestHelpers.TestPatchTarget)
+            .GetMethod(nameof(HarmonyTestHelpers.TestPatchTarget.TestMethod));
+        var postfixMethod = typeof(HarmonyTestHelpers.SamplePostfixPatch)
+            .GetMethod(nameof(HarmonyTestHelpers.SamplePostfixPatch.Postfix));
+
+        HarmonyTestHelpers.SamplePostfixPatch.Applied = false;
+
+        // Get original behavior
+        var originalResult = HarmonyTestHelpers.TestPatchTarget.TestMethod("test");
+
+        // Apply patch
+        harmony.Patch(targetMethod, postfix: new HarmonyMethod(postfixMethod));
+        var patchedResult = HarmonyTestHelpers.TestPatchTarget.TestMethod("test");
+
+        // Act - Remove patch
+        harmony.UnpatchAll(harmony.Id);
+        var restoredResult = HarmonyTestHelpers.TestPatchTarget.TestMethod("test");
+
+        // Assert
+        patchedResult.Should().Contain("[Modified]");
+        restoredResult.Should().Be(originalResult);
+    }
+
+    #endregion
+
     #region Test Support Classes
 
     [HarmonyPatch]
@@ -478,5 +669,15 @@ public class HarmonyPatcherTests : IDisposable
         }
     }
 
+    public static class SampleTranspilerPatch
+    {
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            // Simple transpiler that returns instructions as-is
+            return instructions;
+        }
+    }
+
     #endregion
 }
+

@@ -328,7 +328,7 @@ namespace PokeNET.Tests.Assets
         }
 
         [Fact]
-        public void IntegrationTest_ConcurrentLoading_ShouldHandleMultipleThreads()
+        public async Task IntegrationTest_ConcurrentLoading_ShouldHandleMultipleThreads()
         {
             // Arrange
             var assetManager = new AssetManager(_mockLogger.Object, _testBasePath);
@@ -342,7 +342,7 @@ namespace PokeNET.Tests.Assets
             var tasks = Enumerable.Range(0, 10)
                 .Select(i => Task.Run(() => assetManager.Load<Dictionary<string, object>>($"data{i}.json")))
                 .ToArray();
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
 
             // Assert
             tasks.Should().AllSatisfy(t => t.Result.Should().NotBeNull());
@@ -471,7 +471,7 @@ namespace PokeNET.Tests.Assets
         #region Stress Tests
 
         [Fact]
-        public void StressTest_ConcurrentLoadingUnderHighLoad_ShouldSucceed()
+        public async Task StressTest_ConcurrentLoadingUnderHighLoad_ShouldSucceed()
         {
             // Arrange
             var assetManager = new AssetManager(_mockLogger.Object, _testBasePath);
@@ -488,7 +488,7 @@ namespace PokeNET.Tests.Assets
                 var index = i % 20;
                 tasks.Add(Task.Run(() => assetManager.Load<Dictionary<string, object>>($"stress{index}.json")));
             }
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks.ToArray());
 
             // Assert
             tasks.Should().AllSatisfy(t => t.IsCompletedSuccessfully.Should().BeTrue());

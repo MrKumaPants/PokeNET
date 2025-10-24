@@ -3,180 +3,124 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Melanchall.DryWetMidi.Multimedia;
-using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.Core;
 using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Configuration;
 using PokeNET.Audio.Exceptions;
 using PokeNET.Audio.Models;
+using PokeNET.Audio.Services.Music;
 
 namespace PokeNET.Audio.Services;
 
 /// <summary>
-/// MIDI-based music player with support for looping, crossfading, and volume control.
-/// Uses DryWetMidi for MIDI file processing and playback.
-/// Fully implements IMusicPlayer interface.
+/// MIDI-based music player facade that coordinates specialized music services.
+/// Uses composition to delegate to: file management, state tracking, volume control,
+/// playback engine, and transition handling services.
+/// Fully implements IMusicPlayer interface with zero breaking changes.
 /// </summary>
 public sealed class MusicPlayer : IMusicPlayer
 {
     private readonly ILogger<MusicPlayer> _logger;
-    private readonly AudioSettings _settings;
-    private readonly AudioCache _cache;
-    private readonly SemaphoreSlim _playbackLock;
-
-    private IOutputDevice? _outputDevice;
-    private Playback? _currentPlayback;
-    private MidiFile? _currentMidiFile;
-    private float _volume;
-    private bool _isPlaying;
-    private bool _isPaused;
-    private string? _currentTrackPath;
-    private AudioTrack? _currentAudioTrack;
-    private bool _isLooping;
-    private TimeSpan _crossfadeDuration;
+    private readonly IMusicFileManager _fileManager;
+    private readonly IMusicStateManager _stateManager;
+    private readonly IMusicVolumeController _volumeController;
+    private readonly IMusicPlaybackEngine _playbackEngine;
+    private readonly IMusicTransitionHandler _transitionHandler;
+    private readonly SemaphoreSlim _operationLock;
     private bool _disposed;
 
     // Events from IMusicPlayer
     public event EventHandler<TrackCompletedEventArgs>? TrackCompleted;
-    public event EventHandler<TrackTransitionEventArgs>? TrackTransitioning;
-
-    // IAudioService properties
-    public PlaybackState State
+    public event EventHandler<TrackTransitionEventArgs>? TrackTransitioning
     {
-        get
-        {
-            ThrowIfDisposed();
-            if (_isPlaying && !_isPaused) return PlaybackState.Playing;
-            if (_isPaused) return PlaybackState.Paused;
-            return PlaybackState.Stopped;
-        }
+        add => _transitionHandler.TrackTransitioning += value;
+        remove => _transitionHandler.TrackTransitioning -= value;
     }
 
-    public bool IsPlaying
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _isPlaying && !_isPaused;
-        }
-    }
+    // IAudioService properties - delegated to state manager
+    public PlaybackState State => _stateManager.State;
+    public bool IsPlaying => _stateManager.IsPlaying;
+    public bool IsPaused => _stateManager.IsPaused;
 
-    public bool IsPaused
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _isPaused;
-        }
-    }
+    // IMusicPlayer properties - delegated to appropriate services
+    public AudioTrack? CurrentTrack => _stateManager.CurrentTrack;
+    public AudioTrack? NextTrack => null; // TODO: Implement track queue
 
-    // IMusicPlayer properties
-    public AudioTrack? CurrentTrack
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return _currentAudioTrack;
-        }
-    }
-
-    public AudioTrack? NextTrack
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return null; // TODO: Implement track queue
-        }
-    }
-
-    public MusicState MusicState
-    {
-        get
-        {
-            ThrowIfDisposed();
-            return new MusicState
-            {
-                CurrentTrack = _currentAudioTrack,
-                NextTrack = null, // TODO: Implement track queue
-                State = State,
-                Position = GetPosition(),
-                Volume = _volume,
-                IsLooping = _isLooping,
-                IsMuted = _volume == 0.0f,
-                IsTransitioning = false,
-                TransitionProgress = 0.0f
-            };
-        }
-    }
+    public MusicState MusicState => _stateManager.GetMusicState(_playbackEngine.GetPosition(), _volumeController.Volume);
 
     public bool IsLooping
     {
-        get
-        {
-            ThrowIfDisposed();
-            return _isLooping;
-        }
-        set
-        {
-            ThrowIfDisposed();
-            _isLooping = value;
-            if (_currentPlayback != null)
-            {
-                _currentPlayback.Loop = value;
-            }
-            _logger.LogDebug("Music looping set to {IsLooping}", value);
-        }
+        get => _stateManager.IsLooping;
+        set => _stateManager.IsLooping = value;
     }
 
     public TimeSpan CrossfadeDuration
     {
-        get
-        {
-            ThrowIfDisposed();
-            return _crossfadeDuration;
-        }
-        set
-        {
-            ThrowIfDisposed();
-            _crossfadeDuration = value;
-            _logger.LogDebug("Crossfade duration set to {Duration}ms", value.TotalMilliseconds);
-        }
+        get => _transitionHandler.CrossfadeDuration;
+        set => _transitionHandler.CrossfadeDuration = value;
     }
 
     public float Volume
     {
-        get => _volume;
-        set
-        {
-            ThrowIfDisposed();
-            _volume = Math.Clamp(value, 0.0f, 1.0f);
-            _logger.LogDebug("Music volume set to {Volume}", _volume);
-        }
+        get => _volumeController.Volume;
+        set => _volumeController.Volume = value;
     }
+
+    // Test compatibility properties
+    public bool IsInitialized => _playbackEngine.IsInitialized;
+    public MidiFile? CurrentMidi => _stateManager.CurrentMidiFile;
+    public bool IsLoaded => _stateManager.IsLoaded;
+    public float Tempo { get; private set; } = 1.0f;
 
     // Test compatibility constructor
     public MusicPlayer(ILogger<MusicPlayer> logger, IOutputDevice outputDevice)
-        : this(logger,
-               Options.Create(new AudioSettings { MusicVolume = 1.0f, MidiOutputDevice = 0 }),
-               new AudioCache(NullLoggerFactory.Instance.CreateLogger<AudioCache>(), 50 * 1024 * 1024)) // 50MB cache
+        : this(
+            logger,
+            CreateFileManager(logger),
+            new MusicStateManager(NullLoggerFactory.Instance.CreateLogger<MusicStateManager>()),
+            CreateVolumeController(logger),
+            CreatePlaybackEngine(logger, outputDevice),
+            new MusicTransitionHandler(NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()))
     {
-        _outputDevice = outputDevice;
     }
 
+    // Production constructor with DI
     public MusicPlayer(
         ILogger<MusicPlayer> logger,
         IOptions<AudioSettings> settings,
         AudioCache cache)
+        : this(
+            logger,
+            new MusicFileManager(NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(), settings, cache),
+            new MusicStateManager(NullLoggerFactory.Instance.CreateLogger<MusicStateManager>()),
+            new MusicVolumeController(NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(), settings),
+            new MusicPlaybackEngine(NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(), settings),
+            new MusicTransitionHandler(NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()))
+    {
+    }
+
+    // Main constructor - accepts all services
+    public MusicPlayer(
+        ILogger<MusicPlayer> logger,
+        IMusicFileManager fileManager,
+        IMusicStateManager stateManager,
+        IMusicVolumeController volumeController,
+        IMusicPlaybackEngine playbackEngine,
+        IMusicTransitionHandler transitionHandler)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
+        _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+        _volumeController = volumeController ?? throw new ArgumentNullException(nameof(volumeController));
+        _playbackEngine = playbackEngine ?? throw new ArgumentNullException(nameof(playbackEngine));
+        _transitionHandler = transitionHandler ?? throw new ArgumentNullException(nameof(transitionHandler));
 
-        _playbackLock = new SemaphoreSlim(1, 1);
-        _volume = _settings.MusicVolume;
-        _crossfadeDuration = TimeSpan.FromSeconds(1); // Default 1 second crossfade
+        _operationLock = new SemaphoreSlim(1, 1);
 
-        _logger.LogInformation("MusicPlayer initialized");
+        // Wire up playback finished event
+        _playbackEngine.PlaybackFinished += OnPlaybackFinished;
+
+        _logger.LogInformation("MusicPlayer initialized with composed services");
     }
 
     // IAudioService methods
@@ -189,43 +133,25 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentNullException(nameof(track));
         }
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
             _logger.LogInformation("Playing music: {TrackName}, Loop: {Loop}", track.Name, track.Loop);
 
-            // Stop current playback
-            StopInternal();
-
             // Load MIDI file
-            var midiFile = await LoadMidiFileAsync(track.FilePath, cancellationToken);
+            var midiFile = await _fileManager.LoadMidiFileAsync(track.FilePath, cancellationToken);
 
-            // Initialize output device if needed
-            if (_outputDevice == null)
+            // Initialize playback engine if needed
+            if (!_playbackEngine.IsInitialized)
             {
-                _outputDevice = OutputDevice.GetByIndex(_settings.MidiOutputDevice);
-                _logger.LogInformation("MIDI output device initialized: {DeviceId}", _settings.MidiOutputDevice);
+                await _playbackEngine.InitializeAsync();
             }
 
-            // Create playback
-            _currentPlayback = midiFile.GetPlayback(_outputDevice);
-            _currentPlayback.Loop = track.Loop || _isLooping;
-
-            // Handle playback finished event
-            _currentPlayback.Finished += OnPlaybackFinished;
-
             // Start playback
-            _currentPlayback.Start();
+            _playbackEngine.StartPlayback(midiFile, track.Loop || _stateManager.IsLooping);
 
-            _currentMidiFile = midiFile;
-            _currentTrackPath = track.FilePath;
-            _currentAudioTrack = track;
-            _isPlaying = true;
-            _isPaused = false;
-
-            // Update track metadata
-            track.LastPlayedAt = DateTime.UtcNow;
-            track.PlayCount++;
+            // Update state
+            _stateManager.SetPlaying(track, midiFile);
 
             _logger.LogInformation("Music playback started: {Track}", track.Name);
         }
@@ -236,56 +162,20 @@ public sealed class MusicPlayer : IMusicPlayer
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
     public TimeSpan GetPosition()
     {
         ThrowIfDisposed();
-
-        if (_currentPlayback == null)
-        {
-            return TimeSpan.Zero;
-        }
-
-        try
-        {
-            var currentTime = _currentPlayback.GetCurrentTime<MetricTimeSpan>();
-            return TimeSpan.FromMilliseconds(currentTime.TotalMicroseconds / 1000.0);
-        }
-        catch
-        {
-            return TimeSpan.Zero;
-        }
+        return _playbackEngine.GetPosition();
     }
 
     public void Seek(TimeSpan position)
     {
         ThrowIfDisposed();
-
-        _playbackLock.Wait();
-        try
-        {
-            if (_currentPlayback == null)
-            {
-                throw new AudioPlaybackException("No track is currently loaded");
-            }
-
-            var metricTime = new MetricTimeSpan((long)(position.TotalMilliseconds * 1000));
-            _currentPlayback.MoveToTime(metricTime);
-
-            _logger.LogDebug("Seeked to position: {Position}", position);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to seek to position: {Position}", position);
-            throw new AudioPlaybackException($"Failed to seek to position: {position}", ex);
-        }
-        finally
-        {
-            _playbackLock.Release();
-        }
+        _playbackEngine.Seek(position);
     }
 
     // IMusicPlayer methods
@@ -298,34 +188,25 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentNullException(nameof(track));
         }
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
             _logger.LogInformation("Loading music: {TrackName}", track.Name);
 
-            // Stop current playback
-            StopInternal();
+            // Load MIDI file
+            var midiFile = await _fileManager.LoadMidiFileAsync(track.FilePath, cancellationToken);
 
-            // Load MIDI file (but don't play it)
-            var midiFile = await LoadMidiFileAsync(track.FilePath, cancellationToken);
-
-            // Initialize output device if needed
-            if (_outputDevice == null)
+            // Initialize playback engine if needed
+            if (!_playbackEngine.IsInitialized)
             {
-                _outputDevice = OutputDevice.GetByIndex(_settings.MidiOutputDevice);
-                _logger.LogInformation("MIDI output device initialized: {DeviceId}", _settings.MidiOutputDevice);
+                await _playbackEngine.InitializeAsync();
             }
 
-            // Create playback (but don't start it)
-            _currentPlayback = midiFile.GetPlayback(_outputDevice);
-            _currentPlayback.Loop = track.Loop || _isLooping;
-            _currentPlayback.Finished += OnPlaybackFinished;
+            // Prepare playback (but don't start)
+            _playbackEngine.PreparePlayback(midiFile, track.Loop || _stateManager.IsLooping);
 
-            _currentMidiFile = midiFile;
-            _currentTrackPath = track.FilePath;
-            _currentAudioTrack = track;
-            _isPlaying = false;
-            _isPaused = false;
+            // Update state
+            _stateManager.SetLoaded(track, midiFile);
 
             _logger.LogInformation("Music loaded: {Track}", track.Name);
         }
@@ -336,7 +217,7 @@ public sealed class MusicPlayer : IMusicPlayer
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
@@ -349,46 +230,28 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentNullException(nameof(track));
         }
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
-            _logger.LogInformation("Transitioning to music: {TrackName}, Crossfade: {UseCrossfade}",
-                track.Name, useCrossfade);
-
-            // Raise transition event
-            TrackTransitioning?.Invoke(this, new TrackTransitionEventArgs
-            {
-                FromTrack = _currentAudioTrack,
-                ToTrack = track,
-                IsCrossfading = useCrossfade,
-                Duration = useCrossfade ? _crossfadeDuration : TimeSpan.Zero
-            });
-
-            if (useCrossfade && _isPlaying)
-            {
-                // Perform crossfade
-                var fadeOutTask = FadeVolumeAsync(_volume, 0.0f, (int)_crossfadeDuration.TotalMilliseconds, cancellationToken);
-                await fadeOutTask;
-            }
-
-            // Play new track
-            _playbackLock.Release(); // Release before calling PlayAsync
-            await PlayAsync(track, cancellationToken);
-            await _playbackLock.WaitAsync(cancellationToken);
-
-            if (useCrossfade)
-            {
-                // Fade in new track
-                await FadeVolumeAsync(0.0f, _settings.MusicVolume, (int)_crossfadeDuration.TotalMilliseconds, cancellationToken);
-            }
-
-            _logger.LogInformation("Transition completed to: {Track}", track.Name);
+            await _transitionHandler.TransitionAsync(
+                _stateManager.CurrentTrack,
+                track,
+                useCrossfade,
+                async (t, ct) =>
+                {
+                    _operationLock.Release();
+                    await PlayAsync(t, ct);
+                    await _operationLock.WaitAsync(ct);
+                },
+                async (duration, ct) => await _volumeController.FadeOutAsync(duration, ct),
+                async (duration, ct) => await _volumeController.FadeInAsync(_volumeController.MasterVolume, duration, ct),
+                cancellationToken);
         }
         finally
         {
-            if (_playbackLock.CurrentCount == 0)
+            if (_operationLock.CurrentCount == 0)
             {
-                _playbackLock.Release();
+                _operationLock.Release();
             }
         }
     }
@@ -397,24 +260,24 @@ public sealed class MusicPlayer : IMusicPlayer
     {
         ThrowIfDisposed();
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
-            if (!_isPlaying)
+            if (!_stateManager.IsPlaying)
             {
                 return;
             }
 
             _logger.LogInformation("Fading out music: {Track}, Duration: {Duration}ms",
-                _currentAudioTrack?.Name, duration.TotalMilliseconds);
+                _stateManager.CurrentTrack?.Name, duration.TotalMilliseconds);
 
-            await FadeVolumeAsync(_volume, 0.0f, (int)duration.TotalMilliseconds, cancellationToken);
-
-            StopInternal();
+            await _volumeController.FadeOutAsync(duration, cancellationToken);
+            _playbackEngine.StopPlayback();
+            _stateManager.SetStopped();
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
@@ -422,47 +285,34 @@ public sealed class MusicPlayer : IMusicPlayer
     {
         ThrowIfDisposed();
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
-            if (_currentPlayback == null)
+            if (!_playbackEngine.HasActivePlayback)
             {
                 throw new AudioPlaybackException("No track is currently loaded");
             }
 
             _logger.LogInformation("Fading in music: {Track}, Duration: {Duration}ms",
-                _currentAudioTrack?.Name, duration.TotalMilliseconds);
+                _stateManager.CurrentTrack?.Name, duration.TotalMilliseconds);
 
             // Start playback if not already playing
-            if (!_isPlaying)
+            if (!_stateManager.IsPlaying)
             {
-                _currentPlayback.Start();
-                _isPlaying = true;
-                _isPaused = false;
+                _playbackEngine.ResumePlayback();
+                _stateManager.SetResumed();
             }
 
-            await FadeVolumeAsync(0.0f, _settings.MusicVolume, (int)duration.TotalMilliseconds, cancellationToken);
+            await _volumeController.FadeInAsync(_volumeController.MasterVolume, duration, cancellationToken);
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
-    public void SetVolume(float volume)
-    {
-        if (volume < 0.0f || volume > 1.0f)
-        {
-            throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be between 0.0 and 1.0");
-        }
-
-        Volume = volume;
-    }
-
-    public float GetVolume()
-    {
-        return Volume;
-    }
+    public void SetVolume(float volume) => _volumeController.SetVolume(volume);
+    public float GetVolume() => _volumeController.GetVolume();
 
     // Legacy string-based PlayAsync (for backward compatibility)
     public async Task PlayAsync(
@@ -478,7 +328,6 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentException("Asset path cannot be null or whitespace", nameof(assetPath));
         }
 
-        // Create an AudioTrack wrapper and delegate to the main implementation
         var track = new AudioTrack
         {
             Name = Path.GetFileNameWithoutExtension(assetPath),
@@ -487,46 +336,42 @@ public sealed class MusicPlayer : IMusicPlayer
             Type = TrackType.Music
         };
 
-        // Use the IMusicPlayer implementation
         await PlayAsync(track, cancellationToken);
 
-        // Apply fade-in if specified
         if (fadeInDuration > 0)
         {
             await FadeInAsync(TimeSpan.FromMilliseconds(fadeInDuration), cancellationToken);
         }
     }
 
-    // IAudioService Stop implementation
     public void Stop()
     {
         ThrowIfDisposed();
 
-        _playbackLock.Wait();
+        _operationLock.Wait();
         try
         {
-            if (!_isPlaying)
+            if (!_stateManager.IsPlaying)
             {
                 return;
             }
 
-            _logger.LogInformation("Stopping music: {Track}", _currentAudioTrack?.Name);
-            StopInternal();
+            _logger.LogInformation("Stopping music: {Track}", _stateManager.CurrentTrack?.Name);
+            _playbackEngine.StopPlayback();
+            _stateManager.SetStopped();
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
-    // Legacy Stop with fade-out (for backward compatibility)
     public void Stop(int fadeOutDuration = 0)
     {
         ThrowIfDisposed();
 
         if (fadeOutDuration > 0)
         {
-            // Perform async fade-out
             FadeOutAsync(TimeSpan.FromMilliseconds(fadeOutDuration), CancellationToken.None)
                 .GetAwaiter().GetResult();
         }
@@ -540,22 +385,22 @@ public sealed class MusicPlayer : IMusicPlayer
     {
         ThrowIfDisposed();
 
-        _playbackLock.Wait();
+        _operationLock.Wait();
         try
         {
-            if (!_isPlaying || _isPaused)
+            if (!_stateManager.IsPlaying || _stateManager.IsPaused)
             {
                 return;
             }
 
-            _currentPlayback?.Stop();
-            _isPaused = true;
+            _playbackEngine.PausePlayback();
+            _stateManager.SetPaused();
 
-            _logger.LogInformation("Music paused: {Track}", _currentAudioTrack?.Name);
+            _logger.LogInformation("Music paused: {Track}", _stateManager.CurrentTrack?.Name);
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
@@ -563,22 +408,22 @@ public sealed class MusicPlayer : IMusicPlayer
     {
         ThrowIfDisposed();
 
-        _playbackLock.Wait();
+        _operationLock.Wait();
         try
         {
-            if (!_isPaused)
+            if (!_stateManager.IsPaused)
             {
                 return;
             }
 
-            _currentPlayback?.Start();
-            _isPaused = false;
+            _playbackEngine.ResumePlayback();
+            _stateManager.SetResumed();
 
-            _logger.LogInformation("Music resumed: {Track}", _currentAudioTrack?.Name);
+            _logger.LogInformation("Music resumed: {Track}", _stateManager.CurrentTrack?.Name);
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
@@ -595,152 +440,29 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentException("Asset path cannot be null or whitespace", nameof(assetPath));
         }
 
-        await _playbackLock.WaitAsync(cancellationToken);
+        await _operationLock.WaitAsync(cancellationToken);
         try
         {
             _logger.LogInformation("Crossfading to music: {AssetPath}, Duration: {Duration}ms", assetPath, crossfadeDuration);
 
-            // Fade out current track
-            if (_isPlaying)
-            {
-                var fadeOutTask = FadeVolumeAsync(_volume, 0.0f, crossfadeDuration, cancellationToken);
-                await fadeOutTask;
-            }
+            await _transitionHandler.CrossfadeAsync(
+                _volumeController.Volume,
+                _volumeController.MasterVolume,
+                crossfadeDuration,
+                async () => await PlayAsync(assetPath, loop, 0, cancellationToken),
+                async (from, to, duration, ct) => await _volumeController.FadeVolumeAsync(from, to, duration, ct),
+                cancellationToken);
 
-            // Play new track with fade-in
-            await PlayAsync(assetPath, loop, crossfadeDuration, cancellationToken);
-
-            _logger.LogInformation("Crossfade completed to: {Track}", _currentAudioTrack?.Name);
+            _logger.LogInformation("Crossfade completed to: {Track}", _stateManager.CurrentTrack?.Name);
         }
         finally
         {
-            _playbackLock.Release();
+            _operationLock.Release();
         }
     }
 
-    /// <summary>
-    /// Loads a MIDI file from cache or disk.
-    /// </summary>
-    private async Task<MidiFile> LoadMidiFileAsync(string assetPath, CancellationToken cancellationToken)
-    {
-        // Check cache first
-        if (_cache.TryGet<MidiFile>(assetPath, out var cachedFile) && cachedFile != null)
-        {
-            _logger.LogDebug("MIDI file loaded from cache: {AssetPath}", assetPath);
-            return cachedFile;
-        }
-
-        // Load from disk
-        var fullPath = Path.Combine(_settings.AssetBasePath, assetPath);
-
-        if (!File.Exists(fullPath))
-        {
-            throw new AudioLoadException(assetPath, new FileNotFoundException($"MIDI file not found: {fullPath}"));
-        }
-
-        try
-        {
-            var midiFile = await Task.Run(() => MidiFile.Read(fullPath), cancellationToken);
-
-            // Cache the file
-            var fileInfo = new FileInfo(fullPath);
-            _cache.Set(assetPath, midiFile, fileInfo.Length);
-
-            _logger.LogDebug("MIDI file loaded from disk and cached: {AssetPath}", assetPath);
-            return midiFile;
-        }
-        catch (Exception ex)
-        {
-            throw new AudioLoadException(assetPath, ex);
-        }
-    }
-
-    /// <summary>
-    /// Fades volume from one level to another over a specified duration.
-    /// </summary>
-    private async Task FadeVolumeAsync(float fromVolume, float toVolume, int durationMs, CancellationToken cancellationToken)
-    {
-        const int stepMs = 50; // Update every 50ms
-        var steps = durationMs / stepMs;
-        var volumeStep = (toVolume - fromVolume) / steps;
-
-        for (int i = 0; i < steps; i++)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            _volume = fromVolume + (volumeStep * i);
-            await Task.Delay(stepMs, cancellationToken);
-        }
-
-        _volume = toVolume;
-    }
-
-    /// <summary>
-    /// Internal stop method without locking (must be called within lock).
-    /// </summary>
-    private void StopInternal()
-    {
-        if (_currentPlayback != null)
-        {
-            _currentPlayback.Finished -= OnPlaybackFinished;
-            _currentPlayback.Stop();
-            _currentPlayback.Dispose();
-            _currentPlayback = null;
-        }
-
-        _isPlaying = false;
-        _isPaused = false;
-        _currentTrackPath = null;
-        _currentAudioTrack = null;
-
-        _logger.LogDebug("Music playback stopped internally");
-    }
-
-    /// <summary>
-    /// Handles playback finished event.
-    /// </summary>
-    private void OnPlaybackFinished(object? sender, EventArgs e)
-    {
-        _logger.LogInformation("Music playback finished: {Track}", _currentAudioTrack?.Name);
-
-        _playbackLock.Wait();
-        try
-        {
-            var completedTrack = _currentAudioTrack;
-            var willLoop = _currentPlayback?.Loop ?? false;
-
-            _isPlaying = false;
-            _isPaused = false;
-
-            // Fire TrackCompleted event if there's a subscriber
-            if (completedTrack != null)
-            {
-                TrackCompleted?.Invoke(this, new TrackCompletedEventArgs
-                {
-                    Track = completedTrack,
-                    WillLoop = willLoop
-                });
-            }
-        }
-        finally
-        {
-            _playbackLock.Release();
-        }
-    }
-
-    // ==========================================================================
-    // TEST COMPATIBILITY METHODS
-    // These methods provide compatibility with the legacy test API
-    // ==========================================================================
-
-    public bool IsInitialized => true; // Always initialized via constructor
-    public MidiFile? CurrentMidi => _currentMidiFile;
-    public bool IsLoaded => _currentMidiFile != null;
-
-    public Task InitializeAsync() => Task.CompletedTask; // No-op, initialized via constructor
+    // Test compatibility methods
+    public Task InitializeAsync() => _playbackEngine.InitializeAsync();
 
     public async Task LoadMidiAsync(byte[] midiData)
     {
@@ -751,14 +473,13 @@ public sealed class MusicPlayer : IMusicPlayer
             throw new ArgumentNullException(nameof(midiData));
         }
 
-        using var memoryStream = new MemoryStream(midiData);
-        _currentMidiFile = MidiFile.Read(memoryStream);
+        var midiFile = _fileManager.LoadMidiFromBytes(midiData);
 
         var track = new AudioTrack
         {
             Name = "loaded-track",
             FilePath = "memory",
-            Loop = _isLooping
+            Loop = _stateManager.IsLooping
         };
 
         await LoadAsync(track);
@@ -777,26 +498,14 @@ public sealed class MusicPlayer : IMusicPlayer
         await LoadMidiAsync(midiData);
     }
 
-    public Task PlayAsync() => PlayAsync(_currentAudioTrack ?? throw new InvalidOperationException("No MIDI file loaded"));
+    public Task PlayAsync() => PlayAsync(_stateManager.CurrentTrack ?? throw new InvalidOperationException("No MIDI file loaded"));
     public Task PauseAsync() { Pause(); return Task.CompletedTask; }
     public Task ResumeAsync() { Resume(); return Task.CompletedTask; }
     public Task StopAsync() { Stop(); return Task.CompletedTask; }
     public Task SeekAsync(TimeSpan position) { Seek(position); return Task.CompletedTask; }
-
-    public TimeSpan GetDuration()
-    {
-        if (_currentMidiFile == null) return TimeSpan.Zero;
-        return _currentMidiFile.GetDuration<MetricTimeSpan>();
-    }
-
-    public int GetTrackCount() => _currentMidiFile?.GetTrackChunks().Count() ?? 0;
-
-    public void SetLoop(bool enabled)
-    {
-        IsLooping = enabled;
-    }
-
-    public float Tempo { get; private set; } = 1.0f;
+    public TimeSpan GetDuration() => _stateManager.GetDuration();
+    public int GetTrackCount() => _stateManager.GetTrackCount();
+    public void SetLoop(bool enabled) => IsLooping = enabled;
 
     public void SetTempo(float tempo)
     {
@@ -814,6 +523,33 @@ public sealed class MusicPlayer : IMusicPlayer
         OnPlaybackFinished(this, EventArgs.Empty);
     }
 
+    private void OnPlaybackFinished(object? sender, EventArgs e)
+    {
+        _logger.LogInformation("Music playback finished: {Track}", _stateManager.CurrentTrack?.Name);
+
+        _operationLock.Wait();
+        try
+        {
+            var completedTrack = _stateManager.CurrentTrack;
+            var willLoop = _stateManager.IsLooping;
+
+            _stateManager.SetStopped();
+
+            if (completedTrack != null)
+            {
+                TrackCompleted?.Invoke(this, new TrackCompletedEventArgs
+                {
+                    Track = completedTrack,
+                    WillLoop = willLoop
+                });
+            }
+        }
+        finally
+        {
+            _operationLock.Release();
+        }
+    }
+
     private void ThrowIfDisposed()
     {
         if (_disposed)
@@ -829,25 +565,47 @@ public sealed class MusicPlayer : IMusicPlayer
             return;
         }
 
-        _playbackLock.Wait();
+        _operationLock.Wait();
         try
         {
-            StopInternal();
+            Stop();
 
-            _outputDevice?.Dispose();
-            _outputDevice = null;
+            if (_playbackEngine is IDisposable disposableEngine)
+            {
+                disposableEngine.Dispose();
+            }
 
-            _playbackLock.Dispose();
+            _operationLock.Dispose();
             _disposed = true;
 
             _logger.LogInformation("MusicPlayer disposed");
         }
         finally
         {
-            if (!_playbackLock.CurrentCount.Equals(0))
+            if (_operationLock.CurrentCount == 0)
             {
-                _playbackLock.Release();
+                _operationLock.Release();
             }
         }
+    }
+
+    // Helper factory methods for test constructor
+    private static IMusicFileManager CreateFileManager(ILogger logger)
+    {
+        var settings = Options.Create(new AudioSettings { MusicVolume = 1.0f, AssetBasePath = "", MidiOutputDevice = 0 });
+        var cache = new AudioCache(NullLoggerFactory.Instance.CreateLogger<AudioCache>(), 50 * 1024 * 1024);
+        return new MusicFileManager(NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(), settings, cache);
+    }
+
+    private static IMusicVolumeController CreateVolumeController(ILogger logger)
+    {
+        var settings = Options.Create(new AudioSettings { MusicVolume = 1.0f });
+        return new MusicVolumeController(NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(), settings);
+    }
+
+    private static IMusicPlaybackEngine CreatePlaybackEngine(ILogger logger, IOutputDevice outputDevice)
+    {
+        var settings = new AudioSettings { MidiOutputDevice = 0 };
+        return new MusicPlaybackEngine(NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(), outputDevice, settings);
     }
 }

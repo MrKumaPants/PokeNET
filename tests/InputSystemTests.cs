@@ -44,20 +44,23 @@ public class InputSystemTests : IDisposable
     #region Command Creation and Execution Tests
 
     [Fact]
-    public void MoveCommand_ShouldUpdateVelocity()
+    public void MoveCommand_ShouldUpdateDirection()
     {
         // Arrange
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
         var direction = new Vector2(1, 0); // Move right
-        var command = new MoveCommand(entity, direction, 2.0f);
+        var command = new MoveCommand(entity, direction);
 
         // Act
         command.Execute(_world);
 
         // Assert
-        ref var velocity = ref _world.Get<Velocity>(entity);
-        Assert.Equal(2.0f, velocity.X, 0.01f);
-        Assert.Equal(0.0f, velocity.Y, 0.01f);
+        ref var dir = ref _world.Get<Direction>(entity);
+        Assert.Equal(Direction.East, dir);
     }
 
     [Fact]
@@ -138,7 +141,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var queue = new CommandQueue(_queueLogger, maxQueueSize: 10);
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
         var command = new MoveCommand(entity, Vector2.One);
 
         // Act
@@ -177,7 +184,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var queue = new CommandQueue(_queueLogger, maxQueueSize: 2);
-        var entity = _world.Create(new Position(), new Velocity());
+        var entity = _world.Create(
+            new Position(),
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
 
         // Act
         var result1 = queue.Enqueue(new MoveCommand(entity, Vector2.One));
@@ -196,7 +207,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var queue = new CommandQueue(_queueLogger);
-        var entity = _world.Create(new Position(), new Velocity());
+        var entity = _world.Create(
+            new Position(),
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
         queue.Enqueue(new MoveCommand(entity, Vector2.One));
         queue.Enqueue(new MoveCommand(entity, Vector2.One));
 
@@ -217,22 +232,25 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var history = new CommandHistory(_historyLogger);
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
-        var command = new MoveCommand(entity, Vector2.One);
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
+        var command = new MoveCommand(entity, new Vector2(1, 0));
 
         // Act
         command.Execute(_world);
-        ref var position = ref _world.Get<Position>(entity);
-        var positionAfterExecute = new Vector2(position.X, position.Y);
+        ref var direction = ref _world.Get<Direction>(entity);
+        var directionAfterExecute = direction;
 
         history.Record(command);
         var undoResult = history.Undo(_world);
 
         // Assert
         Assert.True(undoResult);
-        ref var positionAfterUndo = ref _world.Get<Position>(entity);
-        Assert.Equal(0, positionAfterUndo.X, 0.01f);
-        Assert.Equal(0, positionAfterUndo.Y, 0.01f);
+        ref var directionAfterUndo = ref _world.Get<Direction>(entity);
+        Assert.Equal(Direction.None, directionAfterUndo);
     }
 
     [Fact]
@@ -240,7 +258,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var history = new CommandHistory(_historyLogger);
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
         var command = new MoveCommand(entity, new Vector2(1, 0));
 
         // Act
@@ -248,13 +270,13 @@ public class InputSystemTests : IDisposable
         history.Record(command);
         history.Undo(_world);
 
-        ref var positionAfterUndo = ref _world.Get<Position>(entity);
+        ref var directionAfterUndo = ref _world.Get<Direction>(entity);
         var redoResult = history.Redo(_world);
-        ref var positionAfterRedo = ref _world.Get<Position>(entity);
+        ref var directionAfterRedo = ref _world.Get<Direction>(entity);
 
         // Assert
         Assert.True(redoResult);
-        // Position should be restored after redo
+        Assert.Equal(Direction.East, directionAfterRedo);
     }
 
     [Fact]
@@ -262,7 +284,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var history = new CommandHistory(_historyLogger);
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
         var command1 = new MoveCommand(entity, Vector2.One);
         var command2 = new MoveCommand(entity, Vector2.One);
 
@@ -285,7 +311,11 @@ public class InputSystemTests : IDisposable
     {
         // Arrange
         var history = new CommandHistory(_historyLogger, maxHistorySize: 3);
-        var entity = _world.Create(new Position { X = 0, Y = 0 }, new Velocity { X = 0, Y = 0 });
+        var entity = _world.Create(
+            new Position { X = 0, Y = 0 },
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
 
         // Act - record 4 commands (exceeds max)
         for (int i = 0; i < 4; i++)
@@ -398,7 +428,11 @@ public class InputSystemTests : IDisposable
         var system = new InputSystem(_systemLogger, queue, history, _eventBus);
         system.Initialize(_world);
 
-        var playerEntity = _world.Create(new Position(), new Velocity());
+        var playerEntity = _world.Create(
+            new Position(),
+            new GridPosition { TileX = 0, TileY = 0 },
+            Direction.None,
+            new MovementState { Mode = MovementMode.Idle, CanRun = false });
 
         // Act
         system.SetPlayerEntity(playerEntity);

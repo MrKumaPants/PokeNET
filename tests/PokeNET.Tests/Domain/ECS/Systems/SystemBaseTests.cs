@@ -265,13 +265,15 @@ public class SystemBaseTests : IDisposable
     }
 
     [Fact]
-    public void World_BeforeInitialization_IsNull()
+    public void World_BeforeInitialization_ThrowsInvalidOperationException()
     {
         // Arrange
         var system = new TestSystem(_mockLogger.Object);
 
         // Act & Assert
-        system.World.Should().BeNull();
+        Action act = () => { _ = system.World; };
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*not initialized*");
     }
 
     [Fact]
@@ -507,7 +509,7 @@ public class SystemBaseTests : IDisposable
     }
 
     [Fact]
-    public void SystemLifecycle_UpdateBeforeInitialize_HandlesGracefully()
+    public void SystemLifecycle_UpdateBeforeInitialize_ThrowsInvalidOperationException()
     {
         // Arrange
         var system = new SafeSystem(_mockLogger.Object);
@@ -515,8 +517,9 @@ public class SystemBaseTests : IDisposable
         // Act
         Action act = () => system.Update(0.016f);
 
-        // Assert - Should not throw (World will be null but system handles it)
-        act.Should().NotThrow();
+        // Assert - Should throw because World is not initialized
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*not initialized*");
     }
 
     #endregion
@@ -530,6 +533,9 @@ public class SystemBaseTests : IDisposable
         public bool OnDisposeCalled { get; private set; }
         public float LastDeltaTime { get; private set; }
         public int UpdateCallCount { get; private set; }
+
+        // Expose World for test assertions
+        public new World? World => base.World;
 
         public TestSystem(ILogger logger) : base(logger) { }
 
@@ -635,12 +641,10 @@ public class SystemBaseTests : IDisposable
 
         protected override void OnUpdate(float deltaTime)
         {
-            if (World == null) return;
+            var queryDesc = new QueryDescription().WithAll<TestComponent>();
+            EntityCount = World.CountEntities(in queryDesc);
 
-            var query = World.Query(in new QueryDescription().WithAll<TestComponent>());
-            EntityCount = query.CountEntities();
-
-            query.ForEach((ref TestComponent comp) =>
+            World.Query(in queryDesc, (ref TestComponent comp) =>
             {
                 ComponentValue = comp.Value;
             });
@@ -670,10 +674,10 @@ public class SystemBaseTests : IDisposable
 
         protected override void OnUpdate(float deltaTime)
         {
-            // Safely handle null world
-            if (World == null) return;
-
-            // Would normally query world here
+            // Access World to test uninitialized state
+            // This will throw if not initialized
+            var queryDesc = new QueryDescription();
+            _ = World.CountEntities(in queryDesc);
         }
     }
 

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.Modding;
 using PokeNET.Scripting.Interfaces;
 
 namespace PokeNET.Scripting.Services;

@@ -1,5 +1,5 @@
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.Models;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.Models;
 
 namespace PokeNET.Audio.Reactive
 {

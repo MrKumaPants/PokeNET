@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
-using PokeNET.Domain.Assets;
+using PokeNET.Core.Assets;
 
 namespace PokeNET.Core.Assets.Loaders;
 

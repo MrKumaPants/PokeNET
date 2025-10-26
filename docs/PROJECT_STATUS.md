@@ -1,9 +1,10 @@
 # PokeNET Project Status — Current
 
-**Last Updated**: 2025-10-26  
-**Overall Status**: 🟡 **In Development** - Strong foundations, MVP blockers identified  
-**Build Status**: ✅ **Compiles** - 0 errors  
+**Last Updated**: 2025-10-26
+**Overall Status**: 🟡 **In Development** - Strong foundations, MVP blockers identified
+**Build Status**: ✅ **Compiles** - 0 errors, 0 warnings (Domain merged into Core 2025-10-26)
 **Test Status**: 🟡 **Partial** - Audio/Save 90%+, Core systems 10-50%
+**Project Structure**: 7 projects (PokeNET.Domain eliminated via merge)
 
 ---
 
@@ -96,9 +97,10 @@
 ## Architecture Issues
 
 ### **Layering Violations**
-- ❌ **MonoGame in Domain**: `PokeNET.Domain.csproj` references MonoGame (line 18)
-  - **Fix**: Move `RenderSystem` to `PokeNET.Core`, leave `IRenderSystem` interface in Domain
-  - **Priority**: HIGH
+- ✅ **MonoGame in Domain** [RESOLVED 2025-10-26]
+  - **Status**: PokeNET.Domain merged into PokeNET.Core, eliminating layer separation issues
+  - **Resolution**: Project structure simplified from 8 to 7 projects
+  - **Impact**: CS0436 type conflicts from Arch.System.SourceGenerator resolved
 
 ### **API Duplication**
 - ❌ **3× Duplicate APIs**: `IEventApi`, `IEntityApi`, `IAssetApi` in Domain, ModAPI, and Scripting
@@ -155,8 +157,9 @@
 ### **Phase 1: Data Infrastructure** (Week 1 - 32h)
 - [ ] C-4, C-5, C-6, C-7: Data loaders, TypeChart, stats consolidation
 
-### **Phase 2: Fix Architecture** (Week 2 - 19h)
-- [ ] C-1, C-2, C-3: Layering fixes, documentation corrections
+### **Phase 2: Fix Architecture** (Week 2 - 16h)
+- [x] ~~C-1, C-2~~: ✅ Layering fixes completed (Domain merged into Core 2025-10-26)
+- [ ] C-3: Documentation corrections
 - [ ] C-8, C-9, C-10: DI registration (save, audio, scripting)
 - [ ] C-11, C-12: API consolidation, package versions
 
@@ -168,9 +171,9 @@
 - [ ] H-5, H-6, H-7, H-8: AI, status effects, evolution, commands
 - [ ] M-1, M-2, M-3: Pokemon-specific components
 
-**Total Estimate**: 147 hours ≈ 5 weeks to playable MVP
+**Total Estimate**: 144 hours ≈ 5 weeks to playable MVP
 
-**Full Production**: 372 hours ≈ 12 weeks (see ACTIONABLE_TASKS.md for complete breakdown)
+**Full Production**: 369 hours ≈ 11 weeks (see ACTIONABLE_TASKS.md for complete breakdown)
 
 ---
 
@@ -188,12 +191,12 @@
 
 1. **Implement data loaders** (`IDataApi`, JSON deserializers)
 2. **Create TypeChart system** (18 types, effectiveness matrix)
-3. **Move RenderSystem to Core** (fix layering violation)
-4. **Implement minimal battle UI** (move selection, switch, run)
-5. **Implement party screen UI** (view/switch Pokemon)
-6. **Wire save system** (register in DI, create menu)
-7. **Consolidate battle stats** (single `PokemonStats` model)
-8. **Add Pokemon mechanics tests** (type calc, stat calc, damage)
+3. **Implement minimal battle UI** (move selection, switch, run)
+4. **Implement party screen UI** (view/switch Pokemon)
+5. **Wire save system** (register in DI, create menu)
+6. **Consolidate battle stats** (single `PokemonStats` model)
+7. **Add Pokemon mechanics tests** (type calc, stat calc, damage)
+8. **Register audio and scripting services** (complete DI setup)
 
 ---
 

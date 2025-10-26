@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.Modding;
 
 namespace PokeNET.Core.Modding;
 

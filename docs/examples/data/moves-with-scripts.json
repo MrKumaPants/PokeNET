@@ -1,0 +1,91 @@
+[
+  {
+    "name": "Ember",
+    "type": "Fire",
+    "category": "Special",
+    "power": 40,
+    "accuracy": 100,
+    "pp": 25,
+    "priority": 0,
+    "target": "SingleTarget",
+    "effectChance": 10,
+    "description": "A weak Fire-type attack that may burn the target.",
+    "flags": ["Contact"],
+    "effectScript": "scripts/moves/burn.csx",
+    "effectParameters": {
+      "burnChance": 10
+    }
+  },
+  {
+    "name": "Growl",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "pp": 40,
+    "priority": 0,
+    "target": "AllOpponents",
+    "effectChance": 100,
+    "description": "Lowers the target's Attack stat.",
+    "flags": ["Sound"],
+    "effectScript": "scripts/moves/stat-change.csx",
+    "effectParameters": {
+      "stat": "Attack",
+      "statChange": -1,
+      "targetSelf": false
+    }
+  },
+  {
+    "name": "Sword Dance",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "pp": 20,
+    "priority": 0,
+    "target": "User",
+    "effectChance": 100,
+    "description": "Sharply raises the user's Attack stat.",
+    "flags": [],
+    "effectScript": "scripts/moves/stat-change.csx",
+    "effectParameters": {
+      "stat": "Attack",
+      "statChange": 2,
+      "targetSelf": true
+    }
+  },
+  {
+    "name": "Tail Whip",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "pp": 30,
+    "priority": 0,
+    "target": "AllOpponents",
+    "effectChance": 100,
+    "description": "Lowers the target's Defense stat.",
+    "flags": [],
+    "effectScript": "scripts/moves/stat-change.csx",
+    "effectParameters": {
+      "stat": "Defense",
+      "statChange": -1,
+      "targetSelf": false
+    }
+  },
+  {
+    "name": "Tackle",
+    "type": "Normal",
+    "category": "Physical",
+    "power": 40,
+    "accuracy": 100,
+    "pp": 35,
+    "priority": 0,
+    "target": "SingleTarget",
+    "effectChance": 0,
+    "description": "A physical attack with no secondary effect.",
+    "flags": ["Contact"],
+    "effectScript": null,
+    "effectParameters": null
+  }
+]

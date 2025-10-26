@@ -2,7 +2,9 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for PokeNET's Entity Component System (ECS) architecture, built on **Arch** and **Arch.Extended**.
+This directory contains comprehensive documentation for PokeNET's Entity Component System (ECS) architecture, built on **Arch** with **Arch.System** source generators.
+
+**Note:** This project uses **Arch.System v1.1.0** (source generators), not "Arch.Extended". Historical references to "Arch.Extended" in archived documentation refer to research that informed the architecture but was not directly adopted.
 
 ---
 

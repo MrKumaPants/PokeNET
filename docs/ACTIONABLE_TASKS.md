@@ -20,11 +20,11 @@
 
 | Priority | Count | Est. Time | Description |
 |----------|-------|-----------|-------------|
-| **🔴 CRITICAL** | 12 | 3-4 weeks | Blockers for MVP and architectural violations |
+| **🔴 CRITICAL** | 10 | 2-3 weeks | Blockers for MVP and architectural violations |
 | **🟠 HIGH** | 18 | 2-3 weeks | Core functionality gaps |
 | **🟡 MEDIUM** | 15 | 2-3 weeks | Quality and polish |
 | **🔵 LOW** | 12 | 1-2 weeks | Nice-to-haves and optimizations |
-| **TOTAL** | **57** | **8-12 weeks** | Full implementation |
+| **TOTAL** | **55** | **7-11 weeks** | Full implementation |
 
 ---
 
@@ -32,19 +32,16 @@
 
 ### Architecture Violations
 
-#### C-1. Move RenderSystem from Domain to Core
-- **File:** `PokeNET/PokeNET.Domain/ECS/Systems/RenderSystem.cs`
-- **Issue:** Contains MonoGame types (`GraphicsDevice`, `SpriteBatch`, `Texture2D`) violating Domain layer purity
-- **Impact:** Severe architectural violation
-- **Action:** Move to `PokeNET.Core/ECS/Systems/RenderSystem.cs`
-- **Est:** 1 hour
+#### ✅ C-1. Move RenderSystem from Domain to Core [COMPLETED 2025-10-26]
+- **Status:** Obsolete - RenderSystem already in Core (PokeNET.Domain merged into PokeNET.Core)
+- **Resolution:** Project merge eliminated Domain layer entirely, all systems now in Core
+- **Completed:** 2025-10-26
 
-#### C-2. Fix PokeNET.Domain MonoGame Reference
-- **File:** `PokeNET/PokeNET.Domain/PokeNET.Domain.csproj`
-- **Issue:** References `MonoGame.Framework.DesktopGL` (platform-specific)
-- **Impact:** Violates layering (Domain should be pure C#)
-- **Action:** Remove MonoGame reference entirely from Domain
-- **Est:** 2 hours
+#### ✅ C-2. Fix PokeNET.Domain MonoGame Reference [COMPLETED 2025-10-26]
+- **Status:** Resolved - PokeNET.Domain project merged into PokeNET.Core
+- **Resolution:** MonoGame references properly isolated in Core project, no layering violations
+- **Impact:** Project structure simplified from 8 to 7 projects
+- **Completed:** 2025-10-26
 
 #### C-3. Correct "Arch.Extended" References in Documentation
 - **Issue:** Documentation claims usage of "Arch.Extended" which doesn't exist
@@ -680,8 +677,10 @@ public class CriticalHitBoostPatch
 - C-4, C-5, C-6, C-7
 
 ### Phase 2: Fix Architecture (Week 2)
-**Time:** 19 hours
-- C-1, C-2, C-3, C-8, C-9, C-10, C-11, C-12
+**Time:** 16 hours
+- ~~C-1~~ ✅ Complete (Domain merged)
+- ~~C-2~~ ✅ Complete (Domain merged)
+- C-3, C-8, C-9, C-10, C-11, C-12
 
 ### Phase 3: Core Gameplay (Weeks 3-4)
 **Time:** 58 hours
@@ -742,12 +741,14 @@ Use this document as the single source of truth for all implementation work. As 
 
 ## Notes
 
-- **Total Estimated Effort:** 372 hours (~8-12 weeks for 1 developer)
+- **Total Estimated Effort:** 369 hours (~7-11 weeks for 1 developer)
+- **Project Structure:** 7 projects (PokeNET.Domain merged into PokeNET.Core on 2025-10-26)
 - **Critical Path:** Phases 1-3 must be completed in order
 - **Parallelizable:** Audio, asset loading, and testing can overlap
 - **MVP Target:** End of Phase 4 (5 weeks)
 - **Production Target:** End of Phase 7 (8 weeks)
-- **Full Feature Set:** End of Phase 8 (12 weeks)
+- **Full Feature Set:** End of Phase 8 (11 weeks)
+- **Recent Completions:** C-1, C-2 resolved via Domain/Core merge (CS0436 conflicts eliminated)
 
 **Last Updated:** October 26, 2025
 

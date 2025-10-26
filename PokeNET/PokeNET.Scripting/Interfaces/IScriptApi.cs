@@ -1,5 +1,5 @@
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.Modding;
 
 namespace PokeNET.Scripting.Interfaces;
 

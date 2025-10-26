@@ -18,4 +18,4 @@ global using Microsoft.Extensions.Options;
 global using Microsoft.Xna.Framework;
 global using Microsoft.Xna.Framework.Audio;
 // PokeNET Domain
-global using PokeNET.Domain;
+global using PokeNET.Core;

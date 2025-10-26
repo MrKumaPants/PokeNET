@@ -2,36 +2,27 @@
   <PropertyGroup>
     <!-- Enable nullable reference types for all projects -->
     <Nullable>enable</Nullable>
-    
     <!-- Use latest C# language version -->
     <LangVersion>latest</LangVersion>
-    
     <!-- Enable implicit usings for cleaner code -->
     <ImplicitUsings>enable</ImplicitUsings>
-    
     <!-- Code Quality -->
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>5</WarningLevel>
-
     <!-- Performance -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-
     <!-- Debugging -->
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
-
     <!-- Documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    
     <!-- Suppress warnings from source-generated code -->
     <!-- CS1591: Missing XML comment for publicly visible type or member (from Arch source generators) -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    
     <!-- Treat warnings as errors -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
-

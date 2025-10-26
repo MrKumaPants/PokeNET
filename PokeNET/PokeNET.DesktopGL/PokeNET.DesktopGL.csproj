@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\PokeNET.Core\PokeNET.Core.csproj" />
-    <ProjectReference Include="..\PokeNET.Domain\PokeNET.Domain.csproj" />
+    <!-- PokeNET.Domain merged into PokeNET.Core -->
     <ProjectReference Include="..\PokeNET.Scripting\PokeNET.Scripting.csproj" />
     <ProjectReference Include="..\PokeNET.Audio\PokeNET.Audio.csproj" />
   </ItemGroup>

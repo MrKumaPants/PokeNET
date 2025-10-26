@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.Modding;
 
 namespace PokeNET.Core.Modding;
 

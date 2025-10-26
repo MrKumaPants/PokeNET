@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.ECS.Factories;
+using PokeNET.Core.ECS.Factories;
 
 namespace PokeNET.Core.ECS.Factories;
 

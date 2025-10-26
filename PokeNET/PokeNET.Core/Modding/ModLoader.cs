@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.Modding;
 
 namespace PokeNET.Core.Modding;
 

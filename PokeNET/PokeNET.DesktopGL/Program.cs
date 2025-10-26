@@ -13,14 +13,12 @@ using PokeNET.Audio.Reactive;
 using PokeNET.Core;
 using PokeNET.Core.Assets;
 using PokeNET.Core.Assets.Loaders;
+using PokeNET.Core.DependencyInjection;
 using PokeNET.Core.ECS;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.ECS.Persistence;
+using PokeNET.Core.ECS.Systems;
 using PokeNET.Core.Modding;
-using PokeNET.Domain.Assets;
-using PokeNET.Domain.DependencyInjection;
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.ECS.Persistence;
-using PokeNET.Domain.ECS.Systems;
-using PokeNET.Domain.Modding;
 using PokeNET.Scripting.Abstractions;
 using PokeNET.Scripting.Services;
 
@@ -99,9 +97,12 @@ internal class Program
                     // Register core game services
                     RegisterCoreServices(services, context.Configuration);
 
-                    // NEW: Register Domain services (includes ECS, WorldPersistenceService, PokemonRelationships)
+                    // NEW: Register Domain services (includes ECS, PokemonRelationships)
                     // This centralizes all Domain layer service registration
                     services.AddDomainServices();
+
+                    // Register persistence services (WorldPersistenceService is in Core layer)
+                    RegisterPersistenceServices(services, context.Configuration);
 
                     // DEPRECATED: Old ECS registration (replaced by AddDomainServices)
                     // RegisterEcsServices(services);
@@ -320,6 +321,32 @@ internal class Program
         // Register script context and API (Day 9: Uncommented)
         //         services.AddScoped<IScriptContext, ScriptContext>();
         //         services.AddScoped<IScriptApi, ScriptApi>();
+    }
+
+    /// <summary>
+    /// Registers persistence services (WorldPersistenceService).
+    /// Moved from Domain to Core layer (C-2: Architecture fix).
+    /// </summary>
+    private static void RegisterPersistenceServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
+        // Get the save directory from configuration or use default
+        var saveDirectory = configuration["Persistence:SaveDirectory"] ?? "Saves";
+
+        // Register WorldPersistenceService (Arch.Persistence-based)
+        services.AddSingleton<WorldPersistenceService>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<WorldPersistenceService>>();
+            logger.LogInformation(
+                "Registering WorldPersistenceService with directory: {SaveDirectory}",
+                saveDirectory
+            );
+            var service = new WorldPersistenceService(logger, saveDirectory);
+            logger.LogInformation("WorldPersistenceService registered successfully");
+            return service;
+        });
     }
 
     /// <summary>

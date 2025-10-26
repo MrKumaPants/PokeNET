@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using Arch.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
-using PokeNET.Domain.ECS.Commands;
-using PokeNET.Domain.ECS.Components;
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.ECS.Factories;
+using PokeNET.Core.ECS.Commands;
+using PokeNET.Core.ECS.Components;
+using PokeNET.Core.ECS.Events;
 
 namespace PokeNET.Core.ECS.Factories;
 

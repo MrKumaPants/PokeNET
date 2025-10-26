@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
-using PokeNET.Domain.ECS.Components;
-using PokeNET.Domain.ECS.Factories;
+using PokeNET.Core.ECS.Components;
 
 namespace PokeNET.Core.ECS.Factories;
 

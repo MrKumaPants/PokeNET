@@ -16,6 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Project References -->
-    <ProjectReference Include="..\PokeNET.Domain\PokeNET.Domain.csproj" />
+    <ProjectReference Include="..\PokeNET.Core\PokeNET.Core.csproj" />
   </ItemGroup>
 </Project>

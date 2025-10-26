@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using PokeNET.Audio.Abstractions;
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.Models;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.Models;
 
 namespace PokeNET.Audio.Reactive.Reactions;
 

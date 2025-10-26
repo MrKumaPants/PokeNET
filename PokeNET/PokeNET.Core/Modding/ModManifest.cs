@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using PokeNET.Domain.Modding;
+using PokeNET.Core.Modding;
 
 namespace PokeNET.Core.Modding;
 

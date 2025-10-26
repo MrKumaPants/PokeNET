@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Arch.Core;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.ECS.Systems;
+using PokeNET.Core.ECS.Systems;
 
 namespace PokeNET.Core.ECS;
 

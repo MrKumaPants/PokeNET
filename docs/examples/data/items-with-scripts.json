@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "name": "Potion",
+    "category": "Medicine",
+    "buyPrice": 200,
+    "sellPrice": 100,
+    "description": "Restores 20 HP to a Pokemon.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/potion.csx",
+    "effectParameters": {
+      "healAmount": 20
+    },
+    "spritePath": "assets/items/potion.png"
+  },
+  {
+    "id": 2,
+    "name": "Super Potion",
+    "category": "Medicine",
+    "buyPrice": 700,
+    "sellPrice": 350,
+    "description": "Restores 50 HP to a Pokemon.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/potion.csx",
+    "effectParameters": {
+      "healAmount": 50
+    },
+    "spritePath": "assets/items/super-potion.png"
+  },
+  {
+    "id": 3,
+    "name": "Full Heal",
+    "category": "Medicine",
+    "buyPrice": 600,
+    "sellPrice": 300,
+    "description": "Cures all status conditions.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/full-heal.csx",
+    "effectParameters": {},
+    "spritePath": "assets/items/full-heal.png"
+  }
+]

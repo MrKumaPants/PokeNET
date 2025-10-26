@@ -4,9 +4,9 @@ using System.Linq;
 using Arch.Core;
 using Arch.Core.Extensions;
 using Microsoft.Extensions.Logging;
-using PokeNET.Domain.ECS.Commands;
-using PokeNET.Domain.ECS.Events;
-using PokeNET.Domain.ECS.Factories;
+using PokeNET.Core.ECS.Commands;
+using PokeNET.Core.ECS.Events;
+using PokeNET.Core.ECS.Factories;
 
 namespace PokeNET.Core.ECS.Factories;
 

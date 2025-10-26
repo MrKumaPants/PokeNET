@@ -54,7 +54,8 @@ public sealed class AudioVolumeManager : IAudioVolumeManager
     public AudioVolumeManager(
         ILogger<AudioVolumeManager> logger,
         IMusicPlayer musicPlayer,
-        ISoundEffectPlayer sfxPlayer)
+        ISoundEffectPlayer sfxPlayer
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _musicPlayer = musicPlayer ?? throw new ArgumentNullException(nameof(musicPlayer));

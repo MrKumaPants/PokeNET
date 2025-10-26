@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace PokeNET.Domain.Assets;
 
 /// <summary>
@@ -13,7 +16,8 @@ public interface IAssetManager : IDisposable
     /// <typeparam name="T">The type of asset to load.</typeparam>
     /// <param name="path">The asset path (relative to asset directory).</param>
     /// <returns>The loaded asset instance.</returns>
-    T Load<T>(string path) where T : class;
+    T Load<T>(string path)
+        where T : class;
 
     /// <summary>
     /// Attempts to load an asset, returning null if it fails.
@@ -21,7 +25,8 @@ public interface IAssetManager : IDisposable
     /// <typeparam name="T">The type of asset to load.</typeparam>
     /// <param name="path">The asset path.</param>
     /// <returns>The loaded asset or null if loading failed.</returns>
-    T? TryLoad<T>(string path) where T : class;
+    T? TryLoad<T>(string path)
+        where T : class;
 
     /// <summary>
     /// Checks if an asset is currently loaded in the cache.
@@ -47,7 +52,8 @@ public interface IAssetManager : IDisposable
     /// </summary>
     /// <typeparam name="T">The asset type.</typeparam>
     /// <param name="loader">The loader instance.</param>
-    void RegisterLoader<T>(IAssetLoader<T> loader) where T : class;
+    void RegisterLoader<T>(IAssetLoader<T> loader)
+        where T : class;
 
     /// <summary>
     /// Sets the mod search paths for asset resolution.

@@ -12,8 +12,12 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Gets comprehensive mixer statistics
         /// </summary>
-        MixerStatistics GetStatistics(float masterVolume, bool enabled,
-            IReadOnlyDictionary<ChannelType, AudioChannel> channels, VolumeController volumeController);
+        MixerStatistics GetStatistics(
+            float masterVolume,
+            bool enabled,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels,
+            VolumeController volumeController
+        );
 
         /// <summary>
         /// Analyzes a specific channel
@@ -30,14 +34,18 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Gets comprehensive mixer statistics
         /// </summary>
-        public MixerStatistics GetStatistics(float masterVolume, bool enabled,
-            IReadOnlyDictionary<ChannelType, AudioChannel> channels, VolumeController volumeController)
+        public MixerStatistics GetStatistics(
+            float masterVolume,
+            bool enabled,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels,
+            VolumeController volumeController
+        )
         {
             var stats = new MixerStatistics
             {
                 MasterVolume = masterVolume,
                 Enabled = enabled,
-                ChannelStats = new Dictionary<ChannelType, ChannelStatistics>()
+                ChannelStats = new Dictionary<ChannelType, ChannelStatistics>(),
             };
 
             foreach (var kvp in channels)
@@ -54,7 +62,7 @@ namespace PokeNET.Audio.Mixing
                     DuckingLevel = channel.DuckingLevel,
                     PeakLevel = analysis.PeakLevel,
                     AverageLevel = analysis.AverageLevel,
-                    RMSLevel = analysis.RMSLevel
+                    RMSLevel = analysis.RMSLevel,
                 };
             }
 

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace PokeNET.Domain.ECS.Factories;
 
 /// <summary>
@@ -44,7 +47,8 @@ public interface IComponentFactory
     /// var position = factory.Create&lt;Position&gt;(definition);
     /// </code>
     /// </example>
-    T Create<T>(ComponentDefinition definition) where T : struct;
+    T Create<T>(ComponentDefinition definition)
+        where T : struct;
 
     /// <summary>
     /// Creates a component dynamically when the type is only known at runtime.
@@ -82,7 +86,8 @@ public interface IComponentFactory
     /// ));
     /// </code>
     /// </example>
-    void RegisterBuilder<T>(Func<ComponentDefinition, T> builder) where T : struct;
+    void RegisterBuilder<T>(Func<ComponentDefinition, T> builder)
+        where T : struct;
 
     /// <summary>
     /// Checks if the factory can create a component of the specified type.
@@ -107,7 +112,8 @@ public interface IComponentFactory
     /// </summary>
     /// <typeparam name="T">The component type to unregister.</typeparam>
     /// <returns>True if the builder was removed; false if no builder was registered.</returns>
-    bool UnregisterBuilder<T>() where T : struct;
+    bool UnregisterBuilder<T>()
+        where T : struct;
 }
 
 /// <summary>
@@ -200,19 +206,29 @@ public class ComponentCreationException : Exception
     /// </summary>
     public ComponentDefinition? Definition { get; }
 
-    public ComponentCreationException(string message) : base(message) { }
+    public ComponentCreationException(string message)
+        : base(message) { }
 
     public ComponentCreationException(string message, Exception innerException)
         : base(message, innerException) { }
 
-    public ComponentCreationException(string message, Type componentType, ComponentDefinition definition)
+    public ComponentCreationException(
+        string message,
+        Type componentType,
+        ComponentDefinition definition
+    )
         : base(message)
     {
         ComponentType = componentType;
         Definition = definition;
     }
 
-    public ComponentCreationException(string message, Type componentType, ComponentDefinition definition, Exception innerException)
+    public ComponentCreationException(
+        string message,
+        Type componentType,
+        ComponentDefinition definition,
+        Exception innerException
+    )
         : base(message, innerException)
     {
         ComponentType = componentType;

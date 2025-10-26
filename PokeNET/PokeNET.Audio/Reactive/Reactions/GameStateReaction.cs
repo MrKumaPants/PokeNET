@@ -10,9 +10,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class GameStateReaction : BaseAudioReaction
 {
-    public GameStateReaction(ILogger<GameStateReaction> logger) : base(logger)
-    {
-    }
+    public GameStateReaction(ILogger<GameStateReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 10;
 
@@ -21,18 +20,30 @@ public class GameStateReaction : BaseAudioReaction
         return gameEvent is GameStateChangedEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;
 
         var evt = (GameStateChangedEvent)gameEvent;
-        Logger.LogInformation("Game state changed from {PreviousState} to {NewState}", evt.PreviousState, evt.NewState);
+        Logger.LogInformation(
+            "Game state changed from {PreviousState} to {NewState}",
+            evt.PreviousState,
+            evt.NewState
+        );
 
         // Handle battle state
         if (evt.NewState == GameState.Battle)
         {
-            await audioManager.PlayMusicAsync("audio/music/battle_wild.ogg", true, cancellationToken);
+            await audioManager.PlayMusicAsync(
+                "audio/music/battle_wild.ogg",
+                true,
+                cancellationToken
+            );
         }
         else if (evt.PreviousState == GameState.Battle && evt.NewState == GameState.Overworld)
         {

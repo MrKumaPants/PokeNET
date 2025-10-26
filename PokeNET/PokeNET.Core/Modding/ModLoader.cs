@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using PokeNET.Domain.Modding;
 
 namespace PokeNET.Core.Modding;
@@ -21,7 +25,8 @@ public sealed class ModLoader : IModLoader
     private readonly Dictionary<string, IMod> _modInstances = new();
 
     public string ModsDirectory { get; }
-    public IReadOnlyList<IModManifest> LoadedMods => _loadedMods.Select(m => (IModManifest)m.Manifest).ToList();
+    public IReadOnlyList<IModManifest> LoadedMods =>
+        _loadedMods.Select(m => (IModManifest)m.Manifest).ToList();
     public IReadOnlyList<IModManifest> DiscoveredMods => _discoveredManifests;
 
     /// <summary>
@@ -35,7 +40,8 @@ public sealed class ModLoader : IModLoader
         ILogger<ModLoader> logger,
         IServiceProvider services,
         ILoggerFactory loggerFactory,
-        string modsDirectory)
+        string modsDirectory
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _services = services ?? throw new ArgumentNullException(nameof(services));
@@ -86,11 +92,14 @@ public sealed class ModLoader : IModLoader
             try
             {
                 var json = File.ReadAllText(manifestPath);
-                var manifest = JsonSerializer.Deserialize<ModManifest>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
-                });
+                var manifest = JsonSerializer.Deserialize<ModManifest>(
+                    json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        ReadCommentHandling = JsonCommentHandling.Skip,
+                    }
+                );
 
                 if (manifest == null)
                 {
@@ -99,8 +108,12 @@ public sealed class ModLoader : IModLoader
                 }
 
                 _discoveredManifests.Add(manifest);
-                _logger.LogInformation("Discovered mod: {Name} ({Id}) v{Version}",
-                    manifest.Name, manifest.Id, manifest.Version);
+                _logger.LogInformation(
+                    "Discovered mod: {Name} ({Id}) v{Version}",
+                    manifest.Name,
+                    manifest.Id,
+                    manifest.Version
+                );
             }
             catch (Exception ex)
             {
@@ -122,8 +135,10 @@ public sealed class ModLoader : IModLoader
         _logger.LogInformation("Resolving load order for {Count} mods", _discoveredManifests.Count);
         var loadOrder = ResolveLoadOrder(_discoveredManifests);
 
-        _logger.LogInformation("Loading mods in order: {Order}",
-            string.Join(", ", loadOrder.Select(m => m.Id)));
+        _logger.LogInformation(
+            "Loading mods in order: {Order}",
+            string.Join(", ", loadOrder.Select(m => m.Id))
+        );
 
         foreach (var manifest in loadOrder)
         {
@@ -133,8 +148,11 @@ public sealed class ModLoader : IModLoader
             }
             catch (Exception ex)
             {
-                throw new ModLoadException(manifest.Id,
-                    $"Failed to load mod '{manifest.Name}' ({manifest.Id})", ex);
+                throw new ModLoadException(
+                    manifest.Id,
+                    $"Failed to load mod '{manifest.Name}' ({manifest.Id})",
+                    ex
+                );
             }
         }
 
@@ -152,21 +170,25 @@ public sealed class ModLoader : IModLoader
 
         if (!File.Exists(sanitizedAssemblyPath))
         {
-            throw new ModLoadException(manifest.Id,
-                $"Assembly not found: {sanitizedAssemblyPath}");
+            throw new ModLoadException(manifest.Id, $"Assembly not found: {sanitizedAssemblyPath}");
         }
 
         _logger.LogDebug("Loading assembly: {Path}", sanitizedAssemblyPath);
         var assembly = Assembly.LoadFrom(sanitizedAssemblyPath);
 
         // Find the IMod implementation
-        var modType = assembly.GetTypes()
-            .FirstOrDefault(t => typeof(IMod).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+        var modType = assembly
+            .GetTypes()
+            .FirstOrDefault(t =>
+                typeof(IMod).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract
+            );
 
         if (modType == null)
         {
-            throw new ModLoadException(manifest.Id,
-                $"No IMod implementation found in assembly: {assembly.FullName}");
+            throw new ModLoadException(
+                manifest.Id,
+                $"No IMod implementation found in assembly: {assembly.FullName}"
+            );
         }
 
         _logger.LogDebug("Instantiating mod type: {Type}", modType.FullName);
@@ -174,18 +196,28 @@ public sealed class ModLoader : IModLoader
 
         if (modInstance == null)
         {
-            throw new ModLoadException(manifest.Id,
-                $"Failed to instantiate mod type: {modType.FullName}");
+            throw new ModLoadException(
+                manifest.Id,
+                $"Failed to instantiate mod type: {modType.FullName}"
+            );
         }
 
         // Create context and initialize mod
         var context = new ModContext(manifest, modDir, _services, _loggerFactory, this);
 
-        _logger.LogInformation("Initializing mod: {Name} ({Id}) v{Version}",
-            manifest.Name, manifest.Id, manifest.Version);
+        _logger.LogInformation(
+            "Initializing mod: {Name} ({Id}) v{Version}",
+            manifest.Name,
+            manifest.Id,
+            manifest.Version
+        );
 
         // Initialize the mod asynchronously with ConfigureAwait to prevent deadlocks
-        modInstance.InitializeAsync(context, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+        modInstance
+            .InitializeAsync(context, CancellationToken.None)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
 
         var loadedMod = new LoadedMod(manifest, modInstance, context, assembly);
         _loadedMods.Add(loadedMod);
@@ -205,7 +237,10 @@ public sealed class ModLoader : IModLoader
             try
             {
                 _logger.LogDebug("Unloading mod: {Id}", mod.Manifest.Id);
-                mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+                mod.Instance.ShutdownAsync(CancellationToken.None)
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
             }
             catch (Exception ex)
             {
@@ -229,60 +264,81 @@ public sealed class ModLoader : IModLoader
         return _modInstances.ContainsKey(modId);
     }
 
-    public async Task LoadModsAsync(string modsDirectory, CancellationToken cancellationToken = default)
+    public async Task LoadModsAsync(
+        string modsDirectory,
+        CancellationToken cancellationToken = default
+    )
     {
-        await Task.Run(() =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            DiscoverMods();
+        await Task.Run(
+                () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    DiscoverMods();
 
-            cancellationToken.ThrowIfCancellationRequested();
-            LoadMods();
-        }, cancellationToken).ConfigureAwait(false);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    LoadMods();
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public async Task ReloadModAsync(string modId, CancellationToken cancellationToken = default)
     {
-        await Task.Run(() =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        await Task.Run(
+                () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-            var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
-            if (mod == null)
-            {
-                throw new ModLoadException($"Mod not found: {modId}", modId);
-            }
+                    var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
+                    if (mod == null)
+                    {
+                        throw new ModLoadException($"Mod not found: {modId}", modId);
+                    }
 
-            // Unload the mod
-            _logger.LogInformation("Reloading mod: {ModId}", modId);
-            mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
-            _loadedMods.Remove(mod);
-            _modInstances.Remove(modId);
+                    // Unload the mod
+                    _logger.LogInformation("Reloading mod: {ModId}", modId);
+                    mod.Instance.ShutdownAsync(CancellationToken.None)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                    _loadedMods.Remove(mod);
+                    _modInstances.Remove(modId);
 
-            cancellationToken.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
-            // Reload it
-            LoadMod(mod.Manifest);
-        }, cancellationToken).ConfigureAwait(false);
+                    // Reload it
+                    LoadMod(mod.Manifest);
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public async Task UnloadModAsync(string modId, CancellationToken cancellationToken = default)
     {
-        await Task.Run(() =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        await Task.Run(
+                () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-            var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
-            if (mod == null)
-            {
-                throw new ModLoadException($"Mod not found: {modId}", modId);
-            }
+                    var mod = _loadedMods.FirstOrDefault(m => m.Manifest.Id == modId);
+                    if (mod == null)
+                    {
+                        throw new ModLoadException($"Mod not found: {modId}", modId);
+                    }
 
-            _logger.LogInformation("Unloading mod: {ModId}", modId);
-            mod.Instance.ShutdownAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
-            _loadedMods.Remove(mod);
-            _modInstances.Remove(modId);
-        }, cancellationToken).ConfigureAwait(false);
+                    _logger.LogInformation("Unloading mod: {ModId}", modId);
+                    mod.Instance.ShutdownAsync(CancellationToken.None)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                    _loadedMods.Remove(mod);
+                    _modInstances.Remove(modId);
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public IReadOnlyList<string> GetLoadOrder()
@@ -298,11 +354,13 @@ public sealed class ModLoader : IModLoader
 
             if (!Directory.Exists(modsDirectory))
             {
-                report.Errors.Add(new ModValidationError
-                {
-                    Message = $"Mods directory does not exist: {modsDirectory}",
-                    ErrorType = ModValidationErrorType.InvalidManifest
-                });
+                report.Errors.Add(
+                    new ModValidationError
+                    {
+                        Message = $"Mods directory does not exist: {modsDirectory}",
+                        ErrorType = ModValidationErrorType.InvalidManifest,
+                    }
+                );
                 return report;
             }
 
@@ -321,19 +379,24 @@ public sealed class ModLoader : IModLoader
                 try
                 {
                     var json = File.ReadAllText(manifestPath);
-                    var manifest = JsonSerializer.Deserialize<ModManifest>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        ReadCommentHandling = JsonCommentHandling.Skip
-                    });
+                    var manifest = JsonSerializer.Deserialize<ModManifest>(
+                        json,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                            ReadCommentHandling = JsonCommentHandling.Skip,
+                        }
+                    );
 
                     if (manifest == null)
                     {
-                        report.Errors.Add(new ModValidationError
-                        {
-                            Message = $"Failed to deserialize manifest: {manifestPath}",
-                            ErrorType = ModValidationErrorType.InvalidManifest
-                        });
+                        report.Errors.Add(
+                            new ModValidationError
+                            {
+                                Message = $"Failed to deserialize manifest: {manifestPath}",
+                                ErrorType = ModValidationErrorType.InvalidManifest,
+                            }
+                        );
                         continue;
                     }
 
@@ -343,37 +406,44 @@ public sealed class ModLoader : IModLoader
                     var assemblyPath = Path.Combine(modDir, manifest.GetAssemblyFileName());
                     if (!File.Exists(assemblyPath) && manifest.ModType == ModType.Code)
                     {
-                        report.Errors.Add(new ModValidationError
-                        {
-                            ModId = manifest.Id,
-                            Message = $"Assembly not found: {assemblyPath}",
-                            ErrorType = ModValidationErrorType.MissingAssembly
-                        });
+                        report.Errors.Add(
+                            new ModValidationError
+                            {
+                                ModId = manifest.Id,
+                                Message = $"Assembly not found: {assemblyPath}",
+                                ErrorType = ModValidationErrorType.MissingAssembly,
+                            }
+                        );
                     }
                 }
                 catch (Exception ex)
                 {
-                    report.Errors.Add(new ModValidationError
-                    {
-                        Message = $"Error reading manifest from {manifestPath}: {ex.Message}",
-                        ErrorType = ModValidationErrorType.InvalidManifest
-                    });
+                    report.Errors.Add(
+                        new ModValidationError
+                        {
+                            Message = $"Error reading manifest from {manifestPath}: {ex.Message}",
+                            ErrorType = ModValidationErrorType.InvalidManifest,
+                        }
+                    );
                 }
             }
 
             // Check for duplicate IDs
-            var duplicateIds = manifests.GroupBy(m => m.Id)
+            var duplicateIds = manifests
+                .GroupBy(m => m.Id)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key);
 
             foreach (var duplicateId in duplicateIds)
             {
-                report.Errors.Add(new ModValidationError
-                {
-                    ModId = duplicateId,
-                    Message = $"Duplicate mod ID detected: {duplicateId}",
-                    ErrorType = ModValidationErrorType.DuplicateModId
-                });
+                report.Errors.Add(
+                    new ModValidationError
+                    {
+                        ModId = duplicateId,
+                        Message = $"Duplicate mod ID detected: {duplicateId}",
+                        ErrorType = ModValidationErrorType.DuplicateModId,
+                    }
+                );
             }
 
             // Validate dependencies
@@ -384,21 +454,25 @@ public sealed class ModLoader : IModLoader
                 {
                     if (!modMap.ContainsKey(dep.ModId) && !dep.Optional)
                     {
-                        report.Errors.Add(new ModValidationError
-                        {
-                            ModId = manifest.Id,
-                            Message = $"Missing required dependency: {dep.ModId}",
-                            ErrorType = ModValidationErrorType.MissingDependency
-                        });
+                        report.Errors.Add(
+                            new ModValidationError
+                            {
+                                ModId = manifest.Id,
+                                Message = $"Missing required dependency: {dep.ModId}",
+                                ErrorType = ModValidationErrorType.MissingDependency,
+                            }
+                        );
                     }
                     else if (!modMap.ContainsKey(dep.ModId) && dep.Optional)
                     {
-                        report.Warnings.Add(new ModValidationWarning
-                        {
-                            ModId = manifest.Id,
-                            Message = $"Optional dependency not found: {dep.ModId}",
-                            WarningType = ModValidationWarningType.MissingOptionalDependency
-                        });
+                        report.Warnings.Add(
+                            new ModValidationWarning
+                            {
+                                ModId = manifest.Id,
+                                Message = $"Optional dependency not found: {dep.ModId}",
+                                WarningType = ModValidationWarningType.MissingOptionalDependency,
+                            }
+                        );
                     }
                 }
 
@@ -407,13 +481,16 @@ public sealed class ModLoader : IModLoader
                 {
                     if (modMap.ContainsKey(incomp.ModId))
                     {
-                        report.Errors.Add(new ModValidationError
-                        {
-                            ModId = manifest.Id,
-                            Message = $"Incompatible mod present: {incomp.ModId}" +
-                                     (incomp.Reason != null ? $" - {incomp.Reason}" : ""),
-                            ErrorType = ModValidationErrorType.IncompatibleModLoaded
-                        });
+                        report.Errors.Add(
+                            new ModValidationError
+                            {
+                                ModId = manifest.Id,
+                                Message =
+                                    $"Incompatible mod present: {incomp.ModId}"
+                                    + (incomp.Reason != null ? $" - {incomp.Reason}" : ""),
+                                ErrorType = ModValidationErrorType.IncompatibleModLoaded,
+                            }
+                        );
                     }
                 }
             }
@@ -425,11 +502,13 @@ public sealed class ModLoader : IModLoader
             }
             catch (ModLoadException ex) when (ex.Message.Contains("Circular dependency"))
             {
-                report.Errors.Add(new ModValidationError
-                {
-                    Message = ex.Message,
-                    ErrorType = ModValidationErrorType.CircularDependency
-                });
+                report.Errors.Add(
+                    new ModValidationError
+                    {
+                        Message = ex.Message,
+                        ErrorType = ModValidationErrorType.CircularDependency,
+                    }
+                );
             }
 
             return report;
@@ -463,9 +542,10 @@ public sealed class ModLoader : IModLoader
                 if (!modMap.ContainsKey(dep.ModId))
                 {
                     throw new ModLoadException(
-                        $"Missing required dependency: {dep.ModId}" +
-                        (dep.Version != null ? $" {dep.Version}" : ""),
-                        mod.Id);
+                        $"Missing required dependency: {dep.ModId}"
+                            + (dep.Version != null ? $" {dep.Version}" : ""),
+                        mod.Id
+                    );
                 }
 
                 adjacency[dep.ModId].Add(mod.Id);
@@ -521,7 +601,8 @@ public sealed class ModLoader : IModLoader
             var cycles = DetectDependencyCycles(unresolved, modMap, adjacency);
 
             throw new ModLoadException(
-                $"Circular dependency detected: {cycles}. Unresolved mods: {string.Join(", ", unresolvedIds)}");
+                $"Circular dependency detected: {cycles}. Unresolved mods: {string.Join(", ", unresolvedIds)}"
+            );
         }
 
         return result;
@@ -533,7 +614,8 @@ public sealed class ModLoader : IModLoader
     private string DetectDependencyCycles(
         List<ModManifest> unresolved,
         Dictionary<string, ModManifest> modMap,
-        Dictionary<string, List<string>> adjacency)
+        Dictionary<string, List<string>> adjacency
+    )
     {
         // Use depth-first search to find cycles
         var visited = new HashSet<string>();
@@ -558,7 +640,8 @@ public sealed class ModLoader : IModLoader
         HashSet<string> visited,
         HashSet<string> recursionStack,
         List<string> path,
-        Dictionary<string, List<string>> adjacency)
+        Dictionary<string, List<string>> adjacency
+    )
     {
         if (recursionStack.Contains(modId))
         {
@@ -605,7 +688,9 @@ public sealed class ModLoader : IModLoader
         // Remove any path traversal characters
         if (modId.Contains("..") || modId.Contains('/') || modId.Contains('\\'))
         {
-            throw new System.Security.SecurityException($"Mod path traversal detected in ID: {modId}");
+            throw new System.Security.SecurityException(
+                $"Mod path traversal detected in ID: {modId}"
+            );
         }
 
         var modPath = Path.Combine(modsDirectory, modId);
@@ -630,7 +715,9 @@ public sealed class ModLoader : IModLoader
 
         if (!fullPath.StartsWith(modFullPath, StringComparison.OrdinalIgnoreCase))
         {
-            throw new System.Security.SecurityException($"File path traversal detected: {filePath}");
+            throw new System.Security.SecurityException(
+                $"File path traversal detected: {filePath}"
+            );
         }
 
         return fullPath;

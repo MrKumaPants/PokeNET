@@ -54,7 +54,12 @@ public interface ISoundEffectPlayer
     /// <param name="priority">Playback priority.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the playback operation.</returns>
-    Task PlayAsync(SoundEffect effect, float? volume = null, int priority = 0, CancellationToken cancellationToken = default);
+    Task PlayAsync(
+        SoundEffect effect,
+        float? volume = null,
+        int priority = 0,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Stops a specific playing sound effect by its instance ID.
@@ -195,5 +200,5 @@ public enum InterruptionReason
     ResourceExhaustion,
 
     /// <summary>An error occurred during playback.</summary>
-    Error
+    Error,
 }

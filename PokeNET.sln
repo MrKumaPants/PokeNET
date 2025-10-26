@@ -5,17 +5,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Core", "PokeNET\Pok
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.DesktopGL", "PokeNET\PokeNET.DesktopGL\PokeNET.DesktopGL.csproj", "{825D8F3D-8AE6-4AB5-A6F5-D0738C5ABA85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Tests", "tests\PokeNET.Tests.csproj", "{66D19D8D-4979-4BA2-A5D1-9939D044F318}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Domain", "PokeNET\PokeNET.Domain\PokeNET.Domain.csproj", "{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Audio", "PokeNET\PokeNET.Audio\PokeNET.Audio.csproj", "{2D730D47-501E-4441-8BD4-2679FA8A7481}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Saving", "PokeNET\PokeNET.Saving\PokeNET.Saving.csproj", "{2127939D-6FB5-4347-94BF-FDBF7BA3B786}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Scripting", "PokeNET\PokeNET.Scripting\PokeNET.Scripting.csproj", "{8C910711-5C5D-4794-A2B1-707500C8D2A1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.ModAPI", "PokeNET\PokeNET.ModAPI\PokeNET.ModAPI.csproj", "{D7D8CFED-78BB-40C9-9279-EE61F1F4949E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Testing", "PokeNET.Testing\PokeNET.Testing.csproj", "{B8110259-FF18-4643-A2F6-AA63CAC2F42F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokeNET.Performance", "PokeNET.Performance\PokeNET.Performance.csproj", "{0DFA2C92-EB57-4937-9622-CFD437BA154C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,10 +31,6 @@ Global
 		{825D8F3D-8AE6-4AB5-A6F5-D0738C5ABA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{825D8F3D-8AE6-4AB5-A6F5-D0738C5ABA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{825D8F3D-8AE6-4AB5-A6F5-D0738C5ABA85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66D19D8D-4979-4BA2-A5D1-9939D044F318}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44CAE0C2-46D1-48D9-99C0-5C2BAA7DC804}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -43,10 +39,6 @@ Global
 		{2D730D47-501E-4441-8BD4-2679FA8A7481}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D730D47-501E-4441-8BD4-2679FA8A7481}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D730D47-501E-4441-8BD4-2679FA8A7481}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2127939D-6FB5-4347-94BF-FDBF7BA3B786}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2127939D-6FB5-4347-94BF-FDBF7BA3B786}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2127939D-6FB5-4347-94BF-FDBF7BA3B786}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2127939D-6FB5-4347-94BF-FDBF7BA3B786}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8C910711-5C5D-4794-A2B1-707500C8D2A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8C910711-5C5D-4794-A2B1-707500C8D2A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C910711-5C5D-4794-A2B1-707500C8D2A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -55,5 +47,15 @@ Global
 		{D7D8CFED-78BB-40C9-9279-EE61F1F4949E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7D8CFED-78BB-40C9-9279-EE61F1F4949E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7D8CFED-78BB-40C9-9279-EE61F1F4949E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8110259-FF18-4643-A2F6-AA63CAC2F42F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8110259-FF18-4643-A2F6-AA63CAC2F42F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8110259-FF18-4643-A2F6-AA63CAC2F42F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8110259-FF18-4643-A2F6-AA63CAC2F42F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DFA2C92-EB57-4937-9622-CFD437BA154C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DFA2C92-EB57-4937-9622-CFD437BA154C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DFA2C92-EB57-4937-9622-CFD437BA154C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DFA2C92-EB57-4937-9622-CFD437BA154C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal

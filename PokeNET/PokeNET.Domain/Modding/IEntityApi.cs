@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
@@ -167,11 +170,15 @@ public readonly struct Entity : IEquatable<Entity>
     public bool IsNull => Id == 0;
 
     public bool Equals(Entity other) => Id == other.Id;
+
     public override bool Equals(object? obj) => obj is Entity other && Equals(other);
+
     public override int GetHashCode() => Id;
+
     public override string ToString() => $"Entity({Id})";
 
     public static bool operator ==(Entity left, Entity right) => left.Equals(right);
+
     public static bool operator !=(Entity left, Entity right) => !left.Equals(right);
 }
 
@@ -220,7 +227,8 @@ public interface IEntityQuery<T1, T2> : IEnumerable<(Entity entity, T1 component
 /// <summary>
 /// Query for entities with three component types.
 /// </summary>
-public interface IEntityQuery<T1, T2, T3> : IEnumerable<(Entity entity, T1 component1, T2 component2, T3 component3)>
+public interface IEntityQuery<T1, T2, T3>
+    : IEnumerable<(Entity entity, T1 component1, T2 component2, T3 component3)>
 {
     /// <summary>
     /// Adds a filter to exclude entities with a specific component.

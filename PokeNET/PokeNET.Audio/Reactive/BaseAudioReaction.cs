@@ -31,7 +31,11 @@ public abstract class BaseAudioReaction : IAudioReaction
     public abstract bool CanHandle(IGameEvent gameEvent);
 
     /// <inheritdoc/>
-    public abstract Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default);
+    public abstract Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Helper method to check if reaction should proceed.

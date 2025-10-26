@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using Arch.Core;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 
 namespace PokeNET.Domain.Input;
 
@@ -46,16 +49,22 @@ public class CommandQueue
     {
         if (_queuedCount >= _maxQueueSize)
         {
-            _logger.LogWarning("Command queue is full ({MaxSize}). Dropping command: {CommandType}",
-                _maxQueueSize, command.GetType().Name);
+            _logger.LogWarning(
+                "Command queue is full ({MaxSize}). Dropping command: {CommandType}",
+                _maxQueueSize,
+                command.GetType().Name
+            );
             return false;
         }
 
         _queue.Enqueue(command);
         Interlocked.Increment(ref _queuedCount);
 
-        _logger.LogTrace("Enqueued command: {CommandType} (Queue size: {QueueSize})",
-            command.GetType().Name, _queuedCount);
+        _logger.LogTrace(
+            "Enqueued command: {CommandType} (Queue size: {QueueSize})",
+            command.GetType().Name,
+            _queuedCount
+        );
 
         return true;
     }
@@ -94,13 +103,19 @@ public class CommandQueue
                 }
                 else
                 {
-                    _logger.LogTrace("Skipped command (CanExecute = false): {CommandType}",
-                        command.GetType().Name);
+                    _logger.LogTrace(
+                        "Skipped command (CanExecute = false): {CommandType}",
+                        command.GetType().Name
+                    );
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error executing command: {CommandType}", command.GetType().Name);
+                _logger.LogError(
+                    ex,
+                    "Error executing command: {CommandType}",
+                    command.GetType().Name
+                );
             }
         }
 

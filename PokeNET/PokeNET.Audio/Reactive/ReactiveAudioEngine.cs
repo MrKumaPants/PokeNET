@@ -45,12 +45,14 @@ public class ReactiveAudioEngine : IDisposable
         ILogger<ReactiveAudioEngine> logger,
         IAudioManager audioManager,
         IEventBus eventBus,
-        AudioReactionRegistry reactionRegistry)
+        AudioReactionRegistry reactionRegistry
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
-        _reactionRegistry = reactionRegistry ?? throw new ArgumentNullException(nameof(reactionRegistry));
+        _reactionRegistry =
+            reactionRegistry ?? throw new ArgumentNullException(nameof(reactionRegistry));
     }
 
     /// <summary>
@@ -66,8 +68,10 @@ public class ReactiveAudioEngine : IDisposable
             return;
         }
 
-        _logger.LogInformation("Initializing ReactiveAudioEngine with {ReactionCount} reactions...",
-            _reactionRegistry.Reactions.Count);
+        _logger.LogInformation(
+            "Initializing ReactiveAudioEngine with {ReactionCount} reactions...",
+            _reactionRegistry.Reactions.Count
+        );
 
         try
         {
@@ -110,14 +114,22 @@ public class ReactiveAudioEngine : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error executing reaction {ReactionType} for event {EventType}",
-                        reaction.GetType().Name, gameEvent.GetType().Name);
+                    _logger.LogError(
+                        ex,
+                        "Error executing reaction {ReactionType} for event {EventType}",
+                        reaction.GetType().Name,
+                        gameEvent.GetType().Name
+                    );
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing game event {EventType}", gameEvent.GetType().Name);
+            _logger.LogError(
+                ex,
+                "Error processing game event {EventType}",
+                gameEvent.GetType().Name
+            );
         }
     }
 

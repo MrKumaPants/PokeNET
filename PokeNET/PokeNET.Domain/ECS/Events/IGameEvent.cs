@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Events;
 
 /// <summary>

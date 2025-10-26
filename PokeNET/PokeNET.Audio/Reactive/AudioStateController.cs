@@ -66,53 +66,70 @@ namespace PokeNET.Audio.Reactive
             // Battle music mappings
             _battleMusicMap[BattleType.Wild] = new List<string>
             {
-                "battle_wild_1", "battle_wild_2", "battle_wild_intense"
+                "battle_wild_1",
+                "battle_wild_2",
+                "battle_wild_intense",
             };
 
             _battleMusicMap[BattleType.Trainer] = new List<string>
             {
-                "battle_trainer_1", "battle_trainer_2", "battle_trainer_epic"
+                "battle_trainer_1",
+                "battle_trainer_2",
+                "battle_trainer_epic",
             };
 
             _battleMusicMap[BattleType.Gym] = new List<string>
             {
-                "battle_gym_leader", "battle_gym_leader_final"
+                "battle_gym_leader",
+                "battle_gym_leader_final",
             };
 
             _battleMusicMap[BattleType.Boss] = new List<string>
             {
-                "battle_boss", "battle_legendary"
+                "battle_boss",
+                "battle_legendary",
             };
 
             _battleMusicMap[BattleType.EliteFour] = new List<string>
             {
-                "battle_elite_four", "battle_champion"
+                "battle_elite_four",
+                "battle_champion",
             };
 
             // Location music mappings
             _locationMusicMap["route"] = new List<string>
             {
-                "route_1", "route_2", "route_adventure"
+                "route_1",
+                "route_2",
+                "route_adventure",
             };
 
             _locationMusicMap["town"] = new List<string>
             {
-                "town_peaceful", "town_day", "town_night"
+                "town_peaceful",
+                "town_day",
+                "town_night",
             };
 
             _locationMusicMap["city"] = new List<string>
             {
-                "city_bustling", "city_modern", "city_night"
+                "city_bustling",
+                "city_modern",
+                "city_night",
             };
 
             _locationMusicMap["cave"] = new List<string>
             {
-                "cave_dark", "cave_mystery", "cave_deep"
+                "cave_dark",
+                "cave_mystery",
+                "cave_deep",
             };
 
             _locationMusicMap["forest"] = new List<string>
             {
-                "forest_calm", "forest_enchanted", "forest_dense"
+                "forest_calm",
+                "forest_enchanted",
+                "forest_dense",
             };
 
             // Time of day ambient music
@@ -128,87 +145,115 @@ namespace PokeNET.Audio.Reactive
         private void SetupStateRules()
         {
             // Battle states have highest priority
-            AddStateRule(new MusicStateRule
-            {
-                Name = "BossBattle",
-                Priority = 100,
-                MatchCondition = state => state.InBattle && state.BattleType == BattleType.Boss,
-                MusicSelector = state => SelectBattleMusic(state.BattleType, state.BattleIntensity)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "BossBattle",
+                    Priority = 100,
+                    MatchCondition = state => state.InBattle && state.BattleType == BattleType.Boss,
+                    MusicSelector = state =>
+                        SelectBattleMusic(state.BattleType, state.BattleIntensity),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "GymBattle",
-                Priority = 90,
-                MatchCondition = state => state.InBattle && state.BattleType == BattleType.Gym,
-                MusicSelector = state => SelectBattleMusic(state.BattleType, state.BattleIntensity)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "GymBattle",
+                    Priority = 90,
+                    MatchCondition = state => state.InBattle && state.BattleType == BattleType.Gym,
+                    MusicSelector = state =>
+                        SelectBattleMusic(state.BattleType, state.BattleIntensity),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "TrainerBattle",
-                Priority = 80,
-                MatchCondition = state => state.InBattle && state.IsTrainerBattle,
-                MusicSelector = state => SelectBattleMusic(BattleType.Trainer, state.BattleIntensity)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "TrainerBattle",
+                    Priority = 80,
+                    MatchCondition = state => state.InBattle && state.IsTrainerBattle,
+                    MusicSelector = state =>
+                        SelectBattleMusic(BattleType.Trainer, state.BattleIntensity),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "WildBattle",
-                Priority = 70,
-                MatchCondition = state => state.InBattle && state.BattleType == BattleType.Wild,
-                MusicSelector = state => SelectBattleMusic(BattleType.Wild, state.BattleIntensity)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "WildBattle",
+                    Priority = 70,
+                    MatchCondition = state => state.InBattle && state.BattleType == BattleType.Wild,
+                    MusicSelector = state =>
+                        SelectBattleMusic(BattleType.Wild, state.BattleIntensity),
+                }
+            );
 
             // Location-based states
-            AddStateRule(new MusicStateRule
-            {
-                Name = "IndoorLocation",
-                Priority = 60,
-                MatchCondition = state => state.IsIndoors && !state.InBattle,
-                MusicSelector = state => SelectIndoorMusic(state.CurrentLocation)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "IndoorLocation",
+                    Priority = 60,
+                    MatchCondition = state => state.IsIndoors && !state.InBattle,
+                    MusicSelector = state => SelectIndoorMusic(state.CurrentLocation),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "CaveLocation",
-                Priority = 55,
-                MatchCondition = state => state.LocationType == LocationType.Cave && !state.InBattle,
-                MusicSelector = state => SelectLocationMusic("cave", state.TimeOfDay)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "CaveLocation",
+                    Priority = 55,
+                    MatchCondition = state =>
+                        state.LocationType == LocationType.Cave && !state.InBattle,
+                    MusicSelector = state => SelectLocationMusic("cave", state.TimeOfDay),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "CityLocation",
-                Priority = 50,
-                MatchCondition = state => state.LocationType == LocationType.City && !state.InBattle,
-                MusicSelector = state => SelectLocationMusic("city", state.TimeOfDay)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "CityLocation",
+                    Priority = 50,
+                    MatchCondition = state =>
+                        state.LocationType == LocationType.City && !state.InBattle,
+                    MusicSelector = state => SelectLocationMusic("city", state.TimeOfDay),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "TownLocation",
-                Priority = 45,
-                MatchCondition = state => state.LocationType == LocationType.Town && !state.InBattle,
-                MusicSelector = state => SelectLocationMusic("town", state.TimeOfDay)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "TownLocation",
+                    Priority = 45,
+                    MatchCondition = state =>
+                        state.LocationType == LocationType.Town && !state.InBattle,
+                    MusicSelector = state => SelectLocationMusic("town", state.TimeOfDay),
+                }
+            );
 
-            AddStateRule(new MusicStateRule
-            {
-                Name = "RouteLocation",
-                Priority = 40,
-                MatchCondition = state => state.LocationType == LocationType.Route && !state.InBattle,
-                MusicSelector = state => SelectLocationMusic("route", state.TimeOfDay)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "RouteLocation",
+                    Priority = 40,
+                    MatchCondition = state =>
+                        state.LocationType == LocationType.Route && !state.InBattle,
+                    MusicSelector = state => SelectLocationMusic("route", state.TimeOfDay),
+                }
+            );
 
             // Time-based ambient music (lowest priority)
-            AddStateRule(new MusicStateRule
-            {
-                Name = "AmbientMusic",
-                Priority = 10,
-                MatchCondition = state => !state.InBattle,
-                MusicSelector = state => SelectAmbientMusic(state.TimeOfDay)
-            });
+            AddStateRule(
+                new MusicStateRule
+                {
+                    Name = "AmbientMusic",
+                    Priority = 10,
+                    MatchCondition = state => !state.InBattle,
+                    MusicSelector = state => SelectAmbientMusic(state.TimeOfDay),
+                }
+            );
         }
 
         /// <summary>
@@ -240,8 +285,8 @@ namespace PokeNET.Audio.Reactive
             }
 
             // Find the highest priority matching rule
-            var matchingRule = _stateRules.Values
-                .Where(rule => rule.MatchCondition(state))
+            var matchingRule = _stateRules
+                .Values.Where(rule => rule.MatchCondition(state))
                 .OrderByDescending(rule => rule.Priority)
                 .FirstOrDefault();
 
@@ -281,14 +326,18 @@ namespace PokeNET.Audio.Reactive
         {
             var locationKey = locationType.ToLower();
 
-            if (!_locationMusicMap.TryGetValue(locationKey, out var musicList) || musicList.Count == 0)
+            if (
+                !_locationMusicMap.TryGetValue(locationKey, out var musicList)
+                || musicList.Count == 0
+            )
             {
                 return SelectAmbientMusic(timeOfDay);
             }
 
             // Prefer time-specific tracks if available
             var timeSpecificTrack = musicList.FirstOrDefault(track =>
-                track.Contains(timeOfDay.ToString().ToLower()));
+                track.Contains(timeOfDay.ToString().ToLower())
+            );
 
             if (!string.IsNullOrEmpty(timeSpecificTrack))
             {
@@ -316,7 +365,11 @@ namespace PokeNET.Audio.Reactive
                 return "pokecenter_theme";
             }
 
-            if (lowerName.Contains("pokemart") || lowerName.Contains("mart") || lowerName.Contains("shop"))
+            if (
+                lowerName.Contains("pokemart")
+                || lowerName.Contains("mart")
+                || lowerName.Contains("shop")
+            )
             {
                 return "pokemart_theme";
             }

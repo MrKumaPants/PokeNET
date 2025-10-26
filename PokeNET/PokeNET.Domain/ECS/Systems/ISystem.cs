@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 
 namespace PokeNET.Domain.ECS.Systems;

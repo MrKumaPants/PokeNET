@@ -118,7 +118,7 @@ public class SoundEffect
             IsPreloaded = IsPreloaded,
             CreatedAt = CreatedAt,
             LastPlayedAt = LastPlayedAt,
-            PlayCount = PlayCount
+            PlayCount = PlayCount,
         };
     }
 
@@ -165,5 +165,5 @@ public enum SoundCategory
     Battle,
 
     /// <summary>Menu navigation sounds.</summary>
-    Menu
+    Menu,
 }

@@ -28,5 +28,5 @@ public enum GameState
     Gym,
 
     /// <summary>Player is viewing inventory or Pokemon party.</summary>
-    Inventory
+    Inventory,
 }

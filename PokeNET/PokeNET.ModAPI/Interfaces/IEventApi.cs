@@ -34,7 +34,8 @@ public interface IEventApi
     /// <typeparam name="T">The event type to subscribe to.</typeparam>
     /// <param name="handler">The handler to invoke when events are published.</param>
     /// <exception cref="ArgumentNullException">Thrown when handler is null.</exception>
-    void Subscribe<T>(Action<T> handler) where T : class;
+    void Subscribe<T>(Action<T> handler)
+        where T : class;
 
     /// <summary>
     /// Unsubscribes a handler from events of the specified type.
@@ -42,7 +43,8 @@ public interface IEventApi
     /// <typeparam name="T">The event type to unsubscribe from.</typeparam>
     /// <param name="handler">The handler to remove.</param>
     /// <returns>True if the handler was removed, false if it wasn't subscribed.</returns>
-    bool Unsubscribe<T>(Action<T> handler) where T : class;
+    bool Unsubscribe<T>(Action<T> handler)
+        where T : class;
 
     /// <summary>
     /// Publishes an event to all subscribed handlers.
@@ -50,12 +52,14 @@ public interface IEventApi
     /// <typeparam name="T">The event type.</typeparam>
     /// <param name="eventData">The event data to publish.</param>
     /// <exception cref="ArgumentNullException">Thrown when eventData is null.</exception>
-    void Publish<T>(T eventData) where T : class;
+    void Publish<T>(T eventData)
+        where T : class;
 
     /// <summary>
     /// Checks if there are any subscribers for the specified event type.
     /// </summary>
     /// <typeparam name="T">The event type to check.</typeparam>
     /// <returns>True if there are subscribers, false otherwise.</returns>
-    bool HasSubscribers<T>() where T : class;
+    bool HasSubscribers<T>()
+        where T : class;
 }

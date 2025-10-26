@@ -21,7 +21,8 @@ public sealed class ScriptExecutionResult<T>
         T? returnValue,
         ICompiledScript compiledScript,
         TimeSpan executionTime,
-        Exception? exception = null)
+        Exception? exception = null
+    )
     {
         Success = success;
         ReturnValue = returnValue;
@@ -82,7 +83,8 @@ public sealed class ScriptExecutionResult<T>
     public static ScriptExecutionResult<T> Successful(
         T? returnValue,
         ICompiledScript compiledScript,
-        TimeSpan executionTime)
+        TimeSpan executionTime
+    )
     {
         return new ScriptExecutionResult<T>(true, returnValue, compiledScript, executionTime);
     }
@@ -93,8 +95,15 @@ public sealed class ScriptExecutionResult<T>
     public static ScriptExecutionResult<T> Failure(
         Exception exception,
         ICompiledScript compiledScript,
-        TimeSpan executionTime)
+        TimeSpan executionTime
+    )
     {
-        return new ScriptExecutionResult<T>(false, default, compiledScript, executionTime, exception);
+        return new ScriptExecutionResult<T>(
+            false,
+            default,
+            compiledScript,
+            executionTime,
+            exception
+        );
     }
 }

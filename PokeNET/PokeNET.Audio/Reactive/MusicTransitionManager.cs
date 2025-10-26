@@ -83,7 +83,11 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Transition to a new music track with specified transition type and duration.
         /// </summary>
-        public void TransitionToTrack(string trackName, TransitionType transitionType, float duration)
+        public void TransitionToTrack(
+            string trackName,
+            TransitionType transitionType,
+            float duration
+        )
         {
             if (!_isInitialized)
             {
@@ -106,7 +110,7 @@ namespace PokeNET.Audio.Reactive
                 TargetTrack = trackName,
                 TransitionType = transitionType,
                 Duration = duration,
-                StartTime = 0f
+                StartTime = 0f,
             };
 
             // For immediate transitions or if no current track, apply immediately
@@ -187,7 +191,7 @@ namespace PokeNET.Audio.Reactive
                 {
                     TrackName = trackName,
                     Volume = 0.0f,
-                    IsPlaying = false
+                    IsPlaying = false,
                 };
                 _trackStates[trackName] = trackState;
             }
@@ -220,7 +224,10 @@ namespace PokeNET.Audio.Reactive
         {
             _transitionState.ElapsedTime += deltaTime;
 
-            float progress = Math.Min(_transitionState.ElapsedTime / _transitionState.Duration, 1.0f);
+            float progress = Math.Min(
+                _transitionState.ElapsedTime / _transitionState.Duration,
+                1.0f
+            );
 
             switch (_transitionState.Type)
             {
@@ -414,7 +421,10 @@ namespace PokeNET.Audio.Reactive
         {
             if (_trackStates.TryGetValue(trackName, out var trackState))
             {
-                return trackState.Volume * _duckingMultiplier * _masterVolume * trackState.IntensityMultiplier;
+                return trackState.Volume
+                    * _duckingMultiplier
+                    * _masterVolume
+                    * trackState.IntensityMultiplier;
             }
 
             return 0.0f;
@@ -456,7 +466,7 @@ namespace PokeNET.Audio.Reactive
     {
         Immediate,
         Fade,
-        Crossfade
+        Crossfade,
     }
 
     public enum EnvironmentFilter
@@ -465,7 +475,7 @@ namespace PokeNET.Audio.Reactive
         Indoor,
         Outdoor,
         Cave,
-        Underwater
+        Underwater,
     }
 
     /// <summary>

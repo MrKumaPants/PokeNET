@@ -9,10 +9,10 @@
 // API Access: IScriptApi via global 'Api' variable
 // ================================================================
 
-using PokeNET.ModApi;
-using PokeNET.ModApi.Events;
 using System;
 using System.Linq;
+using PokeNET.ModApi;
+using PokeNET.ModApi.Events;
 
 /// <summary>
 /// Dynamic stat modifier that adjusts creature stats based on conditions
@@ -40,27 +40,27 @@ public class DynamicStatModifier
     {
         ["RainBoost"] = new StatModifierSet
         {
-            Speed = 2.0f,  // 2x speed in rain for Water types
-            Description = "Rain Dance speed boost"
+            Speed = 2.0f, // 2x speed in rain for Water types
+            Description = "Rain Dance speed boost",
         },
         ["SunBoost"] = new StatModifierSet
         {
             Attack = 1.5f,
             SpecialAttack = 1.5f,
-            Description = "Harsh sunlight power boost"
+            Description = "Harsh sunlight power boost",
         },
         ["LowHealthBoost"] = new StatModifierSet
         {
             Attack = 1.5f,
-            Description = "Low health desperation boost"
+            Description = "Low health desperation boost",
         },
         ["DefensiveStance"] = new StatModifierSet
         {
             Defense = 1.5f,
             SpecialDefense = 1.5f,
             Speed = 0.5f,
-            Description = "Defensive stance"
-        }
+            Description = "Defensive stance",
+        },
     };
 
     public DynamicStatModifier(IScriptApi api)
@@ -92,7 +92,8 @@ public class DynamicStatModifier
         }
 
         _api.Logger.LogInformation(
-            $"Applying {modifierName} to {entity.Name}: {modifier.Description}");
+            $"Applying {modifierName} to {entity.Name}: {modifier.Description}"
+        );
 
         // Store original stats if not already stored
         if (!entity.Has<OriginalStats>())
@@ -106,12 +107,14 @@ public class DynamicStatModifier
         // Track active modifier
         if (duration > 0)
         {
-            entity.Add(new ActiveModifier
-            {
-                ModifierName = modifierName,
-                RemainingTurns = duration,
-                AppliedAt = DateTime.UtcNow
-            });
+            entity.Add(
+                new ActiveModifier
+                {
+                    ModifierName = modifierName,
+                    RemainingTurns = duration,
+                    AppliedAt = DateTime.UtcNow,
+                }
+            );
         }
 
         // Recalculate derived stats
@@ -243,7 +246,8 @@ public class DynamicStatModifier
         if (healthPercent < 0.25f && !evt.Entity.Has<ActiveModifier>())
         {
             _api.Logger.LogInformation(
-                $"{evt.Entity.Name} is low on health, applying desperation boost!");
+                $"{evt.Entity.Name} is low on health, applying desperation boost!"
+            );
 
             ApplyModifier(evt.Entity, "LowHealthBoost");
         }
@@ -293,15 +297,17 @@ public class DynamicStatModifier
     {
         ref var stats = ref entity.Get<CreatureStats>();
 
-        entity.Add(new OriginalStats
-        {
-            HP = stats.HP,
-            Attack = stats.Attack,
-            Defense = stats.Defense,
-            SpecialAttack = stats.SpecialAttack,
-            SpecialDefense = stats.SpecialDefense,
-            Speed = stats.Speed
-        });
+        entity.Add(
+            new OriginalStats
+            {
+                HP = stats.HP,
+                Attack = stats.Attack,
+                Defense = stats.Defense,
+                SpecialAttack = stats.SpecialAttack,
+                SpecialDefense = stats.SpecialDefense,
+                Speed = stats.Speed,
+            }
+        );
 
         _api.Logger.LogDebug($"Stored original stats for {entity.Name}");
     }
@@ -345,8 +351,9 @@ public class DynamicStatModifier
             stats.Speed = (int)(stats.Speed * modifiers.Speed);
 
         _api.Logger.LogDebug(
-            $"Modified stats - Atk:{stats.Attack} Def:{stats.Defense} " +
-            $"SpA:{stats.SpecialAttack} SpD:{stats.SpecialDefense} Spe:{stats.Speed}");
+            $"Modified stats - Atk:{stats.Attack} Def:{stats.Defense} "
+                + $"SpA:{stats.SpecialAttack} SpD:{stats.SpecialDefense} Spe:{stats.Speed}"
+        );
     }
 
     /// <summary>
@@ -373,15 +380,20 @@ public class DynamicStatModifier
                 break;
 
             case "Sandstorm":
-                if (types.PrimaryType == "Rock" || types.SecondaryType == "Rock" ||
-                    types.PrimaryType == "Ground" || types.SecondaryType == "Ground" ||
-                    types.PrimaryType == "Steel" || types.SecondaryType == "Steel")
+                if (
+                    types.PrimaryType == "Rock"
+                    || types.SecondaryType == "Rock"
+                    || types.PrimaryType == "Ground"
+                    || types.SecondaryType == "Ground"
+                    || types.PrimaryType == "Steel"
+                    || types.SecondaryType == "Steel"
+                )
                 {
                     // Sandstorm grants immunity and SpD boost
                     var sandstormBoost = new StatModifierSet
                     {
                         SpecialDefense = 1.5f,
-                        Description = "Sandstorm SpD boost"
+                        Description = "Sandstorm SpD boost",
                     };
                     ApplyCustomModifier(entity, sandstormBoost);
                 }
@@ -406,17 +418,19 @@ public class DynamicStatModifier
             {
                 var intimidateDebuff = new StatModifierSet
                 {
-                    Attack = 0.75f,  // -25% Attack
-                    Description = "Intimidate debuff"
+                    Attack = 0.75f, // -25% Attack
+                    Description = "Intimidate debuff",
                 };
 
                 ApplyCustomModifier(opponent, intimidateDebuff);
 
-                _api.Events.Publish(new BattleMessageEvent
-                {
-                    Message = $"{opponent.Name}'s Attack fell!",
-                    Priority = MessagePriority.Ability
-                });
+                _api.Events.Publish(
+                    new BattleMessageEvent
+                    {
+                        Message = $"{opponent.Name}'s Attack fell!",
+                        Priority = MessagePriority.Ability,
+                    }
+                );
             }
         }
     }
@@ -430,17 +444,18 @@ public class DynamicStatModifier
 
         if (itemData.StatModifiers != null)
         {
-            _api.Logger.LogInformation(
-                $"Applying item modifiers from {itemData.Name}");
+            _api.Logger.LogInformation($"Applying item modifiers from {itemData.Name}");
 
             ApplyCustomModifier(entity, itemData.StatModifiers);
 
-            entity.Add(new ActiveModifier
-            {
-                ModifierName = $"Item_{itemId}",
-                RemainingTurns = -1,  // Permanent while equipped
-                AppliedAt = DateTime.UtcNow
-            });
+            entity.Add(
+                new ActiveModifier
+                {
+                    ModifierName = $"Item_{itemId}",
+                    RemainingTurns = -1, // Permanent while equipped
+                    AppliedAt = DateTime.UtcNow,
+                }
+            );
         }
     }
 }

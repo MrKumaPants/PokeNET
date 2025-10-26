@@ -20,7 +20,8 @@ public sealed class MusicFileManager : IMusicFileManager
     public MusicFileManager(
         ILogger<MusicFileManager> logger,
         IOptions<AudioSettings> settings,
-        AudioCache cache)
+        AudioCache cache
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
@@ -28,11 +29,17 @@ public sealed class MusicFileManager : IMusicFileManager
     }
 
     /// <inheritdoc/>
-    public async Task<MidiFile> LoadMidiFileAsync(string assetPath, CancellationToken cancellationToken = default)
+    public async Task<MidiFile> LoadMidiFileAsync(
+        string assetPath,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(assetPath))
         {
-            throw new ArgumentException("Asset path cannot be null or whitespace", nameof(assetPath));
+            throw new ArgumentException(
+                "Asset path cannot be null or whitespace",
+                nameof(assetPath)
+            );
         }
 
         // Check cache first
@@ -47,7 +54,10 @@ public sealed class MusicFileManager : IMusicFileManager
 
         if (!File.Exists(fullPath))
         {
-            throw new AudioLoadException(assetPath, new FileNotFoundException($"MIDI file not found: {fullPath}"));
+            throw new AudioLoadException(
+                assetPath,
+                new FileNotFoundException($"MIDI file not found: {fullPath}")
+            );
         }
 
         try
@@ -87,7 +97,10 @@ public sealed class MusicFileManager : IMusicFileManager
     }
 
     /// <inheritdoc/>
-    public async Task<MidiFile> LoadMidiFromFileAsync(string filePath, CancellationToken cancellationToken = default)
+    public async Task<MidiFile> LoadMidiFromFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {

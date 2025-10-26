@@ -1,15 +1,21 @@
 # PokeNET Architecture Documentation
 
+> **Note**: This is the consolidated architecture document. For implementation status and MVP roadmap, see [`PROJECT_STATUS.md`](PROJECT_STATUS.md). For audit findings, see [`codebase-audit-2025-10-26.md`](codebase-audit-2025-10-26.md).
+
 ## Executive Summary
 
 PokeNET is a Pokemon-inspired game engine built with modern C# architecture principles. The system uses an Entity Component System (ECS) for game object management, dependency injection for services, and a modular plugin architecture for extensibility.
 
 **Key Technologies:**
-- **ECS Framework:** Arch.Core (high-performance archetype-based ECS)
-- **Rendering:** MonoGame (cross-platform game framework)
-- **Audio:** DryWetMidi + custom reactive audio engine
-- **Modding:** Harmony for runtime patching + plugin system
-- **Scripting:** Roslyn for C# script compilation with sandboxing
+- **ECS Framework:** Arch v2.1.0 (archetype-based ECS) + Arch.System v1.1.0 (source generators)
+- **Rendering:** MonoGame 3.8 (cross-platform game framework)
+- **Audio:** DryWetMIDI v8.0.2 + custom reactive audio engine
+- **Modding:** Harmony v2.x for runtime patching + plugin system
+- **Scripting:** Roslyn v4.14.0 for C# script compilation with sandboxing
+- **Persistence:** Arch.Persistence v2.0.0 for save/load
+- **Relationships:** Arch.Relationships v1.0.1 for entity graphs
+
+**Project Status**: See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for current implementation state and MVP roadmap.
 
 ---
 
@@ -227,24 +233,34 @@ public struct Party
 
 ### Core Systems
 
-Systems implement `SystemBase` and operate on component queries.
+Systems inherit from `BaseSystem<World, float>` (Arch.System package) with source generator support for query optimization.
+
+**Note**: The codebase currently has both `BaseSystem<World, float>` (Arch.System) and custom `ISystem`/`SystemManager`. Per the [audit findings](codebase-audit-2025-10-26.md#8-arch-and-arch-extended-usage-issues), these should be unified.
 
 ```csharp
-public abstract class SystemBase : ISystem
+// Using Arch.System's BaseSystem<TWorld, TGameTime>
+public partial class BattleSystem : BaseSystem<World, float>
 {
-    protected ILogger Logger { get; }
-    protected World World { get; private set; }
+    private readonly ILogger<BattleSystem> _logger;
 
-    public abstract int Priority { get; }  // Execution order (lower = earlier)
+    public BattleSystem(World world, ILogger<BattleSystem> logger) : base(world)
+    {
+        _logger = logger;
+    }
 
-    public void SetWorld(World world);
-    public void Initialize();
-    public void Update(float deltaTime);
-    public void Shutdown();
+    // Source generator creates optimized queries from these methods
+    [Query]
+    [All<PokemonData, PokemonStats, BattleState>]
+    public void ProcessBattle([Data] in Entity entity, ref PokemonStats stats, ref BattleState battle)
+    {
+        // System logic here
+    }
 
-    protected abstract void OnInitialize();
-    protected abstract void OnUpdate(float deltaTime);
-    protected abstract void OnShutdown();
+    public override void Update(in float deltaTime)
+    {
+        // Source generator calls ProcessBattle query automatically
+        ProcessBattleQuery(in World);
+    }
 }
 ```
 

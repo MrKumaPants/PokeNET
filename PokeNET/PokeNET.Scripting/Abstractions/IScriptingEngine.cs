@@ -70,7 +70,8 @@ public interface IScriptingEngine
         string scriptId,
         string sourceCode,
         ScriptCompilationOptions? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Loads a script from a file path using the configured script loader.
@@ -82,7 +83,8 @@ public interface IScriptingEngine
     /// <exception cref="ScriptCompilationException">Thrown when compilation fails.</exception>
     Task<ICompiledScript> LoadScriptAsync(
         string scriptPath,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Executes a compiled script within the provided context.
@@ -102,7 +104,8 @@ public interface IScriptingEngine
     Task<ScriptExecutionResult> ExecuteAsync(
         ICompiledScript script,
         IScriptContext context,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Executes a script function/method by name with arguments.
@@ -120,7 +123,8 @@ public interface IScriptingEngine
         string functionName,
         IScriptContext context,
         object?[]? arguments = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Clears the compilation cache, forcing scripts to be recompiled on next load.

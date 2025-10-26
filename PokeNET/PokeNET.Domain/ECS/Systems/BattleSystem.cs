@@ -1,8 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Arch.Core;
 using Arch.Core.Extensions;
+using Arch.System;
+using Arch.System.SourceGenerator;
 using Microsoft.Extensions.Logging;
+using PokeNET.Domain.ECS.Commands;
 using PokeNET.Domain.ECS.Components;
 using PokeNET.Domain.ECS.Events;
+using PokeNET.Domain.ECS.Relationships;
 
 namespace PokeNET.Domain.ECS.Systems;
 
@@ -31,109 +38,148 @@ namespace PokeNET.Domain.ECS.Systems;
 /// - Efficient query filtering
 /// - Turn-based execution (no per-frame overhead when not in battle)
 /// - Zero allocation for stat calculations
+///
+/// Migration Status:
+/// - Phase 2: ✅ Migrated to Arch.System.BaseSystem with World and float parameters
+/// - Phase 3: ⚠️ SKIPPED - Query pooling optimization postponed
+/// - Phase 5: ✅ COMPLETED - CommandBuffer integrated for safe structural changes
+/// - Phase 5: ✅ COMPLETED - PokemonRelationships integrated for battle state (StartBattle, EndBattle, GetBattleOpponent)
 /// </summary>
-public class BattleSystem : SystemBase
+public partial class BattleSystem : BaseSystem<World, float>
 {
+    private readonly ILogger _logger;
     private readonly IEventBus? _eventBus;
-    private QueryDescription _battleQuery;
     private int _turnsProcessed;
     private readonly Random _random;
-
-    /// <inheritdoc/>
-    public override int Priority => 50; // Mid-priority, after movement but before rendering
+    private List<BattleEntity> _battlersCache;
+    private float _deltaTime; // Store for access in query methods
 
     /// <summary>
-    /// Initializes the battle system.
+    /// Initializes the battle system with Arch's BaseSystem.
     /// </summary>
+    /// <param name="world">World instance.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="eventBus">Optional event bus for battle events.</param>
-    public BattleSystem(ILogger<BattleSystem> logger, IEventBus? eventBus = null)
-        : base(logger)
+    public BattleSystem(World world, ILogger<BattleSystem> logger, IEventBus? eventBus = null)
+        : base(world)
     {
+        _logger = logger;
         _eventBus = eventBus;
         _random = new Random();
+        _battlersCache = new List<BattleEntity>(16); // Pre-allocate for typical battle size
+
+        _logger.LogInformation(
+            "BattleSystem initialized with Arch BaseSystem and source-generated queries"
+        );
     }
 
-    /// <inheritdoc/>
-    protected override void OnInitialize()
+    /// <summary>
+    /// Core battle logic: Process all active battles using source-generated queries.
+    /// Uses CommandBuffer for safe deferred structural changes.
+    /// </summary>
+    /// <param name="deltaTime">Time elapsed since last frame in seconds.</param>
+    public override void Update(in float deltaTime)
     {
-        // Battle query: PokemonData + PokemonStats + BattleState + MoveSet
-        _battleQuery = new QueryDescription()
-            .WithAll<PokemonData, PokemonStats, BattleState, MoveSet>();
+        // Store deltaTime for access in query methods
+        _deltaTime = deltaTime;
 
-        Logger.LogInformation("BattleSystem initialized");
-    }
-
-    /// <inheritdoc/>
-    protected override void OnUpdate(float deltaTime)
-    {
+        // Reset turn counter for this frame
         _turnsProcessed = 0;
 
-        // Process active battles
-        ProcessBattles();
+        // Clear battlers cache for reuse
+        _battlersCache.Clear();
 
+        // Collect battlers using source-generated query
+        CollectBattlerQuery(World);
+
+        if (_battlersCache.Count == 0)
+            return;
+
+        // Sort by speed stat (with stat stage modifiers)
+        _battlersCache.Sort(
+            (a, b) =>
+            {
+                int speedA = (int)(
+                    a.Stats.Speed * a.BattleState.GetStageMultiplier(a.BattleState.SpeedStage)
+                );
+                int speedB = (int)(
+                    b.Stats.Speed * b.BattleState.GetStageMultiplier(b.BattleState.SpeedStage)
+                );
+                return speedB.CompareTo(speedA); // Descending order (faster first)
+            }
+        );
+
+        // Phase 5: Use CommandBuffer for safe structural changes during iteration
+        using var cmd = new CommandBuffer(World);
+
+        // Process each battler's turn with CommandBuffer
+        foreach (var battler in _battlersCache)
+        {
+            ProcessTurn(battler, cmd);
+        }
+
+        // Execute all deferred structural changes AFTER iteration completes
+        cmd.Playback();
+
+        // Check victory/defeat conditions
+        CheckBattleEnd(_battlersCache);
+
+        // Log battle processing results
         if (_turnsProcessed > 0)
         {
-            Logger.LogDebug("BattleSystem processed {Turns} battle turns", _turnsProcessed);
+            _logger.LogDebug(
+                "BattleSystem processed {Turns} battle turns this frame",
+                _turnsProcessed
+            );
         }
     }
 
     /// <summary>
-    /// Processes all active battles.
+    /// Source-generated query for collecting Pokemon in battle.
+    /// Generated method: CollectBattlerQuery(World world)
     /// </summary>
-    private void ProcessBattles()
+    [Query]
+    [All<PokemonData, PokemonStats, BattleState, MoveSet>]
+    private void CollectBattler(
+        in Entity entity,
+        ref PokemonData data,
+        ref PokemonStats stats,
+        ref BattleState battleState,
+        ref MoveSet moveSet
+    )
     {
-        // Collect all Pokemon in battle
-        var battlers = new List<BattleEntity>();
-
-        World.Query(in _battleQuery, (Entity entity, ref PokemonData data, ref PokemonStats stats, ref BattleState battleState, ref MoveSet moveSet) =>
+        if (battleState.Status == BattleStatus.InBattle)
         {
-            if (battleState.Status == BattleStatus.InBattle)
-            {
-                battlers.Add(new BattleEntity
+            _battlersCache.Add(
+                new BattleEntity
                 {
                     Entity = entity,
                     Data = data,
                     Stats = stats,
                     BattleState = battleState,
-                    MoveSet = moveSet
-                });
-            }
-        });
-
-        if (battlers.Count == 0)
-            return;
-
-        // Sort by speed stat (with stat stage modifiers)
-        battlers.Sort((a, b) =>
-        {
-            int speedA = (int)(a.Stats.Speed * a.BattleState.GetStageMultiplier(a.BattleState.SpeedStage));
-            int speedB = (int)(b.Stats.Speed * b.BattleState.GetStageMultiplier(b.BattleState.SpeedStage));
-            return speedB.CompareTo(speedA); // Descending order (faster first)
-        });
-
-        // Process each battler's turn
-        foreach (var battler in battlers)
-        {
-            ProcessTurn(battler);
+                    MoveSet = moveSet,
+                }
+            );
         }
-
-        // Check victory/defeat conditions
-        CheckBattleEnd(battlers);
     }
 
     /// <summary>
     /// Processes a single Pokemon's turn.
+    /// Phase 5: Uses CommandBuffer for safe component additions during iteration.
     /// </summary>
-    private void ProcessTurn(BattleEntity battler)
+    private void ProcessTurn(BattleEntity battler, CommandBuffer cmd)
     {
         ref var battleState = ref World.Get<BattleState>(battler.Entity);
         ref var stats = ref World.Get<PokemonStats>(battler.Entity);
 
-        // Add StatusCondition if it doesn't exist
+        // Phase 5: Use CommandBuffer for safe structural changes
+        // Add StatusCondition if it doesn't exist (deferred until Playback)
         if (!World.Has<StatusCondition>(battler.Entity))
         {
-            World.Add<StatusCondition>(battler.Entity);
+            cmd.Add<StatusCondition>(battler.Entity);
+            // Component won't exist until Playback, skip status processing this turn
+            _turnsProcessed++;
+            return;
         }
         ref var statusCondition = ref World.Get<StatusCondition>(battler.Entity);
 
@@ -143,8 +189,11 @@ public class BattleSystem : SystemBase
         // Check if Pokemon can act (not frozen/asleep/paralyzed)
         if (!statusCondition.CanAct())
         {
-            Logger.LogDebug("Pokemon {Entity} cannot act due to status condition {Status}",
-                battler.Entity.Id, statusCondition.Status);
+            _logger.LogDebug(
+                "Pokemon {Entity} cannot act due to status condition {Status}",
+                battler.Entity.Id,
+                statusCondition.Status
+            );
             return;
         }
 
@@ -153,13 +202,20 @@ public class BattleSystem : SystemBase
         if (statusDamage > 0)
         {
             stats.HP = Math.Max(0, stats.HP - statusDamage);
-            Logger.LogDebug("Pokemon {Entity} took {Damage} damage from {Status}",
-                battler.Entity.Id, statusDamage, statusCondition.Status);
+            _logger.LogDebug(
+                "Pokemon {Entity} took {Damage} damage from {Status}",
+                battler.Entity.Id,
+                statusDamage,
+                statusCondition.Status
+            );
 
             if (stats.HP == 0)
             {
                 battleState.Status = BattleStatus.Fainted;
-                Logger.LogInformation("Pokemon {Entity} fainted from status damage", battler.Entity.Id);
+                _logger.LogInformation(
+                    "Pokemon {Entity} fainted from status damage",
+                    battler.Entity.Id
+                );
                 return;
             }
         }
@@ -172,6 +228,8 @@ public class BattleSystem : SystemBase
 
     /// <summary>
     /// Executes a move from attacker to defender.
+    /// Phase 5: Safe to modify components directly as this is called outside query iteration.
+    /// TODO Phase 3: Cache move lookups with a move database for better performance
     /// </summary>
     /// <param name="attacker">Attacking Pokemon entity</param>
     /// <param name="defender">Defending Pokemon entity</param>
@@ -205,7 +263,7 @@ public class BattleSystem : SystemBase
 
         if (!move.HasValue || move.Value.PP <= 0)
         {
-            Logger.LogWarning("Move {MoveId} not available or out of PP", moveId);
+            _logger.LogWarning("Move {MoveId} not available or out of PP", moveId);
             return false;
         }
 
@@ -220,20 +278,26 @@ public class BattleSystem : SystemBase
             defenderStats,
             defenderBattleState,
             defenderData,
-            moveId);
+            moveId
+        );
 
         // Apply damage
         defenderStats.HP = Math.Max(0, defenderStats.HP - damage);
         defenderBattleState.LastDamageTaken = damage;
 
-        Logger.LogInformation("Pokemon {Attacker} used move {MoveId} on {Defender} for {Damage} damage",
-            attacker.Id, moveId, defender.Id, damage);
+        _logger.LogInformation(
+            "Pokemon {Attacker} used move {MoveId} on {Defender} for {Damage} damage",
+            attacker.Id,
+            moveId,
+            defender.Id,
+            damage
+        );
 
         // Check if defender fainted
         if (defenderStats.HP == 0)
         {
             defenderBattleState.Status = BattleStatus.Fainted;
-            Logger.LogInformation("Pokemon {Entity} fainted!", defender.Id);
+            _logger.LogInformation("Pokemon {Entity} fainted!", defender.Id);
 
             // Award experience to attacker
             AwardExperience(attacker, defenderData.Level);
@@ -248,6 +312,8 @@ public class BattleSystem : SystemBase
     /// <summary>
     /// Calculates damage using the official Pokemon damage formula.
     /// Damage = ((((2 * Level / 5) + 2) * Power * A/D) / 50) + 2) * Modifiers
+    /// TODO Phase 3: Move move data (power, type, category) to a cached move database
+    /// TODO Phase 3: Pre-calculate type effectiveness chart for faster lookups
     /// </summary>
     private int CalculateDamage(
         PokemonStats attackerStats,
@@ -256,7 +322,8 @@ public class BattleSystem : SystemBase
         PokemonStats defenderStats,
         BattleState defenderBattleState,
         PokemonData defenderData,
-        int moveId)
+        int moveId
+    )
     {
         // Placeholder values - in real implementation, these would come from move database
         int movePower = 50; // Example: Tackle
@@ -266,16 +333,29 @@ public class BattleSystem : SystemBase
 
         // Get attack and defense stats with stage modifiers
         int attack = isPhysical
-            ? (int)(attackerStats.Attack * attackerBattleState.GetStageMultiplier(attackerBattleState.AttackStage))
-            : (int)(attackerStats.SpAttack * attackerBattleState.GetStageMultiplier(attackerBattleState.SpAttackStage));
+            ? (int)(
+                attackerStats.Attack
+                * attackerBattleState.GetStageMultiplier(attackerBattleState.AttackStage)
+            )
+            : (int)(
+                attackerStats.SpAttack
+                * attackerBattleState.GetStageMultiplier(attackerBattleState.SpAttackStage)
+            );
 
         int defense = isPhysical
-            ? (int)(defenderStats.Defense * defenderBattleState.GetStageMultiplier(defenderBattleState.DefenseStage))
-            : (int)(defenderStats.SpDefense * defenderBattleState.GetStageMultiplier(defenderBattleState.SpDefenseStage));
+            ? (int)(
+                defenderStats.Defense
+                * defenderBattleState.GetStageMultiplier(defenderBattleState.DefenseStage)
+            )
+            : (int)(
+                defenderStats.SpDefense
+                * defenderBattleState.GetStageMultiplier(defenderBattleState.SpDefenseStage)
+            );
 
         // Base damage calculation
         int level = attackerData.Level;
-        float baseDamage = (((2f * level / 5f) + 2f) * movePower * (attack / (float)defense) / 50f) + 2f;
+        float baseDamage =
+            (((2f * level / 5f) + 2f) * movePower * (attack / (float)defense) / 50f) + 2f;
 
         // Apply modifiers
         float stab = hasStab ? 1.5f : 1.0f;
@@ -301,6 +381,8 @@ public class BattleSystem : SystemBase
 
     /// <summary>
     /// Awards experience points to the winning Pokemon.
+    /// Phase 5: Safe to modify components directly as this is called outside query iteration.
+    /// TODO Phase 3: Cache species base stats for faster stat recalculation
     /// </summary>
     private void AwardExperience(Entity winner, int defeatedLevel)
     {
@@ -314,13 +396,21 @@ public class BattleSystem : SystemBase
         int experienceGained = (baseExp * defeatedLevel) / 5;
 
         data.ExperiencePoints += experienceGained;
-        Logger.LogInformation("Pokemon {Entity} gained {Exp} experience points", winner.Id, experienceGained);
+        _logger.LogInformation(
+            "Pokemon {Entity} gained {Exp} experience points",
+            winner.Id,
+            experienceGained
+        );
 
         // Check for level up
         while (data.ExperiencePoints >= data.ExperienceToNextLevel && data.Level < 100)
         {
             data.Level++;
-            Logger.LogInformation("Pokemon {Entity} leveled up to {Level}!", winner.Id, data.Level);
+            _logger.LogInformation(
+                "Pokemon {Entity} leveled up to {Level}!",
+                winner.Id,
+                data.Level
+            );
 
             // Recalculate stats (would need species base stats)
             // This is a placeholder - real implementation would use species data
@@ -335,6 +425,8 @@ public class BattleSystem : SystemBase
 
     /// <summary>
     /// Recalculates Pokemon stats based on level, IVs, EVs, and nature.
+    /// TODO Phase 3: Load base stats from a species database instead of hardcoding
+    /// TODO Phase 3: Cache nature modifiers in a lookup table
     /// </summary>
     private void RecalculateStats(ref PokemonStats stats, ref PokemonData data)
     {
@@ -356,11 +448,41 @@ public class BattleSystem : SystemBase
         // Calculate stats using official formula
         stats.MaxHP = stats.CalculateHP(baseHP, data.Level);
         stats.HP = stats.MaxHP; // Heal on level up
-        stats.Attack = stats.CalculateStat(baseAttack, stats.IV_Attack, stats.EV_Attack, data.Level, attackMod);
-        stats.Defense = stats.CalculateStat(baseDefense, stats.IV_Defense, stats.EV_Defense, data.Level, defenseMod);
-        stats.SpAttack = stats.CalculateStat(baseSpAttack, stats.IV_SpAttack, stats.EV_SpAttack, data.Level, spAttackMod);
-        stats.SpDefense = stats.CalculateStat(baseSpDefense, stats.IV_SpDefense, stats.EV_SpDefense, data.Level, spDefenseMod);
-        stats.Speed = stats.CalculateStat(baseSpeed, stats.IV_Speed, stats.EV_Speed, data.Level, speedMod);
+        stats.Attack = stats.CalculateStat(
+            baseAttack,
+            stats.IV_Attack,
+            stats.EV_Attack,
+            data.Level,
+            attackMod
+        );
+        stats.Defense = stats.CalculateStat(
+            baseDefense,
+            stats.IV_Defense,
+            stats.EV_Defense,
+            data.Level,
+            defenseMod
+        );
+        stats.SpAttack = stats.CalculateStat(
+            baseSpAttack,
+            stats.IV_SpAttack,
+            stats.EV_SpAttack,
+            data.Level,
+            spAttackMod
+        );
+        stats.SpDefense = stats.CalculateStat(
+            baseSpDefense,
+            stats.IV_SpDefense,
+            stats.EV_SpDefense,
+            data.Level,
+            spDefenseMod
+        );
+        stats.Speed = stats.CalculateStat(
+            baseSpeed,
+            stats.IV_Speed,
+            stats.EV_Speed,
+            data.Level,
+            speedMod
+        );
     }
 
     /// <summary>
@@ -386,6 +508,8 @@ public class BattleSystem : SystemBase
 
     /// <summary>
     /// Checks if the battle has ended (all Pokemon on one side fainted).
+    /// Phase 5: Safe read-only query, no structural changes needed.
+    /// TODO Phase 3: Optimize with early-exit query pattern
     /// </summary>
     private void CheckBattleEnd(List<BattleEntity> battlers)
     {
@@ -398,7 +522,7 @@ public class BattleSystem : SystemBase
 
         if (!anyAlive)
         {
-            Logger.LogInformation("Battle ended - all Pokemon fainted");
+            _logger.LogInformation("Battle ended - all Pokemon fainted");
             // TODO: Emit battle end event
         }
     }
@@ -429,6 +553,98 @@ public class BattleSystem : SystemBase
         Defense,
         SpAttack,
         SpDefense,
-        Speed
+        Speed,
     }
+
+    #region Battle State Management (PokemonRelationships Integration - Phase 5)
+
+    /// <summary>
+    /// Starts a battle between two trainers.
+    /// Uses PokemonRelationships.StartBattle to establish bidirectional battle relationship.
+    /// Phase 5: NEW - Integrated PokemonRelationships for battle state tracking.
+    /// </summary>
+    /// <param name="trainer1">First trainer entity</param>
+    /// <param name="trainer2">Second trainer entity</param>
+    public void StartBattle(Entity trainer1, Entity trainer2)
+    {
+        if (!World.IsAlive(trainer1) || !World.IsAlive(trainer2))
+        {
+            _logger.LogWarning("Cannot start battle: Invalid trainer entities");
+            return;
+        }
+
+        // Check if trainers already in battle
+        if (World.IsInBattle(trainer1))
+        {
+            _logger.LogWarning("Trainer {TrainerId} is already in battle", trainer1.Id);
+            return;
+        }
+
+        if (World.IsInBattle(trainer2))
+        {
+            _logger.LogWarning("Trainer {TrainerId} is already in battle", trainer2.Id);
+            return;
+        }
+
+        // Establish battle relationship using PokemonRelationships
+        World.StartBattle(trainer1, trainer2);
+
+        _logger.LogInformation(
+            "Battle started: Trainer {Trainer1Id} vs Trainer {Trainer2Id}",
+            trainer1.Id,
+            trainer2.Id
+        );
+
+        // TODO: Initialize battle state components for each trainer's lead Pokemon
+        // var lead1 = World.GetLeadPokemon(trainer1);
+        // var lead2 = World.GetLeadPokemon(trainer2);
+    }
+
+    /// <summary>
+    /// Ends a battle between two trainers.
+    /// Uses PokemonRelationships.EndBattle to remove battle relationship.
+    /// </summary>
+    public void EndBattle(Entity trainer1, Entity trainer2)
+    {
+        if (!World.IsAlive(trainer1) || !World.IsAlive(trainer2))
+        {
+            _logger.LogWarning("Cannot end battle: Invalid trainer entities");
+            return;
+        }
+
+        World.EndBattle(trainer1, trainer2);
+
+        _logger.LogInformation(
+            "Battle ended: Trainer {Trainer1Id} vs Trainer {Trainer2Id}",
+            trainer1.Id,
+            trainer2.Id
+        );
+
+        // TODO: Clean up battle state components
+    }
+
+    /// <summary>
+    /// Gets the opponent a trainer is currently battling.
+    /// Demonstrates PokemonRelationships bidirectional query.
+    /// </summary>
+    public Entity? GetBattleOpponent(Entity trainer)
+    {
+        if (!World.IsAlive(trainer))
+            return null;
+
+        return World.GetBattleOpponent(trainer);
+    }
+
+    /// <summary>
+    /// Checks if a trainer is currently in battle.
+    /// </summary>
+    public bool IsTrainerInBattle(Entity trainer)
+    {
+        if (!World.IsAlive(trainer))
+            return false;
+
+        return World.IsInBattle(trainer);
+    }
+
+    #endregion
 }

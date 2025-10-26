@@ -13,7 +13,7 @@ namespace PokeNET.Audio.Mixing
         Low = 0,
         Normal = 1,
         High = 2,
-        Critical = 3
+        Critical = 3,
     }
 
     /// <summary>
@@ -141,28 +141,41 @@ namespace PokeNET.Audio.Mixing
         private void InitializeDefaultRules()
         {
             // Sound effects duck music
-            AddDuckingRule(new DuckingRule
-            {
-                TriggerChannel = ChannelType.SoundEffects,
-                AffectedChannels = new List<ChannelType> { ChannelType.Music, ChannelType.Ambient },
-                DuckLevel = 0.4f,
-                FadeInTime = 0.2f,
-                FadeOutTime = 0.5f,
-                Priority = DuckingPriority.Normal,
-                Enabled = true
-            });
+            AddDuckingRule(
+                new DuckingRule
+                {
+                    TriggerChannel = ChannelType.SoundEffects,
+                    AffectedChannels = new List<ChannelType>
+                    {
+                        ChannelType.Music,
+                        ChannelType.Ambient,
+                    },
+                    DuckLevel = 0.4f,
+                    FadeInTime = 0.2f,
+                    FadeOutTime = 0.5f,
+                    Priority = DuckingPriority.Normal,
+                    Enabled = true,
+                }
+            );
 
             // Voice/dialogue ducks everything else
-            AddDuckingRule(new DuckingRule
-            {
-                TriggerChannel = ChannelType.Voice,
-                AffectedChannels = new List<ChannelType> { ChannelType.Music, ChannelType.SoundEffects, ChannelType.Ambient },
-                DuckLevel = 0.25f,
-                FadeInTime = 0.3f,
-                FadeOutTime = 0.5f,
-                Priority = DuckingPriority.High,
-                Enabled = true
-            });
+            AddDuckingRule(
+                new DuckingRule
+                {
+                    TriggerChannel = ChannelType.Voice,
+                    AffectedChannels = new List<ChannelType>
+                    {
+                        ChannelType.Music,
+                        ChannelType.SoundEffects,
+                        ChannelType.Ambient,
+                    },
+                    DuckLevel = 0.25f,
+                    FadeInTime = 0.3f,
+                    FadeOutTime = 0.5f,
+                    Priority = DuckingPriority.High,
+                    Enabled = true,
+                }
+            );
         }
 
         /// <summary>
@@ -172,10 +185,7 @@ namespace PokeNET.Audio.Mixing
         {
             foreach (ChannelType channelType in Enum.GetValues(typeof(ChannelType)))
             {
-                _duckingStates[channelType] = new DuckingState
-                {
-                    ChannelType = channelType
-                };
+                _duckingStates[channelType] = new DuckingState { ChannelType = channelType };
                 _channelActivity[channelType] = false;
             }
         }
@@ -228,12 +238,15 @@ namespace PokeNET.Audio.Mixing
                 // Fire event on activity state change
                 if (wasActive != isActive)
                 {
-                    OnDuckingStateChanged?.Invoke(this, new DuckingStateChangedEventArgs
-                    {
-                        ChannelType = channel.Type,
-                        IsActive = isActive,
-                        Timestamp = DateTime.UtcNow
-                    });
+                    OnDuckingStateChanged?.Invoke(
+                        this,
+                        new DuckingStateChangedEventArgs
+                        {
+                            ChannelType = channel.Type,
+                            IsActive = isActive,
+                            Timestamp = DateTime.UtcNow,
+                        }
+                    );
                 }
             }
         }
@@ -251,7 +264,9 @@ namespace PokeNET.Audio.Mixing
 
             // Apply ducking rules (sorted by priority)
             var activeRules = _duckingRules
-                .Where(r => r.Enabled && _channelActivity.GetValueOrDefault(r.TriggerChannel, false))
+                .Where(r =>
+                    r.Enabled && _channelActivity.GetValueOrDefault(r.TriggerChannel, false)
+                )
                 .OrderByDescending(r => r.Priority);
 
             foreach (var rule in activeRules)
@@ -264,7 +279,13 @@ namespace PokeNET.Audio.Mixing
                     if (rule.DuckLevel < state.TargetDuckLevel || rule.Priority > state.Priority)
                     {
                         state.TargetDuckLevel = rule.DuckLevel;
-                        state.FadeSpeed = 1.0f / (rule.DuckLevel < state.CurrentDuckLevel ? rule.FadeInTime : rule.FadeOutTime);
+                        state.FadeSpeed =
+                            1.0f
+                            / (
+                                rule.DuckLevel < state.CurrentDuckLevel
+                                    ? rule.FadeInTime
+                                    : rule.FadeOutTime
+                            );
                         state.IsActive = true;
                         state.Priority = rule.Priority;
                     }
@@ -286,11 +307,17 @@ namespace PokeNET.Audio.Mixing
 
                     if (state.CurrentDuckLevel < state.TargetDuckLevel)
                     {
-                        state.CurrentDuckLevel = Math.Min(state.CurrentDuckLevel + change, state.TargetDuckLevel);
+                        state.CurrentDuckLevel = Math.Min(
+                            state.CurrentDuckLevel + change,
+                            state.TargetDuckLevel
+                        );
                     }
                     else
                     {
-                        state.CurrentDuckLevel = Math.Max(state.CurrentDuckLevel - change, state.TargetDuckLevel);
+                        state.CurrentDuckLevel = Math.Max(
+                            state.CurrentDuckLevel - change,
+                            state.TargetDuckLevel
+                        );
                     }
                 }
                 else
@@ -349,7 +376,9 @@ namespace PokeNET.Audio.Mixing
         /// </summary>
         public float GetDuckingLevel(ChannelType channelType)
         {
-            return _duckingStates.TryGetValue(channelType, out var state) ? state.CurrentDuckLevel : 1.0f;
+            return _duckingStates.TryGetValue(channelType, out var state)
+                ? state.CurrentDuckLevel
+                : 1.0f;
         }
 
         /// <summary>
@@ -387,16 +416,18 @@ namespace PokeNET.Audio.Mixing
             {
                 DuckingEnabled = DuckingEnabled,
                 ActivityThreshold = ActivityThreshold,
-                DuckingRules = _duckingRules.Select(r => new DuckingRuleConfig
-                {
-                    TriggerChannel = r.TriggerChannel,
-                    AffectedChannels = r.AffectedChannels.ToList(),
-                    DuckLevel = r.DuckLevel,
-                    FadeInTime = r.FadeInTime,
-                    FadeOutTime = r.FadeOutTime,
-                    Priority = r.Priority,
-                    Enabled = r.Enabled
-                }).ToList()
+                DuckingRules = _duckingRules
+                    .Select(r => new DuckingRuleConfig
+                    {
+                        TriggerChannel = r.TriggerChannel,
+                        AffectedChannels = r.AffectedChannels.ToList(),
+                        DuckLevel = r.DuckLevel,
+                        FadeInTime = r.FadeInTime,
+                        FadeOutTime = r.FadeOutTime,
+                        Priority = r.Priority,
+                        Enabled = r.Enabled,
+                    })
+                    .ToList(),
             };
         }
 
@@ -411,16 +442,18 @@ namespace PokeNET.Audio.Mixing
             _duckingRules.Clear();
             foreach (var ruleConfig in config.DuckingRules)
             {
-                AddDuckingRule(new DuckingRule
-                {
-                    TriggerChannel = ruleConfig.TriggerChannel,
-                    AffectedChannels = ruleConfig.AffectedChannels.ToList(),
-                    DuckLevel = ruleConfig.DuckLevel,
-                    FadeInTime = ruleConfig.FadeInTime,
-                    FadeOutTime = ruleConfig.FadeOutTime,
-                    Priority = ruleConfig.Priority,
-                    Enabled = ruleConfig.Enabled
-                });
+                AddDuckingRule(
+                    new DuckingRule
+                    {
+                        TriggerChannel = ruleConfig.TriggerChannel,
+                        AffectedChannels = ruleConfig.AffectedChannels.ToList(),
+                        DuckLevel = ruleConfig.DuckLevel,
+                        FadeInTime = ruleConfig.FadeInTime,
+                        FadeOutTime = ruleConfig.FadeOutTime,
+                        Priority = ruleConfig.Priority,
+                        Enabled = ruleConfig.Enabled,
+                    }
+                );
             }
         }
     }

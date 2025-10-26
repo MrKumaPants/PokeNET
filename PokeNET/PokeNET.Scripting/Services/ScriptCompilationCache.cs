@@ -26,13 +26,19 @@ public sealed class ScriptCompilationCache
     public ScriptCompilationCache(ILogger<ScriptCompilationCache> logger, int maxCacheSize = 100)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _maxCacheSize = maxCacheSize > 0 ? maxCacheSize : throw new ArgumentOutOfRangeException(nameof(maxCacheSize));
+        _maxCacheSize =
+            maxCacheSize > 0
+                ? maxCacheSize
+                : throw new ArgumentOutOfRangeException(nameof(maxCacheSize));
         _cache = new ConcurrentDictionary<string, CacheEntry>();
         _totalRequests = 0;
         _cacheHits = 0;
         _cacheMisses = 0;
 
-        _logger.LogInformation("ScriptCompilationCache initialized with max size: {MaxSize}", _maxCacheSize);
+        _logger.LogInformation(
+            "ScriptCompilationCache initialized with max size: {MaxSize}",
+            _maxCacheSize
+        );
     }
 
     /// <summary>
@@ -57,7 +63,8 @@ public sealed class ScriptCompilationCache
                 sourceHash,
                 _cacheHits,
                 _totalRequests,
-                GetHitRate());
+                GetHitRate()
+            );
 
             return true;
         }
@@ -69,7 +76,8 @@ public sealed class ScriptCompilationCache
             "Cache MISS for script hash: {SourceHash}. Total misses: {Misses}/{Total}",
             sourceHash,
             _cacheMisses,
-            _totalRequests);
+            _totalRequests
+        );
 
         return false;
     }
@@ -103,7 +111,8 @@ public sealed class ScriptCompilationCache
                 "Added script to cache. Hash: {SourceHash}, Cache size: {CurrentSize}/{MaxSize}",
                 sourceHash,
                 _cache.Count,
-                _maxCacheSize);
+                _maxCacheSize
+            );
         }
         else
         {
@@ -134,7 +143,8 @@ public sealed class ScriptCompilationCache
             _cacheHits,
             _cacheMisses,
             _cache.Count,
-            _maxCacheSize);
+            _maxCacheSize
+        );
     }
 
     /// <summary>
@@ -146,16 +156,15 @@ public sealed class ScriptCompilationCache
             return;
 
         // Find the entry with the oldest LastAccessed time
-        var oldestEntry = _cache
-            .OrderBy(kvp => kvp.Value.LastAccessed)
-            .FirstOrDefault();
+        var oldestEntry = _cache.OrderBy(kvp => kvp.Value.LastAccessed).FirstOrDefault();
 
         if (oldestEntry.Key != null && _cache.TryRemove(oldestEntry.Key, out _))
         {
             _logger.LogDebug(
                 "Evicted oldest cache entry. Hash: {SourceHash}, Last accessed: {LastAccessed}",
                 oldestEntry.Key,
-                oldestEntry.Value.LastAccessed);
+                oldestEntry.Value.LastAccessed
+            );
         }
     }
 

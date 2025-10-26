@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 
 namespace PokeNET.Domain.ECS.Systems;
@@ -38,5 +39,6 @@ public interface ISystemManager : IDisposable
     /// </summary>
     /// <typeparam name="T">The system type.</typeparam>
     /// <returns>The system instance if found, null otherwise.</returns>
-    T? GetSystem<T>() where T : class, ISystem;
+    T? GetSystem<T>()
+        where T : class, ISystem;
 }

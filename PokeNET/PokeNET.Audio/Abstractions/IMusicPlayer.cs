@@ -56,7 +56,11 @@ public interface IMusicPlayer : IAudioService
     /// <param name="useCrossfade">Whether to use crossfading for the transition.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the transition operation.</returns>
-    Task TransitionToAsync(AudioTrack track, bool useCrossfade = true, CancellationToken cancellationToken = default);
+    Task TransitionToAsync(
+        AudioTrack track,
+        bool useCrossfade = true,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Fades out the current track and stops playback.

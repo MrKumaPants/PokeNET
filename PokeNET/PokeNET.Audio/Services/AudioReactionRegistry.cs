@@ -22,13 +22,18 @@ public class AudioReactionRegistry
     /// <param name="reactions">Collection of audio reactions to register.</param>
     public AudioReactionRegistry(
         ILogger<AudioReactionRegistry> logger,
-        IEnumerable<IAudioReaction> reactions)
+        IEnumerable<IAudioReaction> reactions
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _reactions = reactions?.OrderByDescending(r => r.Priority).ToList()
+        _reactions =
+            reactions?.OrderByDescending(r => r.Priority).ToList()
             ?? throw new ArgumentNullException(nameof(reactions));
 
-        _logger.LogInformation("AudioReactionRegistry initialized with {Count} reactions", _reactions.Count);
+        _logger.LogInformation(
+            "AudioReactionRegistry initialized with {Count} reactions",
+            _reactions.Count
+        );
     }
 
     /// <summary>
@@ -57,7 +62,8 @@ public class AudioReactionRegistry
     /// </summary>
     /// <typeparam name="T">The reaction type to configure.</typeparam>
     /// <param name="enabled">True to enable, false to disable.</param>
-    public void SetReactionEnabled<T>(bool enabled) where T : IAudioReaction
+    public void SetReactionEnabled<T>(bool enabled)
+        where T : IAudioReaction
     {
         lock (_lock)
         {
@@ -65,11 +71,18 @@ public class AudioReactionRegistry
             if (reaction != null)
             {
                 reaction.IsEnabled = enabled;
-                _logger.LogDebug("Reaction {ReactionType} set to {Enabled}", typeof(T).Name, enabled);
+                _logger.LogDebug(
+                    "Reaction {ReactionType} set to {Enabled}",
+                    typeof(T).Name,
+                    enabled
+                );
             }
             else
             {
-                _logger.LogWarning("Reaction type {ReactionType} not found in registry", typeof(T).Name);
+                _logger.LogWarning(
+                    "Reaction type {ReactionType} not found in registry",
+                    typeof(T).Name
+                );
             }
         }
     }
@@ -95,7 +108,8 @@ public class AudioReactionRegistry
     /// </summary>
     /// <typeparam name="T">The reaction type to check.</typeparam>
     /// <returns>True if enabled, false otherwise.</returns>
-    public bool IsReactionEnabled<T>() where T : IAudioReaction
+    public bool IsReactionEnabled<T>()
+        where T : IAudioReaction
     {
         lock (_lock)
         {
@@ -131,7 +145,7 @@ public class AudioReactionRegistry
                 EnabledReactions = _reactions.Count(r => r.IsEnabled),
                 DisabledReactions = _reactions.Count(r => !r.IsEnabled),
                 HighestPriority = _reactions.Any() ? _reactions.Max(r => r.Priority) : 0,
-                LowestPriority = _reactions.Any() ? _reactions.Min(r => r.Priority) : 0
+                LowestPriority = _reactions.Any() ? _reactions.Min(r => r.Priority) : 0,
             };
         }
     }

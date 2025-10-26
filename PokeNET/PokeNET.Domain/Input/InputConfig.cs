@@ -1,6 +1,8 @@
-using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Xna.Framework.Input;
 
 namespace PokeNET.Domain.Input;
 
@@ -79,7 +81,7 @@ public class InputConfig
 
                 // Undo/Redo (for debugging/replays)
                 ["Undo"] = Keys.Z,
-                ["Redo"] = Keys.Y
+                ["Redo"] = Keys.Y,
             },
             GamepadBindings = new Dictionary<string, Buttons>
             {
@@ -93,12 +95,12 @@ public class InputConfig
                 ["Menu"] = Buttons.Back,
 
                 ["ShoulderLeft"] = Buttons.LeftShoulder,
-                ["ShoulderRight"] = Buttons.RightShoulder
+                ["ShoulderRight"] = Buttons.RightShoulder,
             },
             Sensitivity = 1.0f,
             DeadZone = 0.2f,
             EnableBuffering = true,
-            MaxBufferSize = 10
+            MaxBufferSize = 10,
         };
     }
 
@@ -126,10 +128,7 @@ public class InputConfig
     /// </summary>
     public void SaveToFile(string filePath)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
+        var options = new JsonSerializerOptions { WriteIndented = true };
 
         var json = JsonSerializer.Serialize(this, options);
         File.WriteAllText(filePath, json);

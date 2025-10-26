@@ -1,10 +1,14 @@
 <Project>
   <PropertyGroup>
-    <!-- Language and Framework -->
-    <LangVersion>latest</LangVersion>
+    <!-- Enable nullable reference types for all projects -->
     <Nullable>enable</Nullable>
+    
+    <!-- Use latest C# language version -->
+    <LangVersion>latest</LangVersion>
+    
+    <!-- Enable implicit usings for cleaner code -->
     <ImplicitUsings>enable</ImplicitUsings>
-
+    
     <!-- Code Quality -->
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -21,23 +25,13 @@
 
     <!-- Documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- Suppress warnings from source-generated code -->
+    <!-- CS1591: Missing XML comment for publicly visible type or member (from Arch source generators) -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    
+    <!-- Treat warnings as errors -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-
-  <!-- Shared Package Versions -->
-  <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageVersion Include="Arch" Version="1.3.2" />
-    <PackageVersion Include="Lib.Harmony" Version="2.3.3" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
-    <PackageVersion Include="Melanchall.DryWetMidi" Version="7.2.0" />
-    <PackageVersion Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
-  </ItemGroup>
 </Project>
+

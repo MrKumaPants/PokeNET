@@ -98,7 +98,11 @@ public static class ComponentBuilders
         sprite.IsVisible = definition.GetBool("IsVisible", true);
 
         // Optional color tint
-        if (definition.HasProperty("ColorR") || definition.HasProperty("ColorG") || definition.HasProperty("ColorB"))
+        if (
+            definition.HasProperty("ColorR")
+            || definition.HasProperty("ColorG")
+            || definition.HasProperty("ColorB")
+        )
         {
             sprite.Color = new Color(
                 definition.GetInt("ColorR", 255),
@@ -148,7 +152,7 @@ public static class ComponentBuilders
             Defense = definition.GetInt("Defense", 10),
             SpecialAttack = definition.GetInt("SpecialAttack", 10),
             SpecialDefense = definition.GetInt("SpecialDefense", 10),
-            Speed = definition.GetInt("Speed", 10)
+            Speed = definition.GetInt("Speed", 10),
         };
     }
 

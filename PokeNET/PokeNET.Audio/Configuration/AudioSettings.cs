@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace PokeNET.Audio.Configuration;
@@ -162,12 +163,16 @@ public class AudioSettings
     {
         if (MaxConcurrentSounds < 1 || MaxConcurrentSounds > 256)
         {
-            throw new InvalidOperationException($"MaxConcurrentSounds must be between 1 and 256, got {MaxConcurrentSounds}");
+            throw new InvalidOperationException(
+                $"MaxConcurrentSounds must be between 1 and 256, got {MaxConcurrentSounds}"
+            );
         }
 
         if (MaxCacheSizeMB < 1)
         {
-            throw new InvalidOperationException($"MaxCacheSizeMB must be at least 1, got {MaxCacheSizeMB}");
+            throw new InvalidOperationException(
+                $"MaxCacheSizeMB must be at least 1, got {MaxCacheSizeMB}"
+            );
         }
 
         if (string.IsNullOrWhiteSpace(AssetBasePath))
@@ -211,13 +216,13 @@ public class AudioSettings
             MusicVolume,
             SfxVolume,
             MusicEnabled,
-            SfxEnabled
+            SfxEnabled,
         };
 
-        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        var json = JsonSerializer.Serialize(
+            data,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
 
         await File.WriteAllTextAsync(filePath, json);
     }
@@ -264,7 +269,10 @@ public class AudioSettings
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to load audio settings from {filePath}", ex);
+            throw new InvalidOperationException(
+                $"Failed to load audio settings from {filePath}",
+                ex
+            );
         }
     }
 
@@ -279,7 +287,7 @@ public class AudioSettings
             MusicVolume = MusicVolume,
             SfxVolume = SfxVolume,
             MusicEnabled = MusicEnabled,
-            SfxEnabled = SfxEnabled
+            SfxEnabled = SfxEnabled,
         };
     }
 
@@ -297,7 +305,10 @@ public class AudioSettings
 
     private void OnSettingChanged(string settingName, object oldValue, object newValue)
     {
-        SettingChanged?.Invoke(this, new AudioSettingChangedEventArgs(settingName, oldValue, newValue));
+        SettingChanged?.Invoke(
+            this,
+            new AudioSettingChangedEventArgs(settingName, oldValue, newValue)
+        );
     }
 }
 

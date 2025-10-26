@@ -92,54 +92,78 @@ public enum Nature
 {
     /// <summary>Neutral nature (no stat modifiers)</summary>
     Hardy,
+
     /// <summary>+Attack, -Defense</summary>
     Lonely,
+
     /// <summary>+Attack, -Speed</summary>
     Brave,
+
     /// <summary>+Attack, -SpAttack</summary>
     Adamant,
+
     /// <summary>+Attack, -SpDefense</summary>
     Naughty,
+
     /// <summary>+Defense, -Attack</summary>
     Bold,
+
     /// <summary>Neutral nature (no stat modifiers)</summary>
     Docile,
+
     /// <summary>+Defense, -Speed</summary>
     Relaxed,
+
     /// <summary>+Defense, -SpAttack</summary>
     Impish,
+
     /// <summary>+Defense, -SpDefense</summary>
     Lax,
+
     /// <summary>+Speed, -Attack</summary>
     Timid,
+
     /// <summary>+Speed, -Defense</summary>
     Hasty,
+
     /// <summary>Neutral nature (no stat modifiers)</summary>
     Serious,
+
     /// <summary>+Speed, -SpAttack</summary>
     Jolly,
+
     /// <summary>+Speed, -SpDefense</summary>
     Naive,
+
     /// <summary>+SpAttack, -Attack</summary>
     Modest,
+
     /// <summary>+SpAttack, -Defense</summary>
     Mild,
+
     /// <summary>+SpAttack, -Speed</summary>
     Quiet,
+
     /// <summary>Neutral nature (no stat modifiers)</summary>
     Bashful,
+
     /// <summary>+SpAttack, -SpDefense</summary>
     Rash,
+
     /// <summary>+SpDefense, -Attack</summary>
     Calm,
+
     /// <summary>+SpDefense, -Defense</summary>
     Gentle,
+
     /// <summary>+SpDefense, -Speed</summary>
     Sassy,
+
     /// <summary>+SpDefense, -SpAttack</summary>
     Careful,
+
     /// <summary>Neutral nature (no stat modifiers)</summary>
-    Quirky
+    Quirky,
 }
 
 /// <summary>
@@ -150,8 +174,10 @@ public enum Gender
 {
     /// <summary>Male Pokemon</summary>
     Male,
+
     /// <summary>Female Pokemon</summary>
     Female,
+
     /// <summary>Genderless Pokemon (e.g., Magnemite, Porygon, Legendary Pokemon)</summary>
-    Unknown
+    Unknown,
 }

@@ -78,7 +78,7 @@ public enum ScaleType
     /// <summary>
     /// Chromatic scale - all 12 semitones
     /// </summary>
-    Chromatic
+    Chromatic,
 }
 
 /// <summary>
@@ -89,25 +89,26 @@ public static class ScaleTypeExtensions
     /// <summary>
     /// Gets the interval pattern for a scale type (in semitones from root)
     /// </summary>
-    public static int[] GetIntervals(this ScaleType scaleType) => scaleType switch
-    {
-        ScaleType.Major => [0, 2, 4, 5, 7, 9, 11],
-        ScaleType.Minor => [0, 2, 3, 5, 7, 8, 10],
-        ScaleType.NaturalMinor => [0, 2, 3, 5, 7, 8, 10],
-        ScaleType.HarmonicMinor => [0, 2, 3, 5, 7, 8, 11],
-        ScaleType.MelodicMinor => [0, 2, 3, 5, 7, 9, 11],
-        ScaleType.Dorian => [0, 2, 3, 5, 7, 9, 10],
-        ScaleType.Phrygian => [0, 1, 3, 5, 7, 8, 10],
-        ScaleType.Lydian => [0, 2, 4, 6, 7, 9, 11],
-        ScaleType.Mixolydian => [0, 2, 4, 5, 7, 9, 10],
-        ScaleType.Locrian => [0, 1, 3, 5, 6, 8, 10],
-        ScaleType.PentatonicMajor => [0, 2, 4, 7, 9],
-        ScaleType.PentatonicMinor => [0, 3, 5, 7, 10],
-        ScaleType.Blues => [0, 3, 5, 6, 7, 10],
-        ScaleType.WholeTone => [0, 2, 4, 6, 8, 10],
-        ScaleType.Chromatic => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        _ => [0]
-    };
+    public static int[] GetIntervals(this ScaleType scaleType) =>
+        scaleType switch
+        {
+            ScaleType.Major => [0, 2, 4, 5, 7, 9, 11],
+            ScaleType.Minor => [0, 2, 3, 5, 7, 8, 10],
+            ScaleType.NaturalMinor => [0, 2, 3, 5, 7, 8, 10],
+            ScaleType.HarmonicMinor => [0, 2, 3, 5, 7, 8, 11],
+            ScaleType.MelodicMinor => [0, 2, 3, 5, 7, 9, 11],
+            ScaleType.Dorian => [0, 2, 3, 5, 7, 9, 10],
+            ScaleType.Phrygian => [0, 1, 3, 5, 7, 8, 10],
+            ScaleType.Lydian => [0, 2, 4, 6, 7, 9, 11],
+            ScaleType.Mixolydian => [0, 2, 4, 5, 7, 9, 10],
+            ScaleType.Locrian => [0, 1, 3, 5, 6, 8, 10],
+            ScaleType.PentatonicMajor => [0, 2, 4, 7, 9],
+            ScaleType.PentatonicMinor => [0, 3, 5, 7, 10],
+            ScaleType.Blues => [0, 3, 5, 6, 7, 10],
+            ScaleType.WholeTone => [0, 2, 4, 6, 8, 10],
+            ScaleType.Chromatic => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            _ => [0],
+        };
 
     /// <summary>
     /// Gets the notes in a scale given a root note and octave
@@ -122,13 +123,15 @@ public static class ScaleTypeExtensions
             var noteValue = ((int)rootNote + interval) % 12;
             var octaveOffset = ((int)rootNote + interval) / 12;
 
-            notes.Add(new Note
-            {
-                NoteName = (NoteName)noteValue,
-                Octave = octave + octaveOffset,
-                Duration = 1.0f,
-                Velocity = 0.8f
-            });
+            notes.Add(
+                new Note
+                {
+                    NoteName = (NoteName)noteValue,
+                    Octave = octave + octaveOffset,
+                    Duration = 1.0f,
+                    Velocity = 0.8f,
+                }
+            );
         }
 
         return notes;

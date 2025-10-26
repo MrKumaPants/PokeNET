@@ -1,7 +1,7 @@
-using Microsoft.Xna.Framework.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Audio;
 
 namespace PokeNET.Audio.SoundEffects
 {
@@ -45,9 +45,10 @@ namespace PokeNET.Audio.SoundEffects
         public int MaxSize => _maxSize;
         public int TotalHits => _totalHits;
         public int TotalMisses => _totalMisses;
-        public float HitRate => (_totalHits + _totalMisses) > 0
-            ? (float)_totalHits / (_totalHits + _totalMisses)
-            : 0.0f;
+        public float HitRate =>
+            (_totalHits + _totalMisses) > 0
+                ? (float)_totalHits / (_totalHits + _totalMisses)
+                : 0.0f;
 
         public SoundEffectCache(int maxSize = 50)
         {
@@ -60,7 +61,11 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Add a sound effect to the cache
         /// </summary>
-        public void Add(string key, SoundEffect soundEffect, SoundCategory category = SoundCategory.System)
+        public void Add(
+            string key,
+            SoundEffect soundEffect,
+            SoundCategory category = SoundCategory.System
+        )
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SoundEffectCache));
@@ -192,9 +197,10 @@ namespace PokeNET.Audio.SoundEffects
             if (_disposed)
                 return Enumerable.Empty<string>();
 
-            return _cache.Where(kvp => kvp.Value.Category == category)
-                         .Select(kvp => kvp.Key)
-                         .ToList();
+            return _cache
+                .Where(kvp => kvp.Value.Category == category)
+                .Select(kvp => kvp.Key)
+                .ToList();
         }
 
         /// <summary>
@@ -217,7 +223,7 @@ namespace PokeNET.Audio.SoundEffects
                 TotalHits = _totalHits,
                 TotalMisses = _totalMisses,
                 HitRate = HitRate,
-                CategoryBreakdown = new Dictionary<SoundCategory, int>()
+                CategoryBreakdown = new Dictionary<SoundCategory, int>(),
             };
 
             // Calculate category breakdown
@@ -238,7 +244,7 @@ namespace PokeNET.Audio.SoundEffects
                 {
                     Key = kvp.Key,
                     AccessCount = kvp.Value.AccessCount,
-                    Category = kvp.Value.Category
+                    Category = kvp.Value.Category,
                 })
                 .ToList();
 
@@ -254,9 +260,7 @@ namespace PokeNET.Audio.SoundEffects
                 return;
 
             // Find the entry with the oldest access time
-            var lruEntry = _cache
-                .OrderBy(kvp => kvp.Value.LastAccessed)
-                .First();
+            var lruEntry = _cache.OrderBy(kvp => kvp.Value.LastAccessed).First();
 
             _cache.Remove(lruEntry.Key);
         }
@@ -321,9 +325,9 @@ namespace PokeNET.Audio.SoundEffects
 
         public override string ToString()
         {
-            return $"Cache: {TotalEntries}/{MaxSize} entries, " +
-                   $"Hits={TotalHits}, Misses={TotalMisses}, " +
-                   $"HitRate={HitRate:P1}";
+            return $"Cache: {TotalEntries}/{MaxSize} entries, "
+                + $"Hits={TotalHits}, Misses={TotalMisses}, "
+                + $"HitRate={HitRate:P1}";
         }
     }
 

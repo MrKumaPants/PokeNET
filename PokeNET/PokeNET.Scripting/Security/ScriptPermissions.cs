@@ -38,7 +38,7 @@ public sealed class ScriptPermissions
         Elevated = 4,
 
         /// <summary>Full access - only for system scripts (DANGEROUS)</summary>
-        Unrestricted = 99
+        Unrestricted = 99,
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public sealed class ScriptPermissions
         Threading = 1 << 11,
 
         /// <summary>Unsafe code - EXTREMELY DANGEROUS</summary>
-        Unsafe = 1 << 12
+        Unsafe = 1 << 12,
     }
 
     /// <summary>
@@ -137,13 +137,15 @@ public sealed class ScriptPermissions
         IEnumerable<string> allowedNamespaces,
         IEnumerable<string> deniedNamespaces,
         bool canLoadExternalAssemblies,
-        string scriptId)
+        string scriptId
+    )
     {
         Level = level;
         AllowedApis = allowedApis;
         MaxExecutionTime = maxExecutionTime;
         MaxMemoryBytes = maxMemoryBytes;
-        AllowedNamespaces = allowedNamespaces?.ToImmutableHashSet() ?? ImmutableHashSet<string>.Empty;
+        AllowedNamespaces =
+            allowedNamespaces?.ToImmutableHashSet() ?? ImmutableHashSet<string>.Empty;
         DeniedNamespaces = deniedNamespaces?.ToImmutableHashSet() ?? ImmutableHashSet<string>.Empty;
         CanLoadExternalAssemblies = canLoadExternalAssemblies;
         ScriptId = scriptId ?? Guid.NewGuid().ToString();
@@ -175,9 +177,15 @@ public sealed class ScriptPermissions
     {
         return new Builder()
             .WithLevel(PermissionLevel.Standard)
-            .WithApis(ApiCategory.Core | ApiCategory.Collections |
-                     ApiCategory.GameStateRead | ApiCategory.GameStateWrite |
-                     ApiCategory.Logging | ApiCategory.Random | ApiCategory.DateTime)
+            .WithApis(
+                ApiCategory.Core
+                    | ApiCategory.Collections
+                    | ApiCategory.GameStateRead
+                    | ApiCategory.GameStateWrite
+                    | ApiCategory.Logging
+                    | ApiCategory.Random
+                    | ApiCategory.DateTime
+            )
             .WithTimeout(TimeSpan.FromSeconds(10))
             .WithMaxMemory(50 * 1024 * 1024) // 50 MB
             .AllowNamespace("PokeNET.Game")
@@ -200,10 +208,16 @@ public sealed class ScriptPermissions
     {
         return new Builder()
             .WithLevel(PermissionLevel.Elevated)
-            .WithApis(ApiCategory.Core | ApiCategory.Collections |
-                     ApiCategory.GameStateRead | ApiCategory.GameStateWrite |
-                     ApiCategory.Logging | ApiCategory.Random | ApiCategory.DateTime |
-                     ApiCategory.Serialization)
+            .WithApis(
+                ApiCategory.Core
+                    | ApiCategory.Collections
+                    | ApiCategory.GameStateRead
+                    | ApiCategory.GameStateWrite
+                    | ApiCategory.Logging
+                    | ApiCategory.Random
+                    | ApiCategory.DateTime
+                    | ApiCategory.Serialization
+            )
             .WithTimeout(TimeSpan.FromSeconds(30))
             .WithMaxMemory(100 * 1024 * 1024) // 100 MB
             .AllowNamespace("PokeNET")
@@ -232,14 +246,20 @@ public sealed class ScriptPermissions
             return false;
 
         // Denylist takes precedence
-        if (DeniedNamespaces.Any(denied => ns.StartsWith(denied, StringComparison.OrdinalIgnoreCase)))
+        if (
+            DeniedNamespaces.Any(denied =>
+                ns.StartsWith(denied, StringComparison.OrdinalIgnoreCase)
+            )
+        )
             return false;
 
         // Empty allowlist means all allowed (except denied)
         if (AllowedNamespaces.Count == 0)
             return true;
 
-        return AllowedNamespaces.Any(allowed => ns.StartsWith(allowed, StringComparison.OrdinalIgnoreCase));
+        return AllowedNamespaces.Any(allowed =>
+            ns.StartsWith(allowed, StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     /// <summary>
@@ -283,7 +303,10 @@ public sealed class ScriptPermissions
         public Builder WithTimeout(TimeSpan timeout)
         {
             if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromMinutes(5))
-                throw new ArgumentException("Timeout must be between 0 and 5 minutes", nameof(timeout));
+                throw new ArgumentException(
+                    "Timeout must be between 0 and 5 minutes",
+                    nameof(timeout)
+                );
 
             _maxExecutionTime = timeout;
             return this;
@@ -292,7 +315,10 @@ public sealed class ScriptPermissions
         public Builder WithMaxMemory(long bytes)
         {
             if (bytes <= 0 || bytes > 1024L * 1024 * 1024) // Max 1 GB
-                throw new ArgumentException("Memory limit must be between 0 and 1 GB", nameof(bytes));
+                throw new ArgumentException(
+                    "Memory limit must be between 0 and 1 GB",
+                    nameof(bytes)
+                );
 
             _maxMemoryBytes = bytes;
             return this;
@@ -345,19 +371,29 @@ public sealed class ScriptPermissions
             if (_level < PermissionLevel.Elevated)
             {
                 if (_allowedApis.HasFlag(ApiCategory.FileIO))
-                    throw new InvalidOperationException("FileIO requires Elevated permission level");
+                    throw new InvalidOperationException(
+                        "FileIO requires Elevated permission level"
+                    );
                 if (_allowedApis.HasFlag(ApiCategory.Network))
-                    throw new InvalidOperationException("Network requires Elevated permission level");
+                    throw new InvalidOperationException(
+                        "Network requires Elevated permission level"
+                    );
                 if (_allowedApis.HasFlag(ApiCategory.Reflection))
-                    throw new InvalidOperationException("Reflection requires Elevated permission level");
+                    throw new InvalidOperationException(
+                        "Reflection requires Elevated permission level"
+                    );
                 if (_allowedApis.HasFlag(ApiCategory.Threading))
-                    throw new InvalidOperationException("Threading requires Elevated permission level");
+                    throw new InvalidOperationException(
+                        "Threading requires Elevated permission level"
+                    );
             }
 
             if (_level < PermissionLevel.Unrestricted)
             {
                 if (_allowedApis.HasFlag(ApiCategory.Unsafe))
-                    throw new InvalidOperationException("Unsafe code requires Unrestricted permission level");
+                    throw new InvalidOperationException(
+                        "Unsafe code requires Unrestricted permission level"
+                    );
             }
         }
     }
@@ -367,7 +403,7 @@ public sealed class ScriptPermissions
     /// </summary>
     public override string ToString()
     {
-        return $"ScriptPermissions[{ScriptId}]: Level={Level}, APIs={AllowedApis}, " +
-               $"Timeout={MaxExecutionTime.TotalSeconds}s, MaxMem={MaxMemoryBytes / 1024 / 1024}MB";
+        return $"ScriptPermissions[{ScriptId}]: Level={Level}, APIs={AllowedApis}, "
+            + $"Timeout={MaxExecutionTime.TotalSeconds}s, MaxMem={MaxMemoryBytes / 1024 / 1024}MB";
     }
 }

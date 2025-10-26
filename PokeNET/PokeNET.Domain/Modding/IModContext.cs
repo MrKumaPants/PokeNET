@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
 namespace PokeNET.Domain.Modding;
@@ -118,7 +120,8 @@ public interface IModContext
     /// Only a subset of game services are exposed to mods for security and stability.
     /// Use the specific APIs (<see cref="Assets"/>, <see cref="Entities"/>, etc.) when possible.
     /// </remarks>
-    T GetService<T>() where T : notnull;
+    T GetService<T>()
+        where T : notnull;
 
     /// <summary>
     /// Attempts to get a service from the dependency injection container.
@@ -126,7 +129,8 @@ public interface IModContext
     /// <typeparam name="T">Type of service to retrieve.</typeparam>
     /// <param name="service">The service instance if found; otherwise null.</param>
     /// <returns>True if the service was found; otherwise false.</returns>
-    bool TryGetService<T>(out T? service) where T : class;
+    bool TryGetService<T>(out T? service)
+        where T : class;
 }
 
 /// <summary>
@@ -175,7 +179,8 @@ public interface IModRegistry
     /// </code>
     /// </para>
     /// </remarks>
-    TApi? GetApi<TApi>(string modId) where TApi : class;
+    TApi? GetApi<TApi>(string modId)
+        where TApi : class;
 
     /// <summary>
     /// Gets all mods that depend on the specified mod.

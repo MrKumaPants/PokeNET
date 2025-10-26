@@ -14,7 +14,7 @@ public enum AudioQuality
     Medium = 1,
 
     /// <summary>High quality - 48000 Hz, larger buffer</summary>
-    High = 2
+    High = 2,
 }
 
 /// <summary>
@@ -152,7 +152,9 @@ public class AudioOptions
 
         if (DefaultMasterVolume < 0.0f || DefaultMasterVolume > 1.0f)
         {
-            errors.Add($"DefaultMasterVolume must be between 0.0 and 1.0, got {DefaultMasterVolume}");
+            errors.Add(
+                $"DefaultMasterVolume must be between 0.0 and 1.0, got {DefaultMasterVolume}"
+            );
         }
 
         if (DefaultMusicVolume < 0.0f || DefaultMusicVolume > 1.0f)
@@ -191,7 +193,7 @@ public class AudioOptions
             DefaultSfxVolume = DefaultSfxVolume,
             EnableCompression = EnableCompression,
             EnableCaching = EnableCaching,
-            MaxCacheSizeMB = MaxCacheSizeMB
+            MaxCacheSizeMB = MaxCacheSizeMB,
         };
     }
 }

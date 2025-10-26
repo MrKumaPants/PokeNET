@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Arch.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using PokeNET.Domain.ECS.Commands;
 using PokeNET.Domain.ECS.Components;
 using PokeNET.Domain.ECS.Events;
 using PokeNET.Domain.ECS.Factories;
@@ -23,8 +25,13 @@ public sealed class ItemEntityFactory : EntityFactory
 
     /// <summary>
     /// Creates a health potion item.
+    /// Phase 6: Now uses CommandBuffer for safe deferred entity creation.
     /// </summary>
-    public Entity CreateHealthPotion(World world, Vector2 position, int healAmount = 50)
+    public CommandBuffer.CreateCommand CreateHealthPotion(
+        CommandBuffer cmd,
+        Vector2 position,
+        int healAmount = 50
+    )
     {
         var definition = new EntityDefinition(
             "HealthPotion",
@@ -32,23 +39,28 @@ public sealed class ItemEntityFactory : EntityFactory
             {
                 new Position(position.X, position.Y),
                 new Sprite("sprites/items/health_potion.png", 16, 16, 0.3f),
-                new Renderable(true)
+                new Renderable(true),
             },
             new Dictionary<string, object>
             {
                 ["ItemType"] = "Consumable",
                 ["HealAmount"] = healAmount,
-                ["Rarity"] = "Common"
+                ["Rarity"] = "Common",
             }
         );
 
-        return Create(world, definition);
+        return Create(cmd, definition);
     }
 
     /// <summary>
     /// Creates a coin/currency item.
+    /// Phase 6: Now uses CommandBuffer for safe deferred entity creation.
     /// </summary>
-    public Entity CreateCoin(World world, Vector2 position, int value = 1)
+    public CommandBuffer.CreateCommand CreateCoin(
+        CommandBuffer cmd,
+        Vector2 position,
+        int value = 1
+    )
     {
         var definition = new EntityDefinition(
             "Coin",
@@ -56,22 +68,23 @@ public sealed class ItemEntityFactory : EntityFactory
             {
                 new Position(position.X, position.Y),
                 new Sprite("sprites/items/coin.png", 12, 12, 0.3f),
-                new Renderable(true)
+                new Renderable(true),
             },
-            new Dictionary<string, object>
-            {
-                ["ItemType"] = "Currency",
-                ["Value"] = value
-            }
+            new Dictionary<string, object> { ["ItemType"] = "Currency", ["Value"] = value }
         );
 
-        return Create(world, definition);
+        return Create(cmd, definition);
     }
 
     /// <summary>
     /// Creates a speed boost powerup.
+    /// Phase 6: Now uses CommandBuffer for safe deferred entity creation.
     /// </summary>
-    public Entity CreateSpeedBoost(World world, Vector2 position, float duration = 5f)
+    public CommandBuffer.CreateCommand CreateSpeedBoost(
+        CommandBuffer cmd,
+        Vector2 position,
+        float duration = 5f
+    )
     {
         var definition = new EntityDefinition(
             "SpeedBoost",
@@ -79,24 +92,29 @@ public sealed class ItemEntityFactory : EntityFactory
             {
                 new Position(position.X, position.Y),
                 new Sprite("sprites/items/speed_boost.png", 16, 16, 0.3f),
-                new Renderable(true)
+                new Renderable(true),
             },
             new Dictionary<string, object>
             {
                 ["ItemType"] = "PowerUp",
                 ["Duration"] = duration,
                 ["SpeedMultiplier"] = 1.5f,
-                ["Rarity"] = "Uncommon"
+                ["Rarity"] = "Uncommon",
             }
         );
 
-        return Create(world, definition);
+        return Create(cmd, definition);
     }
 
     /// <summary>
     /// Creates a shield powerup.
+    /// Phase 6: Now uses CommandBuffer for safe deferred entity creation.
     /// </summary>
-    public Entity CreateShield(World world, Vector2 position, float duration = 10f)
+    public CommandBuffer.CreateCommand CreateShield(
+        CommandBuffer cmd,
+        Vector2 position,
+        float duration = 10f
+    )
     {
         var definition = new EntityDefinition(
             "Shield",
@@ -104,24 +122,25 @@ public sealed class ItemEntityFactory : EntityFactory
             {
                 new Position(position.X, position.Y),
                 new Sprite("sprites/items/shield.png", 16, 16, 0.3f),
-                new Renderable(true)
+                new Renderable(true),
             },
             new Dictionary<string, object>
             {
                 ["ItemType"] = "PowerUp",
                 ["Duration"] = duration,
                 ["DamageReduction"] = 0.75f,
-                ["Rarity"] = "Rare"
+                ["Rarity"] = "Rare",
             }
         );
 
-        return Create(world, definition);
+        return Create(cmd, definition);
     }
 
     /// <summary>
     /// Creates a key item for unlocking areas.
+    /// Phase 6: Now uses CommandBuffer for safe deferred entity creation.
     /// </summary>
-    public Entity CreateKey(World world, Vector2 position, string keyId)
+    public CommandBuffer.CreateCommand CreateKey(CommandBuffer cmd, Vector2 position, string keyId)
     {
         var definition = new EntityDefinition(
             $"Key_{keyId}",
@@ -129,59 +148,71 @@ public sealed class ItemEntityFactory : EntityFactory
             {
                 new Position(position.X, position.Y),
                 new Sprite("sprites/items/key.png", 12, 16, 0.3f),
-                new Renderable(true)
+                new Renderable(true),
             },
             new Dictionary<string, object>
             {
                 ["ItemType"] = "Key",
                 ["KeyId"] = keyId,
-                ["Rarity"] = "Special"
+                ["Rarity"] = "Special",
             }
         );
 
-        return Create(world, definition);
+        return Create(cmd, definition);
     }
 
     private void RegisterDefaultTemplates()
     {
-        RegisterTemplate("item_health_potion", new EntityDefinition(
-            "HealthPotion",
-            new object[]
-            {
-                new Position(0, 0),
-                new Sprite("sprites/items/health_potion.png", 16, 16, 0.3f),
-                new Renderable(true)
-            }
-        ));
+        RegisterTemplate(
+            "item_health_potion",
+            new EntityDefinition(
+                "HealthPotion",
+                new object[]
+                {
+                    new Position(0, 0),
+                    new Sprite("sprites/items/health_potion.png", 16, 16, 0.3f),
+                    new Renderable(true),
+                }
+            )
+        );
 
-        RegisterTemplate("item_coin", new EntityDefinition(
-            "Coin",
-            new object[]
-            {
-                new Position(0, 0),
-                new Sprite("sprites/items/coin.png", 12, 12, 0.3f),
-                new Renderable(true)
-            }
-        ));
+        RegisterTemplate(
+            "item_coin",
+            new EntityDefinition(
+                "Coin",
+                new object[]
+                {
+                    new Position(0, 0),
+                    new Sprite("sprites/items/coin.png", 12, 12, 0.3f),
+                    new Renderable(true),
+                }
+            )
+        );
 
-        RegisterTemplate("item_speed_boost", new EntityDefinition(
-            "SpeedBoost",
-            new object[]
-            {
-                new Position(0, 0),
-                new Sprite("sprites/items/speed_boost.png", 16, 16, 0.3f),
-                new Renderable(true)
-            }
-        ));
+        RegisterTemplate(
+            "item_speed_boost",
+            new EntityDefinition(
+                "SpeedBoost",
+                new object[]
+                {
+                    new Position(0, 0),
+                    new Sprite("sprites/items/speed_boost.png", 16, 16, 0.3f),
+                    new Renderable(true),
+                }
+            )
+        );
 
-        RegisterTemplate("item_shield", new EntityDefinition(
-            "Shield",
-            new object[]
-            {
-                new Position(0, 0),
-                new Sprite("sprites/items/shield.png", 16, 16, 0.3f),
-                new Renderable(true)
-            }
-        ));
+        RegisterTemplate(
+            "item_shield",
+            new EntityDefinition(
+                "Shield",
+                new object[]
+                {
+                    new Position(0, 0),
+                    new Sprite("sprites/items/shield.png", 16, 16, 0.3f),
+                    new Renderable(true),
+                }
+            )
+        );
     }
 }

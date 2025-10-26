@@ -50,7 +50,9 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     /// <summary>
     /// Event raised when a sound effect completes playback.
     /// </summary>
+#pragma warning disable CS0067 // Event is never used - reserved for future feature
     public event EventHandler<SoundEffectCompletedEventArgs>? SoundCompleted;
+#pragma warning restore CS0067
 
     /// <summary>
     /// Event raised when a sound effect is interrupted due to channel limits.
@@ -64,11 +66,18 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     /// <param name="audioEngine">Audio engine for low-level playback</param>
     /// <param name="maxSimultaneousSounds">Maximum number of concurrent sounds (default: 32)</param>
     /// <exception cref="ArgumentException">Thrown when maxSimultaneousSounds is less than 1</exception>
-    public SoundEffectPlayer(ILogger<SoundEffectPlayer> logger, IAudioEngine audioEngine, int maxSimultaneousSounds = 32)
+    public SoundEffectPlayer(
+        ILogger<SoundEffectPlayer> logger,
+        IAudioEngine audioEngine,
+        int maxSimultaneousSounds = 32
+    )
     {
         if (maxSimultaneousSounds < 1)
         {
-            throw new ArgumentException("Max simultaneous sounds must be at least 1", nameof(maxSimultaneousSounds));
+            throw new ArgumentException(
+                "Max simultaneous sounds must be at least 1",
+                nameof(maxSimultaneousSounds)
+            );
         }
 
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -77,7 +86,10 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
         _activeSounds = new ConcurrentDictionary<Guid, SoundInstance>();
         _preloadedEffects = new ConcurrentDictionary<string, Models.SoundEffect>();
 
-        _logger.LogInformation("SoundEffectPlayer created with max simultaneous sounds: {Max}", MaxSimultaneousSounds);
+        _logger.LogInformation(
+            "SoundEffectPlayer created with max simultaneous sounds: {Max}",
+            MaxSimultaneousSounds
+        );
     }
 
     /// <summary>
@@ -117,12 +129,17 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
         // Check if pool is full
         if (_activeSounds.Count >= MaxSimultaneousSounds)
         {
-            _logger.LogDebug("Pool full ({Count}/{Max}), attempting to evict low-priority sound",
-                _activeSounds.Count, MaxSimultaneousSounds);
+            _logger.LogDebug(
+                "Pool full ({Count}/{Max}), attempting to evict low-priority sound",
+                _activeSounds.Count,
+                MaxSimultaneousSounds
+            );
 
             if (!TryEvictLowestPriority(priority))
             {
-                _logger.LogWarning("Cannot play sound: pool full and no lower priority sounds to evict");
+                _logger.LogWarning(
+                    "Cannot play sound: pool full and no lower priority sounds to evict"
+                );
                 return null;
             }
         }
@@ -138,13 +155,17 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
                 Effect = effect,
                 Priority = priority,
                 Volume = volume ?? 1.0f,
-                StartTime = DateTime.UtcNow
+                StartTime = DateTime.UtcNow,
             };
 
             _activeSounds[instanceId] = instance;
 
-            _logger.LogDebug("Playing sound {Name} ({InstanceId}) with priority {Priority}",
-                effect.Name, instanceId, priority);
+            _logger.LogDebug(
+                "Playing sound {Name} ({InstanceId}) with priority {Priority}",
+                effect.Name,
+                instanceId,
+                priority
+            );
 
             return instanceId;
         }
@@ -158,7 +179,12 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     /// <summary>
     /// Plays a sound effect asynchronously and waits for completion.
     /// </summary>
-    public async Task PlayAsync(Models.SoundEffect effect, float? volume = null, int priority = 0, CancellationToken cancellationToken = default)
+    public async Task PlayAsync(
+        Models.SoundEffect effect,
+        float? volume = null,
+        int priority = 0,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -173,7 +199,12 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     /// <summary>
     /// Internal method: Plays audio data with optional volume, pitch, and priority.
     /// </summary>
-    internal async Task<int> PlayRawAsync(byte[] audioData, float volume = 1.0f, float pitch = 1.0f, int priority = 0)
+    internal async Task<int> PlayRawAsync(
+        byte[] audioData,
+        float volume = 1.0f,
+        float pitch = 1.0f,
+        int priority = 0
+    )
     {
         ThrowIfDisposed();
 
@@ -187,12 +218,17 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
         // Check if pool is full
         if (_activeSounds.Count >= MaxSimultaneousSounds)
         {
-            _logger.LogDebug("Pool full ({Count}/{Max}), attempting to evict low-priority sound",
-                _activeSounds.Count, MaxSimultaneousSounds);
+            _logger.LogDebug(
+                "Pool full ({Count}/{Max}), attempting to evict low-priority sound",
+                _activeSounds.Count,
+                MaxSimultaneousSounds
+            );
 
             if (!TryEvictLowestPriority(priority))
             {
-                _logger.LogWarning("Cannot play sound: pool full and no lower priority sounds to evict");
+                _logger.LogWarning(
+                    "Cannot play sound: pool full and no lower priority sounds to evict"
+                );
                 return 0;
             }
         }
@@ -203,10 +239,17 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
             float effectiveVolume = Math.Clamp(volume * _masterVolume, 0.0f, 1.0f);
 
             // Play through audio engine
-            int engineSoundId = await _audioEngine.PlaySoundAsync(audioData, effectiveVolume, pitch);
+            int engineSoundId = await _audioEngine.PlaySoundAsync(
+                audioData,
+                effectiveVolume,
+                pitch
+            );
 
-            _logger.LogDebug("Playing raw audio (engine: {EngineSoundId}) with priority {Priority}",
-                engineSoundId, priority);
+            _logger.LogDebug(
+                "Playing raw audio (engine: {EngineSoundId}) with priority {Priority}",
+                engineSoundId,
+                priority
+            );
 
             return engineSoundId;
         }
@@ -226,14 +269,21 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
 
         if (_activeSounds.TryRemove(instanceId, out var instance))
         {
-            _logger.LogDebug("Stopped sound {Name} ({InstanceId})", instance.Effect.Name, instanceId);
+            _logger.LogDebug(
+                "Stopped sound {Name} ({InstanceId})",
+                instance.Effect.Name,
+                instanceId
+            );
 
-            SoundInterrupted?.Invoke(this, new SoundEffectInterruptedEventArgs
-            {
-                InstanceId = instanceId,
-                Effect = instance.Effect,
-                Reason = InterruptionReason.ManualStop
-            });
+            SoundInterrupted?.Invoke(
+                this,
+                new SoundEffectInterruptedEventArgs
+                {
+                    InstanceId = instanceId,
+                    Effect = instance.Effect,
+                    Reason = InterruptionReason.ManualStop,
+                }
+            );
 
             return true;
         }
@@ -252,12 +302,15 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
 
         foreach (var kvp in _activeSounds)
         {
-            SoundInterrupted?.Invoke(this, new SoundEffectInterruptedEventArgs
-            {
-                InstanceId = kvp.Key,
-                Effect = kvp.Value.Effect,
-                Reason = InterruptionReason.GlobalStop
-            });
+            SoundInterrupted?.Invoke(
+                this,
+                new SoundEffectInterruptedEventArgs
+                {
+                    InstanceId = kvp.Key,
+                    Effect = kvp.Value.Effect,
+                    Reason = InterruptionReason.GlobalStop,
+                }
+            );
         }
 
         _activeSounds.Clear();
@@ -295,7 +348,10 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
         ThrowIfDisposed();
 
         if (volume < 0.0f || volume > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(volume), "Volume must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(
+                nameof(volume),
+                "Volume must be between 0.0 and 1.0"
+            );
 
         _masterVolume = volume;
         _logger.LogDebug("Master volume set to {Volume}", _masterVolume);
@@ -343,7 +399,10 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     /// <summary>
     /// Preloads a sound effect into memory for faster playback.
     /// </summary>
-    public Task PreloadAsync(Models.SoundEffect effect, CancellationToken cancellationToken = default)
+    public Task PreloadAsync(
+        Models.SoundEffect effect,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -380,15 +439,20 @@ public sealed class SoundEffectPlayer : ISoundEffectPlayer, IDisposable
     private bool TryEvictLowestPriority(int newSoundPriority)
     {
         // Find lowest priority sound
-        var lowestPriority = _activeSounds.Values
-            .OrderBy(s => s.Priority)
+        var lowestPriority = _activeSounds
+            .Values.OrderBy(s => s.Priority)
             .ThenBy(s => s.StartTime) // Evict oldest if same priority
             .FirstOrDefault();
 
         if (lowestPriority != null && lowestPriority.Priority < newSoundPriority)
         {
-            _logger.LogDebug("Evicting sound {Name} ({InstanceId}) with priority {Priority} for new sound with priority {NewPriority}",
-                lowestPriority.Effect.Name, lowestPriority.InstanceId, lowestPriority.Priority, newSoundPriority);
+            _logger.LogDebug(
+                "Evicting sound {Name} ({InstanceId}) with priority {Priority} for new sound with priority {NewPriority}",
+                lowestPriority.Effect.Name,
+                lowestPriority.InstanceId,
+                lowestPriority.Priority,
+                newSoundPriority
+            );
 
             Stop(lowestPriority.InstanceId);
             return true;

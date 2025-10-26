@@ -54,7 +54,7 @@ public sealed class SecurityValidator
             Info,
             Warning,
             Error,
-            Critical
+            Critical,
         }
 
         public Severity Level { get; init; }
@@ -74,45 +74,62 @@ public sealed class SecurityValidator
     public sealed class ValidationResult
     {
         public bool IsValid { get; init; }
-        public IReadOnlyList<SecurityViolation> Violations { get; init; } = Array.Empty<SecurityViolation>();
+        public IReadOnlyList<SecurityViolation> Violations { get; init; } =
+            Array.Empty<SecurityViolation>();
         public string Summary { get; init; } = string.Empty;
 
         public bool HasCriticalViolations =>
             Violations.Any(v => v.Level == SecurityViolation.Severity.Critical);
 
-        public bool HasErrors =>
-            Violations.Any(v => v.Level >= SecurityViolation.Severity.Error);
+        public bool HasErrors => Violations.Any(v => v.Level >= SecurityViolation.Severity.Error);
     }
 
     // Dangerous keywords that require elevated permissions
-    private static readonly HashSet<string> DangerousKeywords = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> DangerousKeywords = new(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
-        "Process", "ProcessStartInfo", "Registry", "RegistryKey",
-        "AppDomain", "Assembly.Load", "Activator.CreateInstance",
-        "Marshal", "GCHandle", "IntPtr", "UIntPtr",
-        "DllImport", "UnmanagedFunctionPointer",
-        "Thread", "Task.Run", "ThreadPool",
-        "File", "Directory", "FileStream", "StreamReader", "StreamWriter",
-        "WebClient", "HttpClient", "Socket", "TcpClient", "UdpClient",
-        "Reflection.Emit", "DynamicMethod", "ILGenerator"
+        "Process",
+        "ProcessStartInfo",
+        "Registry",
+        "RegistryKey",
+        "AppDomain",
+        "Assembly.Load",
+        "Activator.CreateInstance",
+        "Marshal",
+        "GCHandle",
+        "IntPtr",
+        "UIntPtr",
+        "DllImport",
+        "UnmanagedFunctionPointer",
+        "Thread",
+        "Task.Run",
+        "ThreadPool",
+        "File",
+        "Directory",
+        "FileStream",
+        "StreamReader",
+        "StreamWriter",
+        "WebClient",
+        "HttpClient",
+        "Socket",
+        "TcpClient",
+        "UdpClient",
+        "Reflection.Emit",
+        "DynamicMethod",
+        "ILGenerator",
     };
 
     // Patterns that indicate potentially malicious code
     // Using Compiled flag for better performance with repeated pattern matching
     private static readonly Regex[] MaliciousPatterns = new[]
     {
-        new Regex(@"while\s*\(\s*true\s*\)",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
-        new Regex(@"for\s*\(\s*;\s*;\s*\)",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
-        new Regex(@"goto\s+",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Goto statements (code smell)
-        new Regex(@"#pragma\s+warning\s+disable",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Suppressing warnings
-        new Regex(@"Activator\.CreateInstance",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Dynamic type creation
-        new Regex(@"Type\.GetType",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled), // Type reflection
+        new Regex(@"while\s*\(\s*true\s*\)", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
+        new Regex(@"for\s*\(\s*;\s*;\s*\)", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Infinite loops
+        new Regex(@"goto\s+", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Goto statements (code smell)
+        new Regex(@"#pragma\s+warning\s+disable", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Suppressing warnings
+        new Regex(@"Activator\.CreateInstance", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Dynamic type creation
+        new Regex(@"Type\.GetType", RegexOptions.IgnoreCase | RegexOptions.Compiled), // Type reflection
     };
 
     public SecurityValidator(ScriptPermissions permissions)
@@ -129,7 +146,11 @@ public sealed class SecurityValidator
 
         if (string.IsNullOrWhiteSpace(code))
         {
-            AddViolation(SecurityViolation.Severity.Error, "Empty or null script code", "EMPTY_CODE");
+            AddViolation(
+                SecurityViolation.Severity.Error,
+                "Empty or null script code",
+                "EMPTY_CODE"
+            );
             return CreateResult();
         }
 
@@ -154,8 +175,11 @@ public sealed class SecurityValidator
         }
         catch (Exception ex)
         {
-            AddViolation(SecurityViolation.Severity.Critical,
-                $"Validation failed: {ex.Message}", "VALIDATION_ERROR");
+            AddViolation(
+                SecurityViolation.Severity.Critical,
+                $"Validation failed: {ex.Message}",
+                "VALIDATION_ERROR"
+            );
             return CreateResult();
         }
     }
@@ -199,8 +223,10 @@ public sealed class SecurityValidator
             }
 
             // Check for dangerous namespaces
-            if (ns.StartsWith("System.IO", StringComparison.OrdinalIgnoreCase) &&
-                !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.FileIO))
+            if (
+                ns.StartsWith("System.IO", StringComparison.OrdinalIgnoreCase)
+                && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.FileIO)
+            )
             {
                 var lineSpan = usingDirective.GetLocation().GetLineSpan();
                 AddViolation(
@@ -213,8 +239,10 @@ public sealed class SecurityValidator
                 );
             }
 
-            if (ns.StartsWith("System.Net", StringComparison.OrdinalIgnoreCase) &&
-                !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Network))
+            if (
+                ns.StartsWith("System.Net", StringComparison.OrdinalIgnoreCase)
+                && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Network)
+            )
             {
                 var lineSpan = usingDirective.GetLocation().GetLineSpan();
                 AddViolation(
@@ -227,8 +255,10 @@ public sealed class SecurityValidator
                 );
             }
 
-            if (ns.Contains("Reflection", StringComparison.OrdinalIgnoreCase) &&
-                !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Reflection))
+            if (
+                ns.Contains("Reflection", StringComparison.OrdinalIgnoreCase)
+                && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Reflection)
+            )
             {
                 var lineSpan = usingDirective.GetLocation().GetLineSpan();
                 AddViolation(
@@ -250,8 +280,10 @@ public sealed class SecurityValidator
         foreach (var method in methods)
         {
             // Check for async methods without threading permission
-            if (method.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword)) &&
-                !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Threading))
+            if (
+                method.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword))
+                && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Threading)
+            )
             {
                 var lineSpan = method.GetLocation().GetLineSpan();
                 AddViolation(
@@ -351,7 +383,10 @@ public sealed class SecurityValidator
 
         // Check for unsafe statements
         var unsafeStatements = root.DescendantNodes().OfType<UnsafeStatementSyntax>();
-        if (unsafeStatements.Any() && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Unsafe))
+        if (
+            unsafeStatements.Any()
+            && !_permissions.IsApiAllowed(ScriptPermissions.ApiCategory.Unsafe)
+        )
         {
             var first = unsafeStatements.First();
             var lineSpan = first.GetLocation().GetLineSpan();
@@ -405,8 +440,8 @@ public sealed class SecurityValidator
                 var lineSpan = method.GetLocation().GetLineSpan();
                 AddViolation(
                     SecurityViolation.Severity.Warning,
-                    $"Method '{method.Identifier.Text}' has high complexity ({complexity}). " +
-                    "Complex code may hide malicious logic.",
+                    $"Method '{method.Identifier.Text}' has high complexity ({complexity}). "
+                        + "Complex code may hide malicious logic.",
                     "HIGH_COMPLEXITY",
                     lineSpan.StartLinePosition.Line + 1,
                     lineSpan.StartLinePosition.Character + 1,
@@ -440,17 +475,20 @@ public sealed class SecurityValidator
         string code,
         int line = 0,
         int column = 0,
-        string category = "Security")
+        string category = "Security"
+    )
     {
-        _violations.Add(new SecurityViolation
-        {
-            Level = severity,
-            Message = message,
-            Code = code,
-            Line = line,
-            Column = column,
-            Category = category
-        });
+        _violations.Add(
+            new SecurityViolation
+            {
+                Level = severity,
+                Message = message,
+                Code = code,
+                Line = line,
+                Column = column,
+                Category = category,
+            }
+        );
     }
 
     private ValidationResult CreateResult()
@@ -465,7 +503,7 @@ public sealed class SecurityValidator
         {
             IsValid = isValid,
             Violations = _violations.ToArray(),
-            Summary = summary
+            Summary = summary,
         };
     }
 }

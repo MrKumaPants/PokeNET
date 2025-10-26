@@ -42,16 +42,14 @@ public sealed class Pokedex
     /// <summary>
     /// Gets the Pokédex completion percentage based on caught Pokémon.
     /// </summary>
-    public double CompletionPercentage => TotalSpecies > 0
-        ? (double)CaughtCount / TotalSpecies * 100.0
-        : 0.0;
+    public double CompletionPercentage =>
+        TotalSpecies > 0 ? (double)CaughtCount / TotalSpecies * 100.0 : 0.0;
 
     /// <summary>
     /// Gets the Pokédex seen percentage.
     /// </summary>
-    public double SeenPercentage => TotalSpecies > 0
-        ? (double)SeenCount / TotalSpecies * 100.0
-        : 0.0;
+    public double SeenPercentage =>
+        TotalSpecies > 0 ? (double)SeenCount / TotalSpecies * 100.0 : 0.0;
 
     /// <summary>
     /// Initializes a new Pokédex.
@@ -106,9 +104,7 @@ public sealed class Pokedex
     /// </summary>
     public IEnumerable<int> GetUnseenSpecies()
     {
-        return Enumerable.Range(1, TotalSpecies)
-            .Except(_seenPokemon)
-            .OrderBy(id => id);
+        return Enumerable.Range(1, TotalSpecies).Except(_seenPokemon).OrderBy(id => id);
     }
 
     /// <summary>
@@ -129,6 +125,7 @@ public sealed class Pokedex
         if (speciesId <= 0 || speciesId > TotalSpecies)
             throw new ArgumentOutOfRangeException(
                 nameof(speciesId),
-                $"Species ID must be between 1 and {TotalSpecies}");
+                $"Species ID must be between 1 and {TotalSpecies}"
+            );
     }
 }

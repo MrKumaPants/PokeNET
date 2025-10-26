@@ -1,3 +1,4 @@
+using System;
 using PokeNET.Domain.Input;
 
 namespace PokeNET.Domain.ECS.Events;

@@ -231,7 +231,7 @@ public enum AudioReactionType
     /// Custom event defined by game logic.
     /// Allows for extensible event handling.
     /// </summary>
-    Custom
+    Custom,
 }
 
 /// <summary>
@@ -253,7 +253,7 @@ public static class AudioReactionTypeExtensions
             AudioReactionType.WildEncounter => true,
             AudioReactionType.PartyWipeout => true,
             AudioReactionType.DangerNearby => true,
-            _ => false
+            _ => false,
         };
     }
 
@@ -273,7 +273,7 @@ public static class AudioReactionTypeExtensions
             AudioReactionType.PokemonCaptured => true,
             AudioReactionType.Victory => true,
             AudioReactionType.MenuSound => false,
-            _ => false
+            _ => false,
         };
     }
 
@@ -307,7 +307,7 @@ public static class AudioReactionTypeExtensions
             AudioReactionType.PokemonCaptured => 1,
 
             // Low priority (0)
-            _ => 0
+            _ => 0,
         };
     }
 
@@ -330,7 +330,7 @@ public static class AudioReactionTypeExtensions
             AudioReactionType.PokemonFainted => true,
             AudioReactionType.PartyWipeout => true,
             AudioReactionType.Victory => true,
-            _ => false
+            _ => false,
         };
     }
 
@@ -352,7 +352,7 @@ public static class AudioReactionTypeExtensions
             AudioReactionType.SurfingStart => true,
             AudioReactionType.SurfingEnd => true,
             AudioReactionType.SafeArea => true,
-            _ => false
+            _ => false,
         };
     }
 }

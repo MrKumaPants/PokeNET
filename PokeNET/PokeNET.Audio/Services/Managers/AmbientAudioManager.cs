@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Extensions.Logging;
 using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Models;
@@ -38,7 +39,8 @@ public sealed class AmbientAudioManager : IAmbientAudioManager
     public AmbientAudioManager(
         ILogger<AmbientAudioManager> logger,
         IAudioCache cache,
-        ISoundEffectPlayer sfxPlayer)
+        ISoundEffectPlayer sfxPlayer
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -51,18 +53,29 @@ public sealed class AmbientAudioManager : IAmbientAudioManager
     /// <param name="ambientName">The name/path of the ambient audio.</param>
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlayAsync(string ambientName, float volume, CancellationToken cancellationToken = default)
+    public async Task PlayAsync(
+        string ambientName,
+        float volume,
+        CancellationToken cancellationToken = default
+    )
     {
         try
         {
-            _logger.LogInformation("Playing ambient audio: {AmbientName}, Volume: {Volume}", ambientName, volume);
+            _logger.LogInformation(
+                "Playing ambient audio: {AmbientName}, Volume: {Volume}",
+                ambientName,
+                volume
+            );
 
             // Load ambient audio from cache
-            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(ambientName, () =>
-            {
-                // TODO: Implement actual file loading logic
-                throw new FileNotFoundException($"Ambient audio file not found: {ambientName}");
-            });
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(
+                ambientName,
+                () =>
+                {
+                    // TODO: Implement actual file loading logic
+                    throw new FileNotFoundException($"Ambient audio file not found: {ambientName}");
+                }
+            );
 
             if (audioData == null)
             {

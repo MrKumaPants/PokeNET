@@ -175,5 +175,5 @@ public enum ItemCategory
     /// <summary>
     /// Miscellaneous items.
     /// </summary>
-    Other
+    Other,
 }

@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
@@ -81,8 +86,8 @@ public class ModValidationReport
     /// </summary>
     public string GetSummary()
     {
-        return $"Validation: {(IsValid ? "PASSED" : "FAILED")} - " +
-               $"{Errors.Count} error(s), {Warnings.Count} warning(s)";
+        return $"Validation: {(IsValid ? "PASSED" : "FAILED")} - "
+            + $"{Errors.Count} error(s), {Warnings.Count} warning(s)";
     }
 }
 
@@ -181,7 +186,7 @@ public enum ModValidationErrorType
     /// <summary>
     /// Mod ID is duplicated.
     /// </summary>
-    DuplicateModId
+    DuplicateModId,
 }
 
 /// <summary>
@@ -217,7 +222,7 @@ public enum ModValidationWarningType
     /// <summary>
     /// Mod checksum verification failed.
     /// </summary>
-    ChecksumMismatch
+    ChecksumMismatch,
 }
 
 /// <summary>
@@ -233,12 +238,14 @@ public class ModLoadException : Exception
     /// <summary>
     /// Initializes a new instance of <see cref="ModLoadException"/>.
     /// </summary>
-    public ModLoadException(string message) : base(message) { }
+    public ModLoadException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of <see cref="ModLoadException"/> with a mod ID.
     /// </summary>
-    public ModLoadException(string message, string modId) : base(message)
+    public ModLoadException(string message, string modId)
+        : base(message)
     {
         ModId = modId;
     }
@@ -267,12 +274,14 @@ public class ModInitializationException : ModLoadException
     /// <summary>
     /// Initializes a new instance of <see cref="ModInitializationException"/>.
     /// </summary>
-    public ModInitializationException(string message) : base(message) { }
+    public ModInitializationException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of <see cref="ModInitializationException"/> with a mod ID.
     /// </summary>
-    public ModInitializationException(string message, string modId) : base(message, modId) { }
+    public ModInitializationException(string message, string modId)
+        : base(message, modId) { }
 
     /// <summary>
     /// Initializes a new instance of <see cref="ModInitializationException"/> with an inner exception.

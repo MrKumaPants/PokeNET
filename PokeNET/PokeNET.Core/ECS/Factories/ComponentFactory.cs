@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.ECS.Factories;
@@ -25,7 +28,8 @@ public class ComponentFactory : IComponentFactory
     }
 
     /// <inheritdoc/>
-    public T Create<T>(ComponentDefinition definition) where T : struct
+    public T Create<T>(ComponentDefinition definition)
+        where T : struct
     {
         if (definition == null)
             throw new ArgumentNullException(nameof(definition));
@@ -51,7 +55,8 @@ public class ComponentFactory : IComponentFactory
                     $"Registered builder for {type.Name} failed",
                     type,
                     definition,
-                    ex);
+                    ex
+                );
             }
         }
 
@@ -67,7 +72,10 @@ public class ComponentFactory : IComponentFactory
         if (definition == null)
             throw new ArgumentNullException(nameof(definition));
         if (!componentType.IsValueType)
-            throw new ArgumentException($"Type {componentType.Name} must be a struct", nameof(componentType));
+            throw new ArgumentException(
+                $"Type {componentType.Name} must be a struct",
+                nameof(componentType)
+            );
 
         _logger.LogDebug("Creating component of type {Type} dynamically", componentType.Name);
 
@@ -77,17 +85,25 @@ public class ComponentFactory : IComponentFactory
             try
             {
                 var result = builder.DynamicInvoke(definition);
-                _logger.LogDebug("Component {Type} created using registered builder (dynamic)", componentType.Name);
+                _logger.LogDebug(
+                    "Component {Type} created using registered builder (dynamic)",
+                    componentType.Name
+                );
                 return result!;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Builder for {Type} threw an exception (dynamic)", componentType.Name);
+                _logger.LogError(
+                    ex,
+                    "Builder for {Type} threw an exception (dynamic)",
+                    componentType.Name
+                );
                 throw new ComponentCreationException(
                     $"Registered builder for {componentType.Name} failed",
                     componentType,
                     definition,
-                    ex);
+                    ex
+                );
             }
         }
 
@@ -96,22 +112,31 @@ public class ComponentFactory : IComponentFactory
         {
             var instance = Activator.CreateInstance(componentType)!;
             PopulateProperties(instance, componentType, definition);
-            _logger.LogDebug("Component {Type} created via reflection (dynamic)", componentType.Name);
+            _logger.LogDebug(
+                "Component {Type} created via reflection (dynamic)",
+                componentType.Name
+            );
             return instance;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create component {Type} via reflection", componentType.Name);
+            _logger.LogError(
+                ex,
+                "Failed to create component {Type} via reflection",
+                componentType.Name
+            );
             throw new ComponentCreationException(
                 $"Failed to create component {componentType.Name} via reflection",
                 componentType,
                 definition,
-                ex);
+                ex
+            );
         }
     }
 
     /// <inheritdoc/>
-    public void RegisterBuilder<T>(Func<ComponentDefinition, T> builder) where T : struct
+    public void RegisterBuilder<T>(Func<ComponentDefinition, T> builder)
+        where T : struct
     {
         if (builder == null)
             throw new ArgumentNullException(nameof(builder));
@@ -134,7 +159,8 @@ public class ComponentFactory : IComponentFactory
         // Can create if it's a struct with settable properties
         try
         {
-            var properties = componentType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var properties = componentType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanWrite)
                 .ToArray();
             return properties.Length > 0;
@@ -152,7 +178,8 @@ public class ComponentFactory : IComponentFactory
     }
 
     /// <inheritdoc/>
-    public bool UnregisterBuilder<T>() where T : struct
+    public bool UnregisterBuilder<T>()
+        where T : struct
     {
         var type = typeof(T);
         var removed = _builders.TryRemove(type, out _);
@@ -163,7 +190,8 @@ public class ComponentFactory : IComponentFactory
         return removed;
     }
 
-    private T CreateViaReflection<T>(ComponentDefinition definition) where T : struct
+    private T CreateViaReflection<T>(ComponentDefinition definition)
+        where T : struct
     {
         var type = typeof(T);
 
@@ -186,7 +214,8 @@ public class ComponentFactory : IComponentFactory
                 $"Failed to create component {type.Name} via reflection",
                 type,
                 definition,
-                ex);
+                ex
+            );
         }
     }
 
@@ -208,10 +237,12 @@ public class ComponentFactory : IComponentFactory
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex,
+                _logger.LogWarning(
+                    ex,
                     "Failed to set property {Property} on type {Type}",
                     property.Name,
-                    type.Name);
+                    type.Name
+                );
             }
         }
     }

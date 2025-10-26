@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 using PokeNET.Domain.ECS.Events;
 
@@ -28,11 +29,7 @@ public class PauseCommand : CommandBase
     /// <inheritdoc/>
     public override void Execute(World world)
     {
-        _eventBus?.Publish(new PauseEvent
-        {
-            IsPaused = _pause,
-            Timestamp = DateTime.UtcNow
-        });
+        _eventBus?.Publish(new PauseEvent { IsPaused = _pause, Timestamp = DateTime.UtcNow });
 
         // TODO: Implement pause logic
         // - Set game state to paused/unpaused

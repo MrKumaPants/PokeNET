@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Infrastructure;
 using PokeNET.Audio.Reactive;
 using PokeNET.Audio.Reactive.Reactions;
 using PokeNET.Audio.Services;
@@ -20,6 +21,9 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for method chaining.</returns>
     public static IServiceCollection AddAudioServices(this IServiceCollection services)
     {
+        // Register MIDI output device wrapper (for testability)
+        services.AddSingleton<IMidiOutputDevice>(sp => OutputDeviceWrapper.GetByIndex(0)); // Default MIDI device
+
         // Register core audio services
         services.AddSingleton<IAudioCache, AudioCache>();
         services.AddSingleton<IMusicPlayer, MusicPlayer>();
@@ -64,7 +68,8 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for method chaining.</returns>
     public static IServiceCollection AddAudioServices(
         this IServiceCollection services,
-        Action<AudioServicesOptions> configure)
+        Action<AudioServicesOptions> configure
+    )
     {
         var options = new AudioServicesOptions();
         configure(options);

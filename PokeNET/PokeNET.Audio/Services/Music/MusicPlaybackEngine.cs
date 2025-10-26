@@ -3,8 +3,10 @@ using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.Multimedia;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Configuration;
 using PokeNET.Audio.Exceptions;
+using PokeNET.Audio.Infrastructure;
 
 namespace PokeNET.Audio.Services.Music;
 
@@ -18,7 +20,7 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
     private readonly AudioSettings _settings;
     private readonly SemaphoreSlim _playbackLock;
 
-    private IOutputDevice? _outputDevice;
+    private IMidiOutputDevice? _outputDevice;
     private Playback? _currentPlayback;
     private bool _disposed;
 
@@ -27,7 +29,8 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
 
     public MusicPlaybackEngine(
         ILogger<MusicPlaybackEngine> logger,
-        IOptions<AudioSettings> settings)
+        IOptions<AudioSettings> settings
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
@@ -35,7 +38,11 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
     }
 
     // Test compatibility constructor
-    public MusicPlaybackEngine(ILogger<MusicPlaybackEngine> logger, IOutputDevice outputDevice, AudioSettings settings)
+    public MusicPlaybackEngine(
+        ILogger<MusicPlaybackEngine> logger,
+        IMidiOutputDevice outputDevice,
+        AudioSettings settings
+    )
         : this(logger, Options.Create(settings))
     {
         _outputDevice = outputDevice;
@@ -55,8 +62,11 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
         {
             if (_outputDevice == null)
             {
-                _outputDevice = OutputDevice.GetByIndex(_settings.MidiOutputDevice);
-                _logger.LogInformation("MIDI output device initialized: {DeviceId}", _settings.MidiOutputDevice);
+                _outputDevice = OutputDeviceWrapper.GetByIndex(_settings.MidiOutputDevice);
+                _logger.LogInformation(
+                    "MIDI output device initialized: {DeviceId}",
+                    _settings.MidiOutputDevice
+                );
             }
         }
         finally
@@ -76,8 +86,11 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
             // Initialize device if needed
             if (_outputDevice == null)
             {
-                _outputDevice = OutputDevice.GetByIndex(_settings.MidiOutputDevice);
-                _logger.LogInformation("MIDI output device initialized: {DeviceId}", _settings.MidiOutputDevice);
+                _outputDevice = OutputDeviceWrapper.GetByIndex(_settings.MidiOutputDevice);
+                _logger.LogInformation(
+                    "MIDI output device initialized: {DeviceId}",
+                    _settings.MidiOutputDevice
+                );
             }
 
             // Stop any existing playback
@@ -208,8 +221,11 @@ public sealed class MusicPlaybackEngine : IMusicPlaybackEngine, IDisposable
             // Initialize device if needed
             if (_outputDevice == null)
             {
-                _outputDevice = OutputDevice.GetByIndex(_settings.MidiOutputDevice);
-                _logger.LogInformation("MIDI output device initialized: {DeviceId}", _settings.MidiOutputDevice);
+                _outputDevice = OutputDeviceWrapper.GetByIndex(_settings.MidiOutputDevice);
+                _logger.LogInformation(
+                    "MIDI output device initialized: {DeviceId}",
+                    _settings.MidiOutputDevice
+                );
             }
 
             // Stop any existing playback

@@ -86,5 +86,5 @@ public enum PlaybackState
     Buffering,
 
     /// <summary>An error occurred during playback.</summary>
-    Error
+    Error,
 }

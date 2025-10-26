@@ -19,7 +19,12 @@ public interface IAudioEngine
     /// <param name="pitch">Pitch adjustment (1.0 = normal pitch, default: 1.0)</param>
     /// <param name="cancellationToken">Token to cancel playback</param>
     /// <returns>Unique identifier for the playing sound</returns>
-    Task<int> PlaySoundAsync(byte[] audioData, float volume, float pitch = 1.0f, CancellationToken cancellationToken = default);
+    Task<int> PlaySoundAsync(
+        byte[] audioData,
+        float volume,
+        float pitch = 1.0f,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Stops a specific playing sound.

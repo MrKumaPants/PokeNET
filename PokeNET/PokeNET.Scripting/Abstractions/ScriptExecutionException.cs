@@ -63,18 +63,14 @@ public class ScriptExecutionException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptExecutionException"/> class.
     /// </summary>
-    public ScriptExecutionException()
-    {
-    }
+    public ScriptExecutionException() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptExecutionException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public ScriptExecutionException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptExecutionException"/> class with a message and inner exception.
@@ -82,9 +78,7 @@ public class ScriptExecutionException : Exception
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception from the scripting engine.</param>
     public ScriptExecutionException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptExecutionException"/> class with detailed error information.
@@ -115,7 +109,8 @@ public class ScriptExecutionException : Exception
         int? lineNumber = null,
         int? columnNumber = null,
         string? scriptStackTrace = null,
-        Exception? innerException = null)
+        Exception? innerException = null
+    )
         : base(message, innerException)
     {
         ScriptId = scriptId;
@@ -144,7 +139,8 @@ public class ScriptExecutionException : Exception
         int? lineNumber = null,
         int? columnNumber = null,
         string? scriptStackTrace = null,
-        Exception? innerException = null)
+        Exception? innerException = null
+    )
         : base(message, innerException)
     {
         ScriptId = scriptId;
@@ -235,7 +231,11 @@ public class ScriptTimeoutException : ScriptExecutionException
     /// <param name="timeout">The timeout limit.</param>
     /// <param name="executionTime">The actual execution time.</param>
     public ScriptTimeoutException(string scriptId, TimeSpan timeout, TimeSpan executionTime)
-        : base(scriptId, $"Script execution exceeded timeout of {timeout.TotalMilliseconds}ms (actual: {executionTime.TotalMilliseconds}ms)", null!)
+        : base(
+            scriptId,
+            $"Script execution exceeded timeout of {timeout.TotalMilliseconds}ms (actual: {executionTime.TotalMilliseconds}ms)",
+            null!
+        )
     {
         Timeout = timeout;
         ExecutionTime = executionTime;
@@ -269,7 +269,8 @@ public class ScriptSecurityException : ScriptExecutionException
         string scriptId,
         ScriptSecurityViolation violationType,
         string message,
-        string? violationDetails = null)
+        string? violationDetails = null
+    )
         : base(scriptId, message, null!)
     {
         ViolationType = violationType;
@@ -310,5 +311,5 @@ public enum ScriptSecurityViolation
     /// <summary>
     /// Other security violation.
     /// </summary>
-    Other
+    Other,
 }

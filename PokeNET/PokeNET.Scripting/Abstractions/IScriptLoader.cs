@@ -62,7 +62,10 @@ public interface IScriptLoader
     /// <returns>The loaded script information including source code and metadata.</returns>
     /// <exception cref="ScriptLoadException">Thrown when the script cannot be found or loaded.</exception>
     /// <exception cref="ArgumentNullException">Thrown when scriptPath is null.</exception>
-    Task<ScriptLoadResult> LoadScriptAsync(string scriptPath, CancellationToken cancellationToken = default);
+    Task<ScriptLoadResult> LoadScriptAsync(
+        string scriptPath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Checks if a script exists at the specified path.
@@ -88,7 +91,8 @@ public interface IScriptLoader
         string searchPath,
         string? searchPattern = null,
         bool recursive = true,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Watches a directory for script changes and invokes a callback when changes occur.
@@ -105,7 +109,8 @@ public interface IScriptLoader
     Task<IScriptWatcher> WatchScriptsAsync(
         string watchPath,
         Action<ScriptChangeEvent> onChange,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets a value indicating whether this loader supports file watching.
@@ -241,7 +246,7 @@ public enum ScriptChangeType
     /// <summary>
     /// A script was renamed or moved.
     /// </summary>
-    Renamed
+    Renamed,
 }
 
 /// <summary>
@@ -257,18 +262,14 @@ public class ScriptLoadException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptLoadException"/> class.
     /// </summary>
-    public ScriptLoadException()
-    {
-    }
+    public ScriptLoadException() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptLoadException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public ScriptLoadException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptLoadException"/> class with a message and inner exception.
@@ -276,9 +277,7 @@ public class ScriptLoadException : Exception
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public ScriptLoadException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptLoadException"/> class with a script path.
@@ -332,18 +331,14 @@ public class ScriptCompilationException : Exception
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptCompilationException"/> class.
     /// </summary>
-    public ScriptCompilationException()
-    {
-    }
+    public ScriptCompilationException() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptCompilationException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public ScriptCompilationException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptCompilationException"/> class with a message and inner exception.
@@ -351,9 +346,7 @@ public class ScriptCompilationException : Exception
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public ScriptCompilationException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptCompilationException"/> class with detailed error information.
@@ -362,7 +355,12 @@ public class ScriptCompilationException : Exception
     /// <param name="message">The error message.</param>
     /// <param name="lineNumber">Line number of the error.</param>
     /// <param name="columnNumber">Column number of the error.</param>
-    public ScriptCompilationException(string scriptId, string message, int? lineNumber = null, int? columnNumber = null)
+    public ScriptCompilationException(
+        string scriptId,
+        string message,
+        int? lineNumber = null,
+        int? columnNumber = null
+    )
         : base(message)
     {
         ScriptId = scriptId;

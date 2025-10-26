@@ -36,7 +36,8 @@ public interface IMusicTransitionHandler
         Func<AudioTrack, CancellationToken, Task> playNewTrackAsync,
         Func<TimeSpan, CancellationToken, Task> fadeOutAsync,
         Func<TimeSpan, CancellationToken, Task> fadeInAsync,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Performs a crossfade between tracks.
@@ -53,5 +54,6 @@ public interface IMusicTransitionHandler
         int crossfadeDurationMs,
         Func<Task> playNewTrackAsync,
         Func<float, float, int, CancellationToken, Task> fadeVolumeAsync,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

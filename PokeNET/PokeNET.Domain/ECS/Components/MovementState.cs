@@ -25,7 +25,7 @@ public enum MovementMode
     Surfing = 4,
 
     /// <summary>Moving with a bicycle (fastest ground movement).</summary>
-    Cycling = 5
+    Cycling = 5,
 }
 
 /// <summary>
@@ -86,7 +86,7 @@ public struct MovementState
             MovementMode.Cycling => 12.0f,
             MovementMode.Surfing => 6.0f,
             MovementMode.Jumping => 8.0f,
-            _ => 0.0f
+            _ => 0.0f,
         };
     }
 

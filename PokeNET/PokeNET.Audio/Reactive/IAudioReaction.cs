@@ -35,5 +35,9 @@ public interface IAudioReaction
     /// <param name="audioManager">The audio manager for controlling audio playback.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default);
+    Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    );
 }

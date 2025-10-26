@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Events;
 
 /// <summary>
@@ -12,21 +14,24 @@ public interface IEventBus
     /// </summary>
     /// <typeparam name="T">The event type to subscribe to.</typeparam>
     /// <param name="handler">The handler to invoke when events are published.</param>
-    void Subscribe<T>(Action<T> handler) where T : IGameEvent;
+    void Subscribe<T>(Action<T> handler)
+        where T : IGameEvent;
 
     /// <summary>
     /// Unsubscribes from events of a specific type.
     /// </summary>
     /// <typeparam name="T">The event type to unsubscribe from.</typeparam>
     /// <param name="handler">The handler to remove.</param>
-    void Unsubscribe<T>(Action<T> handler) where T : IGameEvent;
+    void Unsubscribe<T>(Action<T> handler)
+        where T : IGameEvent;
 
     /// <summary>
     /// Publishes an event to all subscribed handlers.
     /// </summary>
     /// <typeparam name="T">The event type.</typeparam>
     /// <param name="gameEvent">The event to publish.</param>
-    void Publish<T>(T gameEvent) where T : IGameEvent;
+    void Publish<T>(T gameEvent)
+        where T : IGameEvent;
 
     /// <summary>
     /// Clears all subscriptions.

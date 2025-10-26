@@ -105,7 +105,7 @@ public class MusicState
             Tempo = Tempo,
             Energy = Energy,
             Mood = Mood,
-            CustomData = new Dictionary<string, object>(CustomData)
+            CustomData = new Dictionary<string, object>(CustomData),
         };
     }
 

@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 using PokeNET.Domain.ECS.Events;
 
@@ -28,11 +29,7 @@ public class MenuCommand : CommandBase
     /// <inheritdoc/>
     public override void Execute(World world)
     {
-        _eventBus?.Publish(new MenuActionEvent
-        {
-            Action = _action,
-            Timestamp = DateTime.UtcNow
-        });
+        _eventBus?.Publish(new MenuActionEvent { Action = _action, Timestamp = DateTime.UtcNow });
 
         // TODO: Implement menu action logic
         // - Open/close specific menus
@@ -55,7 +52,7 @@ public enum MenuAction
     NavigateLeft,
     NavigateRight,
     Select,
-    Cancel
+    Cancel,
 }
 
 /// <summary>

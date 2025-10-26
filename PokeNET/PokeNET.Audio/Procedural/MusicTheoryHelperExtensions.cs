@@ -11,7 +11,8 @@ namespace PokeNET.Audio.Procedural
         {
             var noteValue = (int)noteName;
             var transposed = (noteValue + semitones) % 12;
-            if (transposed < 0) transposed += 12;
+            if (transposed < 0)
+                transposed += 12;
             return (NoteName)transposed;
         }
     }

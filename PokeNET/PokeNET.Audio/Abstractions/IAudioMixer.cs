@@ -126,7 +126,12 @@ public interface IAudioMixer
     /// <param name="duration">Duration of the fade effect.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the fade operation.</returns>
-    Task FadeChannelAsync(AudioChannel channel, float targetVolume, TimeSpan duration, CancellationToken cancellationToken = default);
+    Task FadeChannelAsync(
+        AudioChannel channel,
+        float targetVolume,
+        TimeSpan duration,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Resets all mixer settings to defaults.
@@ -160,7 +165,7 @@ public enum AudioChannel
     Ambient,
 
     /// <summary>UI sound channel.</summary>
-    UI
+    UI,
 }
 
 /// <summary>

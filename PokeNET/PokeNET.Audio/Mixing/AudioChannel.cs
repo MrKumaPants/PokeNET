@@ -198,7 +198,7 @@ namespace PokeNET.Audio.Mixing
                 Type = Type,
                 Name = Name,
                 Volume = _volume,
-                IsMuted = _isMuted
+                IsMuted = _isMuted,
             };
         }
 
@@ -209,7 +209,9 @@ namespace PokeNET.Audio.Mixing
         {
             if (config.Type != Type)
             {
-                throw new ArgumentException($"Config type {config.Type} does not match channel type {Type}");
+                throw new ArgumentException(
+                    $"Config type {config.Type} does not match channel type {Type}"
+                );
             }
 
             Name = config.Name;

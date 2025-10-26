@@ -44,6 +44,6 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Pokemon interaction sounds.
         /// </summary>
-        PokemonSounds
+        PokemonSounds,
     }
 }

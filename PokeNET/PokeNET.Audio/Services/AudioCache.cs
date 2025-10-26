@@ -35,7 +35,10 @@ public sealed class AudioCache : IAudioCache
         _maxCacheSizeBytes = maxCacheSizeMB * 1024 * 1024;
         _currentCacheSize = 0;
 
-        _logger.LogInformation("AudioCache initialized with max size: {MaxSize} MB", maxCacheSizeMB);
+        _logger.LogInformation(
+            "AudioCache initialized with max size: {MaxSize} MB",
+            maxCacheSizeMB
+        );
     }
 
     /// <summary>
@@ -45,7 +48,8 @@ public sealed class AudioCache : IAudioCache
     /// <param name="key">The cache key (asset path).</param>
     /// <param name="asset">The cached asset if found.</param>
     /// <returns>True if the asset was found in cache, false otherwise.</returns>
-    public bool TryGet<T>(string key, out T? asset) where T : class
+    public bool TryGet<T>(string key, out T? asset)
+        where T : class
     {
         ThrowIfDisposed();
 
@@ -65,8 +69,12 @@ public sealed class AudioCache : IAudioCache
                 return true;
             }
 
-            _logger.LogWarning("Cache type mismatch for asset: {Key}. Expected {Expected}, got {Actual}",
-                key, typeof(T).Name, cachedAsset.Data?.GetType().Name ?? "null");
+            _logger.LogWarning(
+                "Cache type mismatch for asset: {Key}. Expected {Expected}, got {Actual}",
+                key,
+                typeof(T).Name,
+                cachedAsset.Data?.GetType().Name ?? "null"
+            );
         }
 
         asset = null;
@@ -81,7 +89,8 @@ public sealed class AudioCache : IAudioCache
     /// <param name="key">The cache key (asset path).</param>
     /// <param name="asset">The asset to cache.</param>
     /// <param name="sizeBytes">The size of the asset in bytes.</param>
-    public void Set<T>(string key, T asset, long sizeBytes) where T : class
+    public void Set<T>(string key, T asset, long sizeBytes)
+        where T : class
     {
         ThrowIfDisposed();
 
@@ -124,7 +133,11 @@ public sealed class AudioCache : IAudioCache
                     var oldSize = existingAsset.SizeBytes;
                     _cache[key] = cachedAsset;
                     Interlocked.Add(ref _currentCacheSize, sizeBytes - oldSize);
-                    _logger.LogDebug("Updated cached asset: {Key}, Size delta: {Delta} bytes", key, sizeBytes - oldSize);
+                    _logger.LogDebug(
+                        "Updated cached asset: {Key}, Size delta: {Delta} bytes",
+                        key,
+                        sizeBytes - oldSize
+                    );
                 }
             }
         }
@@ -160,7 +173,11 @@ public sealed class AudioCache : IAudioCache
                     disposable.Dispose();
                 }
 
-                _logger.LogDebug("Removed cached asset: {Key}, Size: {Size} bytes", key, cachedAsset.SizeBytes);
+                _logger.LogDebug(
+                    "Removed cached asset: {Key}, Size: {Size} bytes",
+                    key,
+                    cachedAsset.SizeBytes
+                );
                 return true;
             }
 
@@ -259,7 +276,11 @@ public sealed class AudioCache : IAudioCache
                 }
             }
 
-            _logger.LogDebug("Evicted LRU asset: {Key}, Size: {Size} bytes", lruKey, evictedAsset.SizeBytes);
+            _logger.LogDebug(
+                "Evicted LRU asset: {Key}, Size: {Size} bytes",
+                lruKey,
+                evictedAsset.SizeBytes
+            );
         }
     }
 
@@ -272,7 +293,8 @@ public sealed class AudioCache : IAudioCache
     }
 
     /// <inheritdoc />
-    public async Task<T?> GetOrLoadAsync<T>(string key, Func<Task<T>> loader) where T : class
+    public async Task<T?> GetOrLoadAsync<T>(string key, Func<Task<T>> loader)
+        where T : class
     {
         ThrowIfDisposed();
 
@@ -301,7 +323,7 @@ public sealed class AudioCache : IAudioCache
         {
             byte[] bytes => bytes.Length,
             string str => str.Length * 2,
-            _ => 1024 // Default estimate
+            _ => 1024, // Default estimate
         };
 
         Set(key, asset, sizeBytes);
@@ -325,7 +347,7 @@ public sealed class AudioCache : IAudioCache
         {
             byte[] bytes => bytes.Length,
             string str => str.Length * 2,
-            _ => 1024 // Default estimate
+            _ => 1024, // Default estimate
         };
 
         var cachedAsset = new CachedAsset(data, sizeBytes);

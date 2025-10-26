@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using PokeNET.Audio.Models;
 using PokeNET.Audio.Abstractions;
+using PokeNET.Audio.Models;
 
 namespace PokeNET.Audio.Mixing
 {
@@ -128,22 +128,31 @@ namespace PokeNET.Audio.Mixing
             IMixerConfigurationService configService,
             IMixerStatisticsService statisticsService,
             VolumeController volumeController,
-            DuckingController duckingController)
+            DuckingController duckingController
+        )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _channelRegistry = channelRegistry ?? throw new ArgumentNullException(nameof(channelRegistry));
+            _channelRegistry =
+                channelRegistry ?? throw new ArgumentNullException(nameof(channelRegistry));
             _fadeManager = fadeManager ?? throw new ArgumentNullException(nameof(fadeManager));
-            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
-            _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
-            _volumeController = volumeController ?? throw new ArgumentNullException(nameof(volumeController));
-            _duckingController = duckingController ?? throw new ArgumentNullException(nameof(duckingController));
+            _configService =
+                configService ?? throw new ArgumentNullException(nameof(configService));
+            _statisticsService =
+                statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
+            _volumeController =
+                volumeController ?? throw new ArgumentNullException(nameof(volumeController));
+            _duckingController =
+                duckingController ?? throw new ArgumentNullException(nameof(duckingController));
 
             _masterVolume = 1.0f;
             Enabled = true;
 
             _channelRegistry.InitializeChannels();
 
-            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", Channels.Count);
+            _logger.LogInformation(
+                "AudioMixer initialized with {ChannelCount} channels",
+                Channels.Count
+            );
         }
 
         /// <summary>
@@ -154,11 +163,20 @@ namespace PokeNET.Audio.Mixing
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Create loggers using NullLogger for services (backward compatibility)
-            var nullLoggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+            var nullLoggerFactory = Microsoft
+                .Extensions
+                .Logging
+                .Abstractions
+                .NullLoggerFactory
+                .Instance;
 
-            _channelRegistry = new ChannelRegistry(nullLoggerFactory.CreateLogger<ChannelRegistry>());
+            _channelRegistry = new ChannelRegistry(
+                nullLoggerFactory.CreateLogger<ChannelRegistry>()
+            );
             _fadeManager = new FadeManager(nullLoggerFactory.CreateLogger<FadeManager>());
-            _configService = new MixerConfigurationService(nullLoggerFactory.CreateLogger<MixerConfigurationService>());
+            _configService = new MixerConfigurationService(
+                nullLoggerFactory.CreateLogger<MixerConfigurationService>()
+            );
             _statisticsService = new MixerStatisticsService();
             _volumeController = new VolumeController();
             _duckingController = new DuckingController();
@@ -168,7 +186,10 @@ namespace PokeNET.Audio.Mixing
 
             _channelRegistry.InitializeChannels();
 
-            _logger.LogInformation("AudioMixer initialized with {ChannelCount} channels", Channels.Count);
+            _logger.LogInformation(
+                "AudioMixer initialized with {ChannelCount} channels",
+                Channels.Count
+            );
         }
 
         #region Channel & Volume Control
@@ -181,14 +202,17 @@ namespace PokeNET.Audio.Mixing
             _logger.LogDebug("Master volume set to {Volume}", MasterVolume);
         }
 
-        public void SetChannelVolume(ChannelType type, float volume) => GetChannel(type).Volume = volume;
+        public void SetChannelVolume(ChannelType type, float volume) =>
+            GetChannel(type).Volume = volume;
 
         public float GetChannelVolume(ChannelType type) => GetChannel(type).Volume;
 
         public float GetEffectiveVolume(ChannelType type)
         {
             var channel = GetChannel(type);
-            return type == ChannelType.Master ? channel.EffectiveVolume : MasterVolume * channel.EffectiveVolume;
+            return type == ChannelType.Master
+                ? channel.EffectiveVolume
+                : MasterVolume * channel.EffectiveVolume;
         }
 
         public float GetFinalVolume(ChannelType type)
@@ -226,7 +250,8 @@ namespace PokeNET.Audio.Mixing
 
         #region Mute Control
 
-        public void SetChannelMute(ChannelType type, bool muted) => GetChannel(type).IsMuted = muted;
+        public void SetChannelMute(ChannelType type, bool muted) =>
+            GetChannel(type).IsMuted = muted;
 
         public bool IsChannelMuted(ChannelType type) => GetChannel(type).IsMuted;
 
@@ -250,7 +275,9 @@ namespace PokeNET.Audio.Mixing
         }
 
         public void MuteAll() => _channelRegistry.MuteAll();
+
         public void SoloChannel(ChannelType type) => _channelRegistry.SoloChannel(type);
+
         public void UnsoloAll() => _channelRegistry.UnmuteAll();
 
         #endregion
@@ -261,8 +288,12 @@ namespace PokeNET.Audio.Mixing
         {
             var channel = GetChannel(type);
             channel.SetDucking(isDucked, duckLevel);
-            _logger.LogDebug("Channel {Type} ducking set to {IsDucked} at level {DuckLevel}",
-                type, isDucked, duckLevel);
+            _logger.LogDebug(
+                "Channel {Type} ducking set to {IsDucked} at level {DuckLevel}",
+                type,
+                isDucked,
+                duckLevel
+            );
         }
 
         public void DuckMusic(float duckLevel = 0.3f)
@@ -345,16 +376,26 @@ namespace PokeNET.Audio.Mixing
 
         public void SaveSettings(string filePath)
         {
-            _configService.SaveSettings(filePath, MasterVolume, Enabled, Channels,
-                _volumeController, _duckingController);
+            _configService.SaveSettings(
+                filePath,
+                MasterVolume,
+                Enabled,
+                Channels,
+                _volumeController,
+                _duckingController
+            );
         }
 
         public void LoadSettings(string filePath)
         {
-            _configService.LoadSettings(filePath,
+            _configService.LoadSettings(
+                filePath,
                 volume => MasterVolume = volume,
                 enabled => Enabled = enabled,
-                Channels, _volumeController, _duckingController);
+                Channels,
+                _volumeController,
+                _duckingController
+            );
         }
 
         public void ResetAll()
@@ -368,8 +409,12 @@ namespace PokeNET.Audio.Mixing
         public void ResetToDefaults()
         {
             ResetAll();
-            _configService.ResetToDefaults(volume => MasterVolume = volume, Channels,
-                _volumeController, _duckingController);
+            _configService.ResetToDefaults(
+                volume => MasterVolume = volume,
+                Channels,
+                _volumeController,
+                _duckingController
+            );
         }
 
         #endregion
@@ -384,15 +429,21 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Sets channel volume using AudioChannel enum (adapter for IAudioMixer interface)
         /// </summary>
-        void Abstractions.IAudioMixer.SetChannelVolume(Abstractions.AudioChannel channel, float volume)
+        void Abstractions.IAudioMixer.SetChannelVolume(
+            Abstractions.AudioChannel channel,
+            float volume
+        )
         {
             SetChannelVolume(ConvertToChannelType(channel), volume);
-            VolumeChanged?.Invoke(this, new Abstractions.VolumeChangedEventArgs
-            {
-                Channel = channel,
-                PreviousVolume = GetChannelVolume(ConvertToChannelType(channel)),
-                NewVolume = volume
-            });
+            VolumeChanged?.Invoke(
+                this,
+                new Abstractions.VolumeChangedEventArgs
+                {
+                    Channel = channel,
+                    PreviousVolume = GetChannelVolume(ConvertToChannelType(channel)),
+                    NewVolume = volume,
+                }
+            );
         }
 
         /// <summary>
@@ -472,9 +523,18 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Fades a channel using AudioChannel enum (adapter for IAudioMixer interface)
         /// </summary>
-        async Task Abstractions.IAudioMixer.FadeChannelAsync(Abstractions.AudioChannel channel, float targetVolume, TimeSpan duration, CancellationToken cancellationToken)
+        async Task Abstractions.IAudioMixer.FadeChannelAsync(
+            Abstractions.AudioChannel channel,
+            float targetVolume,
+            TimeSpan duration,
+            CancellationToken cancellationToken
+        )
         {
-            await FadeChannelAsync(ConvertToChannelType(channel), targetVolume, (float)duration.TotalSeconds);
+            await FadeChannelAsync(
+                ConvertToChannelType(channel),
+                targetVolume,
+                (float)duration.TotalSeconds
+            );
         }
 
         /// <summary>
@@ -498,7 +558,11 @@ namespace PokeNET.Audio.Mixing
                 Abstractions.AudioChannel.Voice => ChannelType.Voice,
                 Abstractions.AudioChannel.Ambient => ChannelType.Ambient,
                 Abstractions.AudioChannel.UI => ChannelType.UI,
-                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, "Unknown AudioChannel value")
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(channel),
+                    channel,
+                    "Unknown AudioChannel value"
+                ),
             };
         }
 
@@ -508,7 +572,8 @@ namespace PokeNET.Audio.Mixing
 
         public void Dispose()
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             _fadeManager.Dispose();
             _disposed = true;

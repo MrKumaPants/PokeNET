@@ -1,3 +1,7 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
@@ -45,7 +49,10 @@ public interface IAssetApi
     /// <returns>The loaded texture.</returns>
     /// <exception cref="AssetNotFoundException">Texture file not found.</exception>
     /// <exception cref="AssetLoadException">Texture failed to load.</exception>
-    Task<ITexture> LoadTextureAsync(string assetPath, CancellationToken cancellationToken = default);
+    Task<ITexture> LoadTextureAsync(
+        string assetPath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Loads an audio asset.
@@ -55,7 +62,10 @@ public interface IAssetApi
     /// <returns>The loaded audio.</returns>
     /// <exception cref="AssetNotFoundException">Audio file not found.</exception>
     /// <exception cref="AssetLoadException">Audio failed to load.</exception>
-    Task<IAudioClip> LoadAudioAsync(string assetPath, CancellationToken cancellationToken = default);
+    Task<IAudioClip> LoadAudioAsync(
+        string assetPath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Checks if an asset exists (in this mod or base game).

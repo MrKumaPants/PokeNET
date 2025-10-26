@@ -15,12 +15,22 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Fades a channel to a target volume over a duration
         /// </summary>
-        Task FadeChannelAsync(AudioChannel channel, ChannelType type, float targetVolume, float duration);
+        Task FadeChannelAsync(
+            AudioChannel channel,
+            ChannelType type,
+            float targetVolume,
+            float duration
+        );
 
         /// <summary>
         /// Fades a channel in from 0 to target volume
         /// </summary>
-        Task FadeInAsync(AudioChannel channel, ChannelType type, float targetVolume, float duration);
+        Task FadeInAsync(
+            AudioChannel channel,
+            ChannelType type,
+            float targetVolume,
+            float duration
+        );
 
         /// <summary>
         /// Fades a channel out to 0
@@ -55,7 +65,12 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Fades a channel to a target volume over a duration
         /// </summary>
-        public async Task FadeChannelAsync(AudioChannel channel, ChannelType type, float targetVolume, float duration)
+        public async Task FadeChannelAsync(
+            AudioChannel channel,
+            ChannelType type,
+            float targetVolume,
+            float duration
+        )
         {
             if (channel == null)
             {
@@ -96,7 +111,12 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Fades a channel in from 0 to target volume
         /// </summary>
-        public async Task FadeInAsync(AudioChannel channel, ChannelType type, float targetVolume, float duration)
+        public async Task FadeInAsync(
+            AudioChannel channel,
+            ChannelType type,
+            float targetVolume,
+            float duration
+        )
         {
             if (channel == null)
             {
@@ -137,8 +157,13 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Performs the actual fade operation
         /// </summary>
-        private async Task PerformFadeAsync(AudioChannel channel, ChannelType type, float targetVolume,
-            float duration, CancellationToken cancellationToken)
+        private async Task PerformFadeAsync(
+            AudioChannel channel,
+            ChannelType type,
+            float targetVolume,
+            float duration,
+            CancellationToken cancellationToken
+        )
         {
             var startVolume = channel.Volume;
             var elapsed = 0f;
@@ -159,8 +184,12 @@ namespace PokeNET.Audio.Mixing
             if (!cancellationToken.IsCancellationRequested)
             {
                 channel.Volume = targetVolume;
-                _logger.LogDebug("Channel {Type} faded to {Volume} over {Duration}s",
-                    type, targetVolume, duration);
+                _logger.LogDebug(
+                    "Channel {Type} faded to {Volume} over {Duration}s",
+                    type,
+                    targetVolume,
+                    duration
+                );
             }
         }
 
@@ -169,7 +198,8 @@ namespace PokeNET.Audio.Mixing
         /// </summary>
         public void Dispose()
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             CancelAllFades();
             _disposed = true;

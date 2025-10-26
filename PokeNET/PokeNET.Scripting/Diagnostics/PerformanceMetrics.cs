@@ -87,9 +87,10 @@ namespace PokeNET.Scripting.Diagnostics
             CompilationTime = _phaseStopwatch.Elapsed;
             var currentMemory = GC.GetTotalMemory(false);
             CompilationMemoryUsed = Math.Max(0, currentMemory - _initialMemory);
-            CompilationGCCollections = (GC.CollectionCount(0) - _gcCollections0) +
-                                      (GC.CollectionCount(1) - _gcCollections1) +
-                                      (GC.CollectionCount(2) - _gcCollections2);
+            CompilationGCCollections =
+                (GC.CollectionCount(0) - _gcCollections0)
+                + (GC.CollectionCount(1) - _gcCollections1)
+                + (GC.CollectionCount(2) - _gcCollections2);
 
             UpdatePeakMemory(currentMemory);
             PhaseTimes["Compilation"] = CompilationTime;
@@ -146,7 +147,8 @@ namespace PokeNET.Scripting.Diagnostics
             HotReloadCount++;
             HotReloadTimes.Add(reloadTime);
             AverageHotReloadTime = TimeSpan.FromMilliseconds(
-                HotReloadTimes.Average(t => t.TotalMilliseconds));
+                HotReloadTimes.Average(t => t.TotalMilliseconds)
+            );
             PhaseTimes[$"HotReload_{HotReloadCount}"] = reloadTime;
             RecordEvent($"Hot Reload #{HotReloadCount}", GC.GetTotalMemory(false));
         }
@@ -163,9 +165,10 @@ namespace PokeNET.Scripting.Diagnostics
             TotalMemoryAllocated = Math.Max(0, finalMemory - _initialMemory);
             PeakMemoryUsage = _peakMemory - _initialMemory;
 
-            TotalGCCollections = (GC.CollectionCount(0) - _gcCollections0) +
-                                (GC.CollectionCount(1) - _gcCollections1) +
-                                (GC.CollectionCount(2) - _gcCollections2);
+            TotalGCCollections =
+                (GC.CollectionCount(0) - _gcCollections0)
+                + (GC.CollectionCount(1) - _gcCollections1)
+                + (GC.CollectionCount(2) - _gcCollections2);
 
             RecordEvent("End", finalMemory);
         }
@@ -175,7 +178,8 @@ namespace PokeNET.Scripting.Diagnostics
         /// </summary>
         public string GetSummary()
         {
-            var summary = $@"Performance Metrics for '{ScriptName}'
+            var summary =
+                $@"Performance Metrics for '{ScriptName}'
 ========================================
 Duration: {StartTime:yyyy-MM-dd HH:mm:ss.fff} -> {EndTime:yyyy-MM-dd HH:mm:ss.fff}
 
@@ -200,7 +204,8 @@ Garbage Collection:
 
             if (HotReloadCount > 0)
             {
-                summary += $@"
+                summary +=
+                    $@"
 
 Hot Reload:
   Count:            {HotReloadCount}
@@ -214,7 +219,9 @@ Hot Reload:
                 summary += "\n\nCustom Phases:";
                 foreach (var phase in PhaseTimes.OrderByDescending(p => p.Value))
                 {
-                    var memory = PhaseMemory.TryGetValue(phase.Key, out var mem) ? $" ({FormatBytes(mem)})" : "";
+                    var memory = PhaseMemory.TryGetValue(phase.Key, out var mem)
+                        ? $" ({FormatBytes(mem)})"
+                        : "";
                     summary += $"\n  {phase.Key}: {phase.Value.TotalMilliseconds:F2} ms{memory}";
                 }
             }

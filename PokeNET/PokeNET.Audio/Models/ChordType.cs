@@ -83,5 +83,5 @@ public enum ChordType
     /// <summary>
     /// Minor 6th chord - Minor triad + Major 6th
     /// </summary>
-    Minor6
+    Minor6,
 }

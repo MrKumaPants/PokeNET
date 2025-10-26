@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Components;
 
 /// <summary>
@@ -123,5 +125,5 @@ public enum BattleStatus
     InBattle,
 
     /// <summary>Fainted (HP = 0), unable to battle</summary>
-    Fainted
+    Fainted,
 }

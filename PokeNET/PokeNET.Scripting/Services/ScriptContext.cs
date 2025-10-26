@@ -46,7 +46,8 @@ public sealed class ScriptContext : IScriptContext
     public ScriptContext(
         IServiceProvider services,
         ILoggerFactory loggerFactory,
-        IScriptMetadata metadata)
+        IScriptMetadata metadata
+    )
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         ArgumentNullException.ThrowIfNull(loggerFactory);
@@ -59,7 +60,8 @@ public sealed class ScriptContext : IScriptContext
     }
 
     /// <inheritdoc/>
-    public T GetService<T>() where T : notnull
+    public T GetService<T>()
+        where T : notnull
     {
         try
         {
@@ -75,7 +77,8 @@ public sealed class ScriptContext : IScriptContext
     }
 
     /// <inheritdoc/>
-    public bool TryGetService<T>(out T? service) where T : class
+    public bool TryGetService<T>(out T? service)
+        where T : class
     {
         service = _services.GetService<T>();
         var found = service != null;

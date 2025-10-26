@@ -1,8 +1,8 @@
-using PokeNET.Audio.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using PokeNET.Audio.Abstractions;
 
 namespace PokeNET.Audio.Services;
 
@@ -29,7 +29,9 @@ public class SystemRandomProvider : IRandomProvider
         }
     });
 
-    private Random Random => _threadLocalRandom.Value ?? throw new InvalidOperationException("ThreadLocal Random not initialized");
+    private Random Random =>
+        _threadLocalRandom.Value
+        ?? throw new InvalidOperationException("ThreadLocal Random not initialized");
 
     /// <summary>
     /// Generates a random integer between 0 and maxValue (exclusive).
@@ -40,7 +42,10 @@ public class SystemRandomProvider : IRandomProvider
     public int Next(int maxValue)
     {
         if (maxValue < 0)
-            throw new ArgumentOutOfRangeException(nameof(maxValue), "maxValue must be non-negative");
+            throw new ArgumentOutOfRangeException(
+                nameof(maxValue),
+                "maxValue must be non-negative"
+            );
 
         return Random.Next(maxValue);
     }
@@ -55,7 +60,10 @@ public class SystemRandomProvider : IRandomProvider
     public int Next(int minValue, int maxValue)
     {
         if (minValue > maxValue)
-            throw new ArgumentOutOfRangeException(nameof(minValue), "minValue must be less than or equal to maxValue");
+            throw new ArgumentOutOfRangeException(
+                nameof(minValue),
+                "minValue must be less than or equal to maxValue"
+            );
 
         return Random.Next(minValue, maxValue);
     }
@@ -87,7 +95,10 @@ public class SystemRandomProvider : IRandomProvider
     public float NextFloat(float minValue, float maxValue)
     {
         if (minValue > maxValue)
-            throw new ArgumentOutOfRangeException(nameof(minValue), "minValue must be less than or equal to maxValue");
+            throw new ArgumentOutOfRangeException(
+                nameof(minValue),
+                "minValue must be less than or equal to maxValue"
+            );
 
         return minValue + (float)Random.NextDouble() * (maxValue - minValue);
     }
@@ -110,7 +121,10 @@ public class SystemRandomProvider : IRandomProvider
     public bool NextBool(float probability)
     {
         if (probability < 0.0f || probability > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(probability), "Probability must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(
+                nameof(probability),
+                "Probability must be between 0.0 and 1.0"
+            );
 
         return Random.NextDouble() < probability;
     }
@@ -152,7 +166,10 @@ public class SystemRandomProvider : IRandomProvider
             throw new ArgumentOutOfRangeException(nameof(count), "Count must be non-negative");
 
         if (count > items.Count)
-            throw new ArgumentException("Cannot select more items than available in collection", nameof(count));
+            throw new ArgumentException(
+                "Cannot select more items than available in collection",
+                nameof(count)
+            );
 
         // Use Fisher-Yates shuffle on a copy and take first 'count' elements
         var itemsCopy = items.ToList();

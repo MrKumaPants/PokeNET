@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 
 namespace PokeNET.Domain.ECS.Events;
@@ -37,7 +38,8 @@ public sealed record EntityCreatedEvent : IGameEvent
         Entity entity,
         string entityType,
         string factoryName,
-        int componentCount)
+        int componentCount
+    )
     {
         Entity = entity;
         EntityType = entityType;

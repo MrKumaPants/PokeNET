@@ -77,7 +77,8 @@ public interface IScriptContext
     /// <para>This prevents scripts from accessing internal engine services.</para>
     /// <para>Thread-safe for concurrent script execution.</para>
     /// </remarks>
-    T GetService<T>() where T : notnull;
+    T GetService<T>()
+        where T : notnull;
 
     /// <summary>
     /// Attempts to get a service from the dependency injection container.
@@ -88,7 +89,8 @@ public interface IScriptContext
     /// <remarks>
     /// Use this method when the service is optional and you want to avoid exceptions.
     /// </remarks>
-    bool TryGetService<T>(out T? service) where T : notnull;
+    bool TryGetService<T>(out T? service)
+        where T : notnull;
 
     /// <summary>
     /// Gets a service by type name (for dynamic scripting languages).

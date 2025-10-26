@@ -29,14 +29,21 @@ public sealed class MockAudioEngine : IAudioEngine
     }
 
     /// <inheritdoc />
-    public Task<int> PlaySoundAsync(byte[] audioData, float volume, float pitch, CancellationToken cancellationToken = default)
+    public Task<int> PlaySoundAsync(
+        byte[] audioData,
+        float volume,
+        float pitch,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(audioData);
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (!_initialized)
         {
-            throw new InvalidOperationException("Audio engine must be initialized before playing sounds.");
+            throw new InvalidOperationException(
+                "Audio engine must be initialized before playing sounds."
+            );
         }
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(audioData.Length);

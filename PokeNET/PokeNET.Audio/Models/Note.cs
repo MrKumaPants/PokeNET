@@ -73,7 +73,7 @@ public sealed record Note
         return this with
         {
             NoteName = newNoteName,
-            Octave = newOctave
+            Octave = newOctave,
         };
     }
 
@@ -82,7 +82,11 @@ public sealed record Note
     /// </summary>
     /// <param name="velocity">New velocity value (0.0 to 1.0).</param>
     /// <returns>A new Note instance with the specified velocity.</returns>
-    public Note WithVelocity(float velocity) => this with { Velocity = Math.Clamp(velocity, 0f, 1f) };
+    public Note WithVelocity(float velocity) =>
+        this with
+        {
+            Velocity = Math.Clamp(velocity, 0f, 1f),
+        };
 
     /// <summary>
     /// Creates a copy of this note with modified duration.
@@ -136,7 +140,7 @@ public enum NoteName
     ASharp = 10,
 
     /// <summary>B natural.</summary>
-    B = 11
+    B = 11,
 }
 
 /// <summary>
@@ -149,37 +153,39 @@ public static class NoteNameExtensions
     /// </summary>
     /// <param name="noteName">The note name to convert.</param>
     /// <returns>Display string (e.g., "C#", "D", "F#").</returns>
-    public static string ToDisplayString(this NoteName noteName) => noteName switch
-    {
-        NoteName.C => "C",
-        NoteName.CSharp => "C#",
-        NoteName.D => "D",
-        NoteName.DSharp => "D#",
-        NoteName.E => "E",
-        NoteName.F => "F",
-        NoteName.FSharp => "F#",
-        NoteName.G => "G",
-        NoteName.GSharp => "G#",
-        NoteName.A => "A",
-        NoteName.ASharp => "A#",
-        NoteName.B => "B",
-        _ => noteName.ToString()
-    };
+    public static string ToDisplayString(this NoteName noteName) =>
+        noteName switch
+        {
+            NoteName.C => "C",
+            NoteName.CSharp => "C#",
+            NoteName.D => "D",
+            NoteName.DSharp => "D#",
+            NoteName.E => "E",
+            NoteName.F => "F",
+            NoteName.FSharp => "F#",
+            NoteName.G => "G",
+            NoteName.GSharp => "G#",
+            NoteName.A => "A",
+            NoteName.ASharp => "A#",
+            NoteName.B => "B",
+            _ => noteName.ToString(),
+        };
 
     /// <summary>
     /// Determines if the note is a sharp (black key on piano).
     /// </summary>
     /// <param name="noteName">The note name to check.</param>
     /// <returns>True if the note is a sharp/flat.</returns>
-    public static bool IsSharp(this NoteName noteName) => noteName switch
-    {
-        NoteName.CSharp => true,
-        NoteName.DSharp => true,
-        NoteName.FSharp => true,
-        NoteName.GSharp => true,
-        NoteName.ASharp => true,
-        _ => false
-    };
+    public static bool IsSharp(this NoteName noteName) =>
+        noteName switch
+        {
+            NoteName.CSharp => true,
+            NoteName.DSharp => true,
+            NoteName.FSharp => true,
+            NoteName.GSharp => true,
+            NoteName.ASharp => true,
+            _ => false,
+        };
 
     /// <summary>
     /// Determines if the note is a natural (white key on piano).

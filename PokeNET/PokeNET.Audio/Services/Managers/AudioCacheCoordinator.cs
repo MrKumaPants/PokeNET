@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Extensions.Logging;
 using PokeNET.Audio.Abstractions;
 
@@ -18,9 +19,7 @@ public sealed class AudioCacheCoordinator : IAudioCacheCoordinator
     /// <param name="logger">Logger for diagnostics.</param>
     /// <param name="cache">Audio cache for managing audio data.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
-    public AudioCacheCoordinator(
-        ILogger<AudioCacheCoordinator> logger,
-        IAudioCache cache)
+    public AudioCacheCoordinator(ILogger<AudioCacheCoordinator> logger, IAudioCache cache)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -38,11 +37,14 @@ public sealed class AudioCacheCoordinator : IAudioCacheCoordinator
             _logger.LogDebug("Preloading audio: {AssetPath}", assetPath);
 
             // Load audio data and cache it using the cache's GetOrLoadAsync
-            await _cache.GetOrLoadAsync<object>(assetPath, () =>
-            {
-                // TODO: Implement actual file loading logic
-                throw new FileNotFoundException($"Audio file not found: {assetPath}");
-            });
+            await _cache.GetOrLoadAsync<object>(
+                assetPath,
+                () =>
+                {
+                    // TODO: Implement actual file loading logic
+                    throw new FileNotFoundException($"Audio file not found: {assetPath}");
+                }
+            );
 
             _logger.LogDebug("Preloaded audio: {AssetPath}", assetPath);
         }
@@ -58,7 +60,10 @@ public sealed class AudioCacheCoordinator : IAudioCacheCoordinator
     /// </summary>
     /// <param name="assetPaths">Array of asset paths to preload.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PreloadMultipleAsync(string[] assetPaths, CancellationToken cancellationToken = default)
+    public async Task PreloadMultipleAsync(
+        string[] assetPaths,
+        CancellationToken cancellationToken = default
+    )
     {
         if (assetPaths == null || assetPaths.Length == 0)
         {

@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Events
 {
     /// <summary>
@@ -8,9 +10,8 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Initializes a new instance of the BattleStartEvent class.
         /// </summary>
-        public BattleStartEvent() : base(BattleEventType.BattleStart)
-        {
-        }
+        public BattleStartEvent()
+            : base(BattleEventType.BattleStart) { }
 
         /// <summary>
         /// Gets or sets whether this is a wild Pokemon battle.
@@ -31,9 +32,8 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Initializes a new instance of the BattleEndEvent class.
         /// </summary>
-        public BattleEndEvent() : base(BattleEventType.BattleEnd)
-        {
-        }
+        public BattleEndEvent()
+            : base(BattleEventType.BattleEnd) { }
 
         /// <summary>
         /// Gets or sets whether the player won the battle.
@@ -49,9 +49,8 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Initializes a new instance of the PokemonFaintEvent class.
         /// </summary>
-        public PokemonFaintEvent() : base(BattleEventType.PokemonFainted)
-        {
-        }
+        public PokemonFaintEvent()
+            : base(BattleEventType.PokemonFainted) { }
 
         /// <summary>
         /// Gets or sets the name of the fainted Pokemon.
@@ -67,9 +66,8 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Initializes a new instance of the AttackEvent class.
         /// </summary>
-        public AttackEvent() : base(BattleEventType.MoveUsed)
-        {
-        }
+        public AttackEvent()
+            : base(BattleEventType.MoveUsed) { }
 
         /// <summary>
         /// Gets or sets the name of the attack.
@@ -90,9 +88,8 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Initializes a new instance of the CriticalHitEvent class.
         /// </summary>
-        public CriticalHitEvent() : base(BattleEventType.CriticalHit)
-        {
-        }
+        public CriticalHitEvent()
+            : base(BattleEventType.CriticalHit) { }
     }
 
     /// <summary>
@@ -213,6 +210,6 @@ namespace PokeNET.Domain.ECS.Events
         /// <summary>
         /// Foggy weather.
         /// </summary>
-        Fog
+        Fog,
     }
 }

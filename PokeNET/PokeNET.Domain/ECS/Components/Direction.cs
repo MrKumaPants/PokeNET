@@ -34,7 +34,7 @@ public enum Direction
     West = 7,
 
     /// <summary>Facing diagonally up-left (NorthWest).</summary>
-    NorthWest = 8
+    NorthWest = 8,
 }
 
 /// <summary>
@@ -58,8 +58,8 @@ public static class DirectionExtensions
             Direction.South => (0, 1),
             Direction.SouthWest => (-1, 1),
             Direction.West => (-1, 0),
-            Direction.NorthWest => (-1, -1),  // Fixed: was (-1, 1)
-            _ => (0, 0)
+            Direction.NorthWest => (-1, -1), // Fixed: was (-1, 1)
+            _ => (0, 0),
         };
     }
 
@@ -80,7 +80,7 @@ public static class DirectionExtensions
             Direction.SouthWest => Direction.NorthEast,
             Direction.NorthWest => Direction.SouthEast,
             Direction.SouthEast => Direction.NorthWest,
-            _ => Direction.None
+            _ => Direction.None,
         };
     }
 }

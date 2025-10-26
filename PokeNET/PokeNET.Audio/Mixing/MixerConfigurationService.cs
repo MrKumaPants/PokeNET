@@ -26,33 +26,53 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Saves the current mixer configuration
         /// </summary>
-        MixerConfiguration SaveConfiguration(float masterVolume, IReadOnlyDictionary<ChannelType, AudioChannel> channels);
+        MixerConfiguration SaveConfiguration(
+            float masterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels
+        );
 
         /// <summary>
         /// Loads a mixer configuration
         /// </summary>
-        void LoadConfiguration(MixerConfiguration config, Action<float> setMasterVolume,
-            IReadOnlyDictionary<ChannelType, AudioChannel> channels);
+        void LoadConfiguration(
+            MixerConfiguration config,
+            Action<float> setMasterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels
+        );
 
         /// <summary>
         /// Saves mixer settings to file
         /// </summary>
-        void SaveSettings(string filePath, float masterVolume, bool enabled,
+        void SaveSettings(
+            string filePath,
+            float masterVolume,
+            bool enabled,
             IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController);
+            VolumeController volumeController,
+            DuckingController duckingController
+        );
 
         /// <summary>
         /// Loads mixer settings from file
         /// </summary>
-        void LoadSettings(string filePath, Action<float> setMasterVolume, Action<bool> setEnabled,
+        void LoadSettings(
+            string filePath,
+            Action<float> setMasterVolume,
+            Action<bool> setEnabled,
             IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController);
+            VolumeController volumeController,
+            DuckingController duckingController
+        );
 
         /// <summary>
         /// Resets mixer to default values
         /// </summary>
-        void ResetToDefaults(Action<float> setMasterVolume, IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController);
+        void ResetToDefaults(
+            Action<float> setMasterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels,
+            VolumeController volumeController,
+            DuckingController duckingController
+        );
     }
 
     /// <summary>
@@ -84,18 +104,23 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Saves the current mixer configuration
         /// </summary>
-        public MixerConfiguration SaveConfiguration(float masterVolume, IReadOnlyDictionary<ChannelType, AudioChannel> channels)
+        public MixerConfiguration SaveConfiguration(
+            float masterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels
+        )
         {
             var config = new MixerConfiguration
             {
                 MasterVolume = masterVolume,
-                Channels = channels.Select(kvp => new ChannelConfig
-                {
-                    Type = kvp.Key,
-                    Name = kvp.Value.Name,
-                    Volume = kvp.Value.Volume,
-                    IsMuted = kvp.Value.IsMuted
-                }).ToList()
+                Channels = channels
+                    .Select(kvp => new ChannelConfig
+                    {
+                        Type = kvp.Key,
+                        Name = kvp.Value.Name,
+                        Volume = kvp.Value.Volume,
+                        IsMuted = kvp.Value.IsMuted,
+                    })
+                    .ToList(),
             };
 
             _logger.LogInformation("Mixer configuration saved");
@@ -105,8 +130,11 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Loads a mixer configuration
         /// </summary>
-        public void LoadConfiguration(MixerConfiguration config, Action<float> setMasterVolume,
-            IReadOnlyDictionary<ChannelType, AudioChannel> channels)
+        public void LoadConfiguration(
+            MixerConfiguration config,
+            Action<float> setMasterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels
+        )
         {
             if (config == null)
             {
@@ -129,9 +157,14 @@ namespace PokeNET.Audio.Mixing
         /// <summary>
         /// Saves mixer settings to file
         /// </summary>
-        public void SaveSettings(string filePath, float masterVolume, bool enabled,
+        public void SaveSettings(
+            string filePath,
+            float masterVolume,
+            bool enabled,
             IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController)
+            VolumeController volumeController,
+            DuckingController duckingController
+        )
         {
             try
             {
@@ -141,13 +174,13 @@ namespace PokeNET.Audio.Mixing
                     Enabled = enabled,
                     Channels = channels.Values.Select(c => c.GetConfig()).ToList(),
                     VolumeController = volumeController.GetConfig(),
-                    DuckingController = duckingController.GetConfig()
+                    DuckingController = duckingController.GetConfig(),
                 };
 
-                var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
+                var json = JsonSerializer.Serialize(
+                    settings,
+                    new JsonSerializerOptions { WriteIndented = true }
+                );
 
                 File.WriteAllText(filePath, json);
 
@@ -157,16 +190,24 @@ namespace PokeNET.Audio.Mixing
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save mixer settings to {FilePath}", filePath);
-                throw new InvalidOperationException($"Failed to save mixer settings to {filePath}", ex);
+                throw new InvalidOperationException(
+                    $"Failed to save mixer settings to {filePath}",
+                    ex
+                );
             }
         }
 
         /// <summary>
         /// Loads mixer settings from file
         /// </summary>
-        public void LoadSettings(string filePath, Action<float> setMasterVolume, Action<bool> setEnabled,
+        public void LoadSettings(
+            string filePath,
+            Action<float> setMasterVolume,
+            Action<bool> setEnabled,
             IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController)
+            VolumeController volumeController,
+            DuckingController duckingController
+        )
         {
             try
             {
@@ -205,15 +246,22 @@ namespace PokeNET.Audio.Mixing
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load mixer settings from {FilePath}", filePath);
-                throw new InvalidOperationException($"Failed to load mixer settings from {filePath}", ex);
+                throw new InvalidOperationException(
+                    $"Failed to load mixer settings from {filePath}",
+                    ex
+                );
             }
         }
 
         /// <summary>
         /// Resets mixer to default values
         /// </summary>
-        public void ResetToDefaults(Action<float> setMasterVolume, IReadOnlyDictionary<ChannelType, AudioChannel> channels,
-            VolumeController volumeController, DuckingController duckingController)
+        public void ResetToDefaults(
+            Action<float> setMasterVolume,
+            IReadOnlyDictionary<ChannelType, AudioChannel> channels,
+            VolumeController volumeController,
+            DuckingController duckingController
+        )
         {
             setMasterVolume(1.0f);
 

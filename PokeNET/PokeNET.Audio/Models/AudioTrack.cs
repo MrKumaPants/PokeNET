@@ -133,7 +133,7 @@ public class AudioTrack
             BitDepth = BitDepth,
             CreatedAt = CreatedAt,
             LastPlayedAt = LastPlayedAt,
-            PlayCount = PlayCount
+            PlayCount = PlayCount,
         };
     }
 
@@ -143,9 +143,7 @@ public class AudioTrack
     /// <returns>String containing track name and artist.</returns>
     public override string ToString()
     {
-        return string.IsNullOrEmpty(Artist)
-            ? Name
-            : $"{Name} - {Artist}";
+        return string.IsNullOrEmpty(Artist) ? Name : $"{Name} - {Artist}";
     }
 }
 
@@ -170,5 +168,5 @@ public enum TrackType
     UI,
 
     /// <summary>Procedurally generated music.</summary>
-    Procedural
+    Procedural,
 }

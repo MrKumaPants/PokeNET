@@ -1,3 +1,4 @@
+using System;
 using PokeNET.Domain.Models;
 
 namespace PokeNET.Domain.ECS.Events;

@@ -43,10 +43,7 @@ public sealed class ScriptApi : IScriptApi
     /// <param name="logger">Logger for script operations.</param>
     /// <param name="metadata">Metadata about the script.</param>
     /// <exception cref="ArgumentNullException">Required parameters are null.</exception>
-    public ScriptApi(
-        IServiceProvider services,
-        ILogger logger,
-        IScriptMetadata metadata)
+    public ScriptApi(IServiceProvider services, ILogger logger, IScriptMetadata metadata)
     {
         ArgumentNullException.ThrowIfNull(services);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -68,8 +65,12 @@ public sealed class ScriptApi : IScriptApi
         try
         {
             var entity = _entities.CreateEntity(components);
-            _logger.LogDebug("Script {ScriptId} created entity {EntityId} with {ComponentCount} components",
-                _metadata.Id, entity.Id, components.Length);
+            _logger.LogDebug(
+                "Script {ScriptId} created entity {EntityId} with {ComponentCount} components",
+                _metadata.Id,
+                entity.Id,
+                components.Length
+            );
             return entity;
         }
         catch (Exception ex)
@@ -88,19 +89,27 @@ public sealed class ScriptApi : IScriptApi
         try
         {
             _entities.DestroyEntity(entity);
-            _logger.LogDebug("Script {ScriptId} destroyed entity {EntityId}",
-                _metadata.Id, entity.Id);
+            _logger.LogDebug(
+                "Script {ScriptId} destroyed entity {EntityId}",
+                _metadata.Id,
+                entity.Id
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Script {ScriptId} failed to destroy entity {EntityId}",
-                _metadata.Id, entity.Id);
+            _logger.LogError(
+                ex,
+                "Script {ScriptId} failed to destroy entity {EntityId}",
+                _metadata.Id,
+                entity.Id
+            );
             throw new InvalidOperationException("Failed to destroy entity", ex);
         }
     }
 
     /// <inheritdoc/>
-    public void PublishEvent<T>(T gameEvent) where T : IGameEvent
+    public void PublishEvent<T>(T gameEvent)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(gameEvent);
 
@@ -110,19 +119,27 @@ public sealed class ScriptApi : IScriptApi
         try
         {
             _events.Publish(gameEvent);
-            _logger.LogDebug("Script {ScriptId} published event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogDebug(
+                "Script {ScriptId} published event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Script {ScriptId} failed to publish event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogError(
+                ex,
+                "Script {ScriptId} failed to publish event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
             throw new InvalidOperationException("Failed to publish event", ex);
         }
     }
 
     /// <inheritdoc/>
-    public void SubscribeToEvent<T>(Action<T> handler) where T : IGameEvent
+    public void SubscribeToEvent<T>(Action<T> handler)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -132,32 +149,47 @@ public sealed class ScriptApi : IScriptApi
         try
         {
             _events.Subscribe(handler);
-            _logger.LogDebug("Script {ScriptId} subscribed to event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogDebug(
+                "Script {ScriptId} subscribed to event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Script {ScriptId} failed to subscribe to event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogError(
+                ex,
+                "Script {ScriptId} failed to subscribe to event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
             throw new InvalidOperationException("Failed to subscribe to event", ex);
         }
     }
 
     /// <inheritdoc/>
-    public void UnsubscribeFromEvent<T>(Action<T> handler) where T : IGameEvent
+    public void UnsubscribeFromEvent<T>(Action<T> handler)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(handler);
 
         try
         {
             _events.Unsubscribe(handler);
-            _logger.LogDebug("Script {ScriptId} unsubscribed from event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogDebug(
+                "Script {ScriptId} unsubscribed from event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Script {ScriptId} failed to unsubscribe from event {EventType}",
-                _metadata.Id, typeof(T).Name);
+            _logger.LogError(
+                ex,
+                "Script {ScriptId} failed to unsubscribe from event {EventType}",
+                _metadata.Id,
+                typeof(T).Name
+            );
             throw new InvalidOperationException("Failed to unsubscribe from event", ex);
         }
     }
@@ -173,7 +205,7 @@ public sealed class ScriptApi : IScriptApi
             Interfaces.LogLevel.Information => Microsoft.Extensions.Logging.LogLevel.Information,
             Interfaces.LogLevel.Warning => Microsoft.Extensions.Logging.LogLevel.Warning,
             Interfaces.LogLevel.Error => Microsoft.Extensions.Logging.LogLevel.Error,
-            _ => Microsoft.Extensions.Logging.LogLevel.Information
+            _ => Microsoft.Extensions.Logging.LogLevel.Information,
         };
 
         _logger.Log(msLogLevel, "[{ScriptId}] {Message}", _metadata.Id, message);
@@ -209,16 +241,21 @@ public sealed class ScriptApi : IScriptApi
         if (!_metadata.IsEnabled)
         {
             throw new InvalidOperationException(
-                $"Script {_metadata.Id} is disabled and cannot perform operations");
+                $"Script {_metadata.Id} is disabled and cannot perform operations"
+            );
         }
 
         // Check if script has the required permission
-        if (_metadata.RequiredPermissions.Count > 0 &&
-            !_metadata.RequiredPermissions.Contains(permission))
+        if (
+            _metadata.RequiredPermissions.Count > 0
+            && !_metadata.RequiredPermissions.Contains(permission)
+        )
         {
             _logger.LogWarning(
                 "Script {ScriptId} attempted operation {Permission} without declaring it in permissions",
-                _metadata.Id, permission);
+                _metadata.Id,
+                permission
+            );
         }
     }
 }

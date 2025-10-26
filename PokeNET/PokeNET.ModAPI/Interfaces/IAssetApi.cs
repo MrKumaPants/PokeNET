@@ -29,7 +29,8 @@ public interface IAssetApi
     /// <returns>The loaded asset instance.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the asset file doesn't exist.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the asset cannot be loaded as type T.</exception>
-    T LoadAsset<T>(string path) where T : class;
+    T LoadAsset<T>(string path)
+        where T : class;
 
     /// <summary>
     /// Registers an asset with a unique identifier for later retrieval.
@@ -38,7 +39,8 @@ public interface IAssetApi
     /// <param name="id">Unique identifier for the asset (format: "modid:assetname").</param>
     /// <param name="asset">The asset instance to register.</param>
     /// <exception cref="ArgumentException">Thrown when id is invalid or already registered.</exception>
-    void RegisterAsset<T>(string id, T asset) where T : class;
+    void RegisterAsset<T>(string id, T asset)
+        where T : class;
 
     /// <summary>
     /// Unloads an asset and removes it from the registry.
@@ -53,7 +55,8 @@ public interface IAssetApi
     /// <typeparam name="T">The asset type.</typeparam>
     /// <param name="id">The unique identifier of the asset.</param>
     /// <returns>The asset instance, or null if not found.</returns>
-    T? GetAsset<T>(string id) where T : class;
+    T? GetAsset<T>(string id)
+        where T : class;
 
     /// <summary>
     /// Checks if an asset is registered with the given identifier.

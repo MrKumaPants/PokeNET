@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Extensions.Logging;
 using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Models;
@@ -93,12 +94,14 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// <summary>
     /// Gets the audio mixer for volume and channel control.
     /// </summary>
-    public IAudioMixer Mixer => throw new NotImplementedException("Audio mixer not yet implemented");
+    public IAudioMixer Mixer =>
+        throw new NotImplementedException("Audio mixer not yet implemented");
 
     /// <summary>
     /// Gets the audio configuration settings.
     /// </summary>
-    public IAudioConfiguration Configuration => throw new NotImplementedException("Audio configuration not yet implemented");
+    public IAudioConfiguration Configuration =>
+        throw new NotImplementedException("Audio configuration not yet implemented");
 
     /// <summary>
     /// Initializes a new instance of the AudioManager class.
@@ -120,7 +123,8 @@ public sealed class AudioManager : IAudioManager, IDisposable
         IAudioVolumeManager volumeManager,
         IAudioStateManager stateManager,
         IAudioCacheCoordinator cacheCoordinator,
-        IAmbientAudioManager ambientManager)
+        IAmbientAudioManager ambientManager
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -128,11 +132,14 @@ public sealed class AudioManager : IAudioManager, IDisposable
         _sfxPlayer = sfxPlayer ?? throw new ArgumentNullException(nameof(sfxPlayer));
         _volumeManager = volumeManager ?? throw new ArgumentNullException(nameof(volumeManager));
         _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
-        _cacheCoordinator = cacheCoordinator ?? throw new ArgumentNullException(nameof(cacheCoordinator));
+        _cacheCoordinator =
+            cacheCoordinator ?? throw new ArgumentNullException(nameof(cacheCoordinator));
         _ambientManager = ambientManager ?? throw new ArgumentNullException(nameof(ambientManager));
 
         _stateManager.SetInitialized(true);
-        _logger.LogInformation("AudioManager created with dependency injection and specialized managers");
+        _logger.LogInformation(
+            "AudioManager created with dependency injection and specialized managers"
+        );
     }
 
     /// <summary>
@@ -233,7 +240,10 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// </summary>
     /// <param name="assetPath">Path to the music file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlayMusicAsync(string assetPath, CancellationToken cancellationToken = default)
+    public async Task PlayMusicAsync(
+        string assetPath,
+        CancellationToken cancellationToken = default
+    )
     {
         await PlayMusicAsync(assetPath, true, cancellationToken);
     }
@@ -244,7 +254,11 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// <param name="trackName">The name/path of the music track.</param>
     /// <param name="loop">Whether to loop the music. Default is true.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlayMusicAsync(string trackName, bool loop = true, CancellationToken cancellationToken = default)
+    public async Task PlayMusicAsync(
+        string trackName,
+        bool loop = true,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -252,10 +266,13 @@ public sealed class AudioManager : IAudioManager, IDisposable
         {
             _logger.LogInformation("Loading music: {TrackName}, Loop: {Loop}", trackName, loop);
 
-            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(trackName, () =>
-            {
-                throw new FileNotFoundException($"Audio file not found: {trackName}");
-            });
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(
+                trackName,
+                () =>
+                {
+                    throw new FileNotFoundException($"Audio file not found: {trackName}");
+                }
+            );
 
             if (audioData == null)
             {
@@ -281,19 +298,30 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// <param name="trackName">The name/path of the music track.</param>
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlayMusicAsync(string trackName, float volume, CancellationToken cancellationToken = default)
+    public async Task PlayMusicAsync(
+        string trackName,
+        float volume,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
         try
         {
-            _logger.LogInformation("Loading music: {TrackName}, Volume: {Volume}", trackName, volume);
+            _logger.LogInformation(
+                "Loading music: {TrackName}, Volume: {Volume}",
+                trackName,
+                volume
+            );
             _volumeManager.SetMusicVolume(volume);
 
-            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(trackName, () =>
-            {
-                throw new FileNotFoundException($"Audio file not found: {trackName}");
-            });
+            var audioData = await _cache.GetOrLoadAsync<AudioTrack>(
+                trackName,
+                () =>
+                {
+                    throw new FileNotFoundException($"Audio file not found: {trackName}");
+                }
+            );
 
             if (audioData == null)
             {
@@ -319,7 +347,11 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// <param name="sfxName">Path to the sound effect file.</param>
     /// <param name="volume">Volume level (0.0 to 1.0). Defaults to 1.0.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlaySoundEffectAsync(string sfxName, float volume = 1.0f, CancellationToken cancellationToken = default)
+    public async Task PlaySoundEffectAsync(
+        string sfxName,
+        float volume = 1.0f,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -327,10 +359,13 @@ public sealed class AudioManager : IAudioManager, IDisposable
         {
             _logger.LogDebug("Loading sound effect: {SfxName}", sfxName);
 
-            var soundEffect = await _cache.GetOrLoadAsync<SoundEffect>(sfxName, () =>
-            {
-                throw new FileNotFoundException($"Sound effect file not found: {sfxName}");
-            });
+            var soundEffect = await _cache.GetOrLoadAsync<SoundEffect>(
+                sfxName,
+                () =>
+                {
+                    throw new FileNotFoundException($"Sound effect file not found: {sfxName}");
+                }
+            );
 
             if (soundEffect == null)
             {
@@ -417,7 +452,11 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// <param name="ambientName">The name/path of the ambient audio.</param>
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public Task PlayAmbientAsync(string ambientName, float volume, CancellationToken cancellationToken = default)
+    public Task PlayAmbientAsync(
+        string ambientName,
+        float volume,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
         return _ambientManager.PlayAsync(ambientName, volume, cancellationToken);
@@ -509,7 +548,10 @@ public sealed class AudioManager : IAudioManager, IDisposable
     /// </summary>
     /// <param name="assetPaths">Array of asset paths to preload.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public Task PreloadMultipleAsync(string[] assetPaths, CancellationToken cancellationToken = default)
+    public Task PreloadMultipleAsync(
+        string[] assetPaths,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
         return _cacheCoordinator.PreloadMultipleAsync(assetPaths, cancellationToken);

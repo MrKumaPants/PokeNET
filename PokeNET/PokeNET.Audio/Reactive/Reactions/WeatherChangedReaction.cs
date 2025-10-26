@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class WeatherChangedReaction : BaseAudioReaction
 {
-    public WeatherChangedReaction(ILogger<WeatherChangedReaction> logger) : base(logger)
-    {
-    }
+    public WeatherChangedReaction(ILogger<WeatherChangedReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 4;
 
@@ -20,7 +19,11 @@ public class WeatherChangedReaction : BaseAudioReaction
         return gameEvent is WeatherChangedEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;
@@ -40,7 +43,7 @@ public class WeatherChangedReaction : BaseAudioReaction
                 Weather.Snow => "audio/ambient/snow.ogg",
                 Weather.Sandstorm => "audio/ambient/sandstorm.ogg",
                 Weather.Fog => "audio/ambient/fog.ogg",
-                _ => null
+                _ => null,
             };
 
             if (ambientPath != null)

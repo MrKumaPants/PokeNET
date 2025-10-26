@@ -1,12 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <Platforms>AnyCPU</Platforms>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Arch" Version="2.*" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.*" />
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Platforms>AnyCPU</Platforms>
+    <!-- Suppress nullable warnings from Arch source generator -->
+    <NoWarn>$(NoWarn);CS8602</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Arch" Version="2.1.0" />
+    <PackageReference Include="Arch.EventBus" Version="1.0.2" />
+    <PackageReference Include="Arch.LowLevel" Version="1.1.5" />
+    <PackageReference Include="Arch.Persistence" Version="2.0.0" />
+    <PackageReference Include="Arch.Relationships" Version="1.0.1" />
+    <PackageReference Include="Arch.System" Version="1.1.0" />
+    <PackageReference Include="Arch.System.SourceGenerator" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
+  </ItemGroup>
 </Project>

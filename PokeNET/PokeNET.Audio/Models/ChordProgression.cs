@@ -59,14 +59,22 @@ public sealed record ChordProgression
         {
             Chords = new[]
             {
-                new Chord { RootNote = key, ChordType = ChordType.Major },                    // I
-                new Chord { RootNote = (NoteName)(((int)key + 5) % 12), ChordType = ChordType.Major },  // IV
-                new Chord { RootNote = (NoteName)(((int)key + 7) % 12), ChordType = ChordType.Major },  // V
-                new Chord { RootNote = key, ChordType = ChordType.Major }                     // I
+                new Chord { RootNote = key, ChordType = ChordType.Major }, // I
+                new Chord
+                {
+                    RootNote = (NoteName)(((int)key + 5) % 12),
+                    ChordType = ChordType.Major,
+                }, // IV
+                new Chord
+                {
+                    RootNote = (NoteName)(((int)key + 7) % 12),
+                    ChordType = ChordType.Major,
+                }, // V
+                new Chord { RootNote = key, ChordType = ChordType.Major }, // I
             },
             Tempo = tempo,
             TimeSignature = TimeSignature.CommonTime,
-            ChordDuration = 4.0f
+            ChordDuration = 4.0f,
         };
     }
 
@@ -79,14 +87,22 @@ public sealed record ChordProgression
         {
             Chords = new[]
             {
-                new Chord { RootNote = key, ChordType = ChordType.Minor },                    // i
-                new Chord { RootNote = (NoteName)(((int)key + 5) % 12), ChordType = ChordType.Minor },  // iv
-                new Chord { RootNote = (NoteName)(((int)key + 7) % 12), ChordType = ChordType.Minor },  // v
-                new Chord { RootNote = key, ChordType = ChordType.Minor }                     // i
+                new Chord { RootNote = key, ChordType = ChordType.Minor }, // i
+                new Chord
+                {
+                    RootNote = (NoteName)(((int)key + 5) % 12),
+                    ChordType = ChordType.Minor,
+                }, // iv
+                new Chord
+                {
+                    RootNote = (NoteName)(((int)key + 7) % 12),
+                    ChordType = ChordType.Minor,
+                }, // v
+                new Chord { RootNote = key, ChordType = ChordType.Minor }, // i
             },
             Tempo = tempo,
             TimeSignature = TimeSignature.CommonTime,
-            ChordDuration = 4.0f
+            ChordDuration = 4.0f,
         };
     }
 

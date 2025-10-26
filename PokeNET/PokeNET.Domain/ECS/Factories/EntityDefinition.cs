@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace PokeNET.Domain.ECS.Factories;
 
 /// <summary>
@@ -32,7 +36,8 @@ public sealed record EntityDefinition
     public EntityDefinition(
         string name,
         IEnumerable<object> components,
-        IReadOnlyDictionary<string, object>? metadata = null)
+        IReadOnlyDictionary<string, object>? metadata = null
+    )
     {
         Name = name;
         Components = components.ToList();
@@ -46,10 +51,7 @@ public sealed record EntityDefinition
     /// <returns>New definition with combined components.</returns>
     public EntityDefinition WithComponents(params object[] additionalComponents)
     {
-        return this with
-        {
-            Components = Components.Concat(additionalComponents).ToList()
-        };
+        return this with { Components = Components.Concat(additionalComponents).ToList() };
     }
 
     /// <summary>
@@ -60,10 +62,7 @@ public sealed record EntityDefinition
     /// <returns>New definition with updated metadata.</returns>
     public EntityDefinition WithMetadata(string key, object value)
     {
-        var newMetadata = new Dictionary<string, object>(Metadata)
-        {
-            [key] = value
-        };
+        var newMetadata = new Dictionary<string, object>(Metadata) { [key] = value };
         return this with { Metadata = newMetadata };
     }
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Components;
 
 /// <summary>
@@ -30,7 +32,7 @@ public struct StatusCondition
             StatusType.Frozen => false, // Cannot act while frozen
             StatusType.Asleep => TurnsRemaining <= 0, // Can act only if sleep turns expired
             StatusType.Paralyzed => Random.Shared.Next(100) >= 25, // 25% chance to be fully paralyzed
-            _ => true // Other statuses don't prevent action
+            _ => true, // Other statuses don't prevent action
         };
     }
 
@@ -158,5 +160,5 @@ public enum StatusType
     /// Wakes up when counter reaches 0.
     /// Some moves can be used while asleep (Snore, Sleep Talk).
     /// </summary>
-    Asleep
+    Asleep,
 }

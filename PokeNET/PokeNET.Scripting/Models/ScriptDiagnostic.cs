@@ -18,7 +18,8 @@ public sealed class ScriptDiagnostic
         string message,
         string code,
         int lineNumber = 0,
-        int columnNumber = 0)
+        int columnNumber = 0
+    )
     {
         Severity = severity;
         Message = message ?? throw new ArgumentNullException(nameof(message));
@@ -80,5 +81,5 @@ public enum DiagnosticSeverity
     /// <summary>
     /// Error message.
     /// </summary>
-    Error = 2
+    Error = 2,
 }

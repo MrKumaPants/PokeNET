@@ -91,7 +91,11 @@ public interface IAudioManager
     /// <param name="loop">Whether to loop the music. Default is true.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the operation.</returns>
-    Task PlayMusicAsync(string trackName, bool loop = true, CancellationToken cancellationToken = default);
+    Task PlayMusicAsync(
+        string trackName,
+        bool loop = true,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Plays music from the specified track with volume control.
@@ -100,7 +104,11 @@ public interface IAudioManager
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the operation.</returns>
-    Task PlayMusicAsync(string trackName, float volume, CancellationToken cancellationToken = default);
+    Task PlayMusicAsync(
+        string trackName,
+        float volume,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Pauses music playback.
@@ -127,7 +135,11 @@ public interface IAudioManager
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the operation.</returns>
-    Task PlaySoundEffectAsync(string sfxName, float volume, CancellationToken cancellationToken = default);
+    Task PlaySoundEffectAsync(
+        string sfxName,
+        float volume,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Plays ambient audio (looping background sounds).
@@ -136,7 +148,11 @@ public interface IAudioManager
     /// <param name="volume">Volume level (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task representing the operation.</returns>
-    Task PlayAmbientAsync(string ambientName, float volume, CancellationToken cancellationToken = default);
+    Task PlayAmbientAsync(
+        string ambientName,
+        float volume,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Pauses ambient audio playback.

@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class BattleStartReaction : BaseAudioReaction
 {
-    public BattleStartReaction(ILogger<BattleStartReaction> logger) : base(logger)
-    {
-    }
+    public BattleStartReaction(ILogger<BattleStartReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 9;
 
@@ -20,29 +19,53 @@ public class BattleStartReaction : BaseAudioReaction
         return gameEvent is BattleStartEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;
 
         var evt = (BattleStartEvent)gameEvent;
-        Logger.LogInformation("Battle started: Wild={IsWild}, Gym={IsGym}", evt.IsWildBattle, evt.IsGymLeader);
+        Logger.LogInformation(
+            "Battle started: Wild={IsWild}, Gym={IsGym}",
+            evt.IsWildBattle,
+            evt.IsGymLeader
+        );
 
         // Play battle intro sound
-        await audioManager.PlaySoundEffectAsync("audio/sfx/battle_start.wav", 1.0f, cancellationToken);
+        await audioManager.PlaySoundEffectAsync(
+            "audio/sfx/battle_start.wav",
+            1.0f,
+            cancellationToken
+        );
 
         // Play appropriate battle music
         if (evt.IsGymLeader)
         {
-            await audioManager.PlayMusicAsync("audio/music/battle_gym_leader.ogg", true, cancellationToken);
+            await audioManager.PlayMusicAsync(
+                "audio/music/battle_gym_leader.ogg",
+                true,
+                cancellationToken
+            );
         }
         else if (evt.IsWildBattle)
         {
-            await audioManager.PlayMusicAsync("audio/music/battle_wild.ogg", true, cancellationToken);
+            await audioManager.PlayMusicAsync(
+                "audio/music/battle_wild.ogg",
+                true,
+                cancellationToken
+            );
         }
         else
         {
-            await audioManager.PlayMusicAsync("audio/music/battle_trainer.ogg", true, cancellationToken);
+            await audioManager.PlayMusicAsync(
+                "audio/music/battle_trainer.ogg",
+                true,
+                cancellationToken
+            );
         }
     }
 }

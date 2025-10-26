@@ -1,25 +1,26 @@
+using System;
+using System.IO;
+using System.Linq;
+using Arch.Core;
+using Arch.System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Arch.Core;
 using Microsoft.Xna.Framework.Graphics;
+using PokeNET.Audio.DependencyInjection;
+using PokeNET.Audio.Reactive;
 using PokeNET.Core;
 using PokeNET.Core.Assets;
 using PokeNET.Core.Assets.Loaders;
 using PokeNET.Core.ECS;
 using PokeNET.Core.Modding;
 using PokeNET.Domain.Assets;
+using PokeNET.Domain.DependencyInjection;
 using PokeNET.Domain.ECS.Events;
+using PokeNET.Domain.ECS.Persistence;
 using PokeNET.Domain.ECS.Systems;
 using PokeNET.Domain.Modding;
-using PokeNET.Domain.Saving;
-using PokeNET.Saving.Services;
-using PokeNET.Saving.Serializers;
-using PokeNET.Saving.Providers;
-using PokeNET.Saving.Validators;
-using PokeNET.Audio.DependencyInjection;
-using PokeNET.Audio.Reactive;
 using PokeNET.Scripting.Abstractions;
 using PokeNET.Scripting.Services;
 
@@ -55,73 +56,85 @@ internal class Program
     private static IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((context, config) =>
-            {
-                // Load configuration from appsettings.json
-                config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
-                config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                config.AddJsonFile(
-                    $"appsettings.{context.HostingEnvironment.EnvironmentName}.json",
-                    optional: true,
-                    reloadOnChange: true);
-                config.AddEnvironmentVariables();
-            })
-            .ConfigureLogging((context, logging) =>
-            {
-                logging.ClearProviders();
-                logging.AddConfiguration(context.Configuration.GetSection("Logging"));
-
-                // Add console logging with structured output
-                logging.AddConsole();
-
-                // Add debug output in development
-                if (context.HostingEnvironment.IsDevelopment())
+            .ConfigureAppConfiguration(
+                (context, config) =>
                 {
-                    logging.AddDebug();
+                    // Load configuration from appsettings.json
+                    config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
+                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                    config.AddJsonFile(
+                        $"appsettings.{context.HostingEnvironment.EnvironmentName}.json",
+                        optional: true,
+                        reloadOnChange: true
+                    );
+                    config.AddEnvironmentVariables();
                 }
+            )
+            .ConfigureLogging(
+                (context, logging) =>
+                {
+                    logging.ClearProviders();
+                    logging.AddConfiguration(context.Configuration.GetSection("Logging"));
 
-                // Set minimum log level based on environment
-                logging.SetMinimumLevel(
-                    context.HostingEnvironment.IsDevelopment()
-                        ? LogLevel.Debug
-                        : LogLevel.Information);
-            })
-            .ConfigureServices((context, services) =>
-            {
-                // Register core game services
-                RegisterCoreServices(services, context.Configuration);
+                    // Add console logging with structured output
+                    logging.AddConsole();
 
-                // Register ECS services
-                RegisterEcsServices(services);
+                    // Add debug output in development
+                    if (context.HostingEnvironment.IsDevelopment())
+                    {
+                        logging.AddDebug();
+                    }
 
-                // Register asset management
-                RegisterAssetServices(services, context.Configuration);
+                    // Set minimum log level based on environment
+                    logging.SetMinimumLevel(
+                        context.HostingEnvironment.IsDevelopment()
+                            ? LogLevel.Debug
+                            : LogLevel.Information
+                    );
+                }
+            )
+            .ConfigureServices(
+                (context, services) =>
+                {
+                    // Register core game services
+                    RegisterCoreServices(services, context.Configuration);
 
-                // Register modding services
-                RegisterModdingServices(services, context.Configuration);
+                    // NEW: Register Domain services (includes ECS, WorldPersistenceService, PokemonRelationships)
+                    // This centralizes all Domain layer service registration
+                    services.AddDomainServices();
 
-                // Register scripting services (Phase 5)
-                RegisterScriptingServices(services, context.Configuration);
+                    // DEPRECATED: Old ECS registration (replaced by AddDomainServices)
+                    // RegisterEcsServices(services);
 
-                // Register audio services (Day 9: Wire Up All Services)
-                RegisterAudioServices(services, context.Configuration);
+                    // Register asset management
+                    RegisterAssetServices(services, context.Configuration);
 
-                // Register save system (Day 9: Wire Up All Services)
-                RegisterSaveServices(services);
+                    // Register modding services
+                    RegisterModdingServices(services, context.Configuration);
 
-                // Register the game itself
-                services.AddSingleton<PokeNETGame>();
+                    // Register scripting services (Phase 5)
+                    RegisterScriptingServices(services, context.Configuration);
 
-                // Configure systems after all services are registered (Day 9)
-                ConfigureSystemManager(services);
-            })
+                    // Register audio services (Day 9: Wire Up All Services)
+                    RegisterAudioServices(services, context.Configuration);
+
+                    // Register the game itself
+                    services.AddSingleton<PokeNETGame>();
+
+                    // Configure systems after all services are registered (Day 9)
+                    ConfigureSystemManager(services);
+                }
+            )
             .UseConsoleLifetime();
     }
 
     /// <summary>
     /// Registers core game services like configuration and event bus.
     /// </summary>
-    private static void RegisterCoreServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterCoreServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         // Event bus for system communication
         services.AddSingleton<IEventBus, EventBus>();
@@ -152,25 +165,28 @@ internal class Program
         });
 
         // Register concrete systems (Day 9: Wire Up All Services)
-        services.AddSingleton<ISystem>(sp =>
+        services.AddSingleton<ISystem<float>>(sp =>
         {
+            var world = sp.GetRequiredService<World>();
             var logger = sp.GetRequiredService<ILogger<RenderSystem>>();
             var graphics = sp.GetRequiredService<GraphicsDevice>();
-            return new RenderSystem(logger, graphics);
+            return new RenderSystem(world, logger, graphics);
         });
 
-        services.AddSingleton<ISystem>(sp =>
+        services.AddSingleton<ISystem<float>>(sp =>
         {
+            var world = sp.GetRequiredService<World>();
             var logger = sp.GetRequiredService<ILogger<MovementSystem>>();
             var eventBus = sp.GetRequiredService<IEventBus>();
-            return new MovementSystem(logger, eventBus);
+            return new MovementSystem(world, logger, eventBus);
         });
 
-        services.AddSingleton<ISystem>(sp =>
+        services.AddSingleton<ISystem<float>>(sp =>
         {
+            var world = sp.GetRequiredService<World>();
             var logger = sp.GetRequiredService<ILogger<BattleSystem>>();
             var eventBus = sp.GetRequiredService<IEventBus>();
-            return new BattleSystem(logger, eventBus);
+            return new BattleSystem(world, logger, eventBus);
         });
 
         // System manager will be configured in ConfigureSystemManager with all registered systems
@@ -179,7 +195,10 @@ internal class Program
     /// <summary>
     /// Registers asset management services.
     /// </summary>
-    private static void RegisterAssetServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterAssetServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         // Get the base asset path from configuration or use default
         var basePath = configuration["Assets:BasePath"] ?? "Content";
@@ -210,7 +229,10 @@ internal class Program
     /// <summary>
     /// Registers modding services including mod loader and Harmony patcher.
     /// </summary>
-    private static void RegisterModdingServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterModdingServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         // Get the mods directory from configuration or use default
         var modsDirectory = configuration["Mods:Directory"] ?? "Mods";
@@ -236,8 +258,8 @@ internal class Program
 
                     // Update asset manager with mod paths
                     var assetManager = sp.GetRequiredService<IAssetManager>();
-                    var modPaths = loader.LoadedMods
-                        .Select(m => Path.Combine(modsDirectory, m.Id))
+                    var modPaths = loader
+                        .LoadedMods.Select(m => Path.Combine(modsDirectory, m.Id))
                         .ToList();
                     assetManager.SetModPaths(modPaths);
                 }
@@ -259,7 +281,10 @@ internal class Program
     /// Registers scripting services including script engine, loaders, and API.
     /// Phase 5: Roslyn C# Scripting Engine
     /// </summary>
-    private static void RegisterScriptingServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterScriptingServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         // Get the scripts directory from configuration or use default
         var scriptsDirectory = configuration["Scripts:Directory"] ?? "Scripts";
@@ -286,14 +311,15 @@ internal class Program
                 engine.EngineName,
                 engine.EngineVersion,
                 maxCacheSize,
-                engine.SupportsHotReload);
+                engine.SupportsHotReload
+            );
 
             return engine;
         });
 
         // Register script context and API (Day 9: Uncommented)
-//         services.AddScoped<IScriptContext, ScriptContext>();
-//         services.AddScoped<IScriptApi, ScriptApi>();
+        //         services.AddScoped<IScriptContext, ScriptContext>();
+        //         services.AddScoped<IScriptApi, ScriptApi>();
     }
 
     /// <summary>
@@ -320,7 +346,10 @@ internal class Program
     /// Day 9: Wire Up All Services
     /// NOTE: Audio reactions (IAudioReaction) will be implemented in Day 6-7.
     /// </summary>
-    private static void RegisterAudioServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterAudioServices(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         // Use extension method to register core audio services
         services.AddAudioServices();
@@ -335,19 +364,6 @@ internal class Program
         // services.AddSingleton<IAudioReaction, PokemonCaughtReaction>();
         // services.AddSingleton<IAudioReaction, LevelUpReaction>();
         // services.AddSingleton<IAudioReaction, WeatherReaction>();
-    }
-
-    /// <summary>
-    /// Registers save system services.
-    /// Day 9: Wire Up All Services
-    /// </summary>
-    private static void RegisterSaveServices(IServiceCollection services)
-    {
-        services.AddSingleton<ISaveSystem, SaveSystem>();
-        services.AddSingleton<ISaveSerializer, JsonSaveSerializer>();
-        services.AddSingleton<ISaveFileProvider, FileSystemSaveFileProvider>();
-        services.AddSingleton<ISaveValidator, SaveValidator>();
-        services.AddSingleton<IGameStateManager, GameStateManager>();
     }
 
     /// <summary>

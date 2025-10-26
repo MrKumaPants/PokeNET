@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.Modding;
@@ -27,7 +30,7 @@ public sealed class HarmonyPatcher : IDisposable
         "PokeNET.Domain.Pokemon.MoveEffects",
         "PokeNET.Domain.Items.ItemEffects",
         "PokeNET.Domain.Combat.DamageCalculator",
-        "PokeNET.Domain.Combat.StatusEffects"
+        "PokeNET.Domain.Combat.StatusEffects",
     };
 
     // SECURITY: Critical types that must NEVER be patched
@@ -41,7 +44,7 @@ public sealed class HarmonyPatcher : IDisposable
         "System.Reflection.Assembly",
         "System.Security",
         "System.IO.File",
-        "System.IO.Directory"
+        "System.IO.Directory",
     };
 
     public HarmonyPatcher(ILogger<HarmonyPatcher> logger)
@@ -90,22 +93,34 @@ public sealed class HarmonyPatcher : IDisposable
                 if (patchInfo != null)
                 {
                     // Check if any patches belong to this mod
-                    var modPatches = new[] { patchInfo.Prefixes, patchInfo.Postfixes, patchInfo.Transpilers, patchInfo.Finalizers }
+                    var modPatches = new[]
+                    {
+                        patchInfo.Prefixes,
+                        patchInfo.Postfixes,
+                        patchInfo.Transpilers,
+                        patchInfo.Finalizers,
+                    }
                         .SelectMany(p => p)
                         .Where(p => p.owner == harmonyId);
 
                     foreach (var patch in modPatches)
                     {
                         patches.Add(new PatchInfo(method, patch.PatchMethod, patch.index));
-                        _logger.LogDebug("Applied {PatchType} patch to {Method}",
-                            patch.PatchMethod.Name, method.FullDescription());
+                        _logger.LogDebug(
+                            "Applied {PatchType} patch to {Method}",
+                            patch.PatchMethod.Name,
+                            method.FullDescription()
+                        );
                     }
                 }
             }
 
             _appliedPatches[modId] = patches;
-            _logger.LogInformation("Applied {Count} Harmony patches for mod: {ModId}",
-                patches.Count, modId);
+            _logger.LogInformation(
+                "Applied {Count} Harmony patches for mod: {ModId}",
+                patches.Count,
+                modId
+            );
         }
         catch (Exception ex)
         {
@@ -185,8 +200,11 @@ public sealed class HarmonyPatcher : IDisposable
             if (modIds.Count > 1)
             {
                 conflicts.Add(new PatchConflict(method, modIds));
-                _logger.LogWarning("Patch conflict detected on {Method}: {Mods}",
-                    method.FullDescription(), string.Join(", ", modIds));
+                _logger.LogWarning(
+                    "Patch conflict detected on {Method}: {Mods}",
+                    method.FullDescription(),
+                    string.Join(", ", modIds)
+                );
             }
         }
 
@@ -198,12 +216,14 @@ public sealed class HarmonyPatcher : IDisposable
     /// </summary>
     private void ValidatePatchesInAssembly(System.Reflection.Assembly assembly)
     {
-        var patchTypes = assembly.GetTypes()
+        var patchTypes = assembly
+            .GetTypes()
             .Where(t => t.GetCustomAttributes(typeof(HarmonyPatch), false).Length > 0);
 
         foreach (var patchType in patchTypes)
         {
-            var patchAttributes = patchType.GetCustomAttributes(typeof(HarmonyPatch), false)
+            var patchAttributes = patchType
+                .GetCustomAttributes(typeof(HarmonyPatch), false)
                 .Cast<HarmonyPatch>();
 
             foreach (var attr in patchAttributes)
@@ -227,18 +247,28 @@ public sealed class HarmonyPatcher : IDisposable
     private void ValidatePatchTarget(string targetTypeName, string patchTypeName)
     {
         // First check blocklist - these can NEVER be patched
-        if (BlockedPatchTargets.Any(blocked => targetTypeName.StartsWith(blocked, StringComparison.OrdinalIgnoreCase)))
+        if (
+            BlockedPatchTargets.Any(blocked =>
+                targetTypeName.StartsWith(blocked, StringComparison.OrdinalIgnoreCase)
+            )
+        )
         {
             throw new System.Security.SecurityException(
-                $"Patch '{patchTypeName}' attempts to modify security-critical type '{targetTypeName}' which is blocked");
+                $"Patch '{patchTypeName}' attempts to modify security-critical type '{targetTypeName}' which is blocked"
+            );
         }
 
         // Then check allowlist - only these can be patched
-        if (!AllowedPatchTargets.Any(allowed => targetTypeName.StartsWith(allowed, StringComparison.OrdinalIgnoreCase)))
+        if (
+            !AllowedPatchTargets.Any(allowed =>
+                targetTypeName.StartsWith(allowed, StringComparison.OrdinalIgnoreCase)
+            )
+        )
         {
             throw new System.Security.SecurityException(
-                $"Patch '{patchTypeName}' targets '{targetTypeName}' which is not in the allowlist. " +
-                $"Allowed targets: {string.Join(", ", AllowedPatchTargets)}");
+                $"Patch '{patchTypeName}' targets '{targetTypeName}' which is not in the allowlist. "
+                    + $"Allowed targets: {string.Join(", ", AllowedPatchTargets)}"
+            );
         }
 
         _logger.LogDebug("Patch target validated: {TargetType}", targetTypeName);
@@ -262,7 +292,11 @@ public sealed class HarmonyPatcher : IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error removing patches during disposal for mod: {ModId}", modId);
+                _logger.LogError(
+                    ex,
+                    "Error removing patches during disposal for mod: {ModId}",
+                    modId
+                );
             }
         }
 

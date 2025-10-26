@@ -12,9 +12,8 @@ public class HealthChangedReaction : BaseAudioReaction
     private bool _isLowHealthMusicPlaying;
     private const float LowHealthThreshold = 0.25f;
 
-    public HealthChangedReaction(ILogger<HealthChangedReaction> logger) : base(logger)
-    {
-    }
+    public HealthChangedReaction(ILogger<HealthChangedReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 8;
 
@@ -23,7 +22,11 @@ public class HealthChangedReaction : BaseAudioReaction
         return gameEvent is HealthChangedEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;
@@ -33,7 +36,11 @@ public class HealthChangedReaction : BaseAudioReaction
         if (evt.HealthPercentage <= LowHealthThreshold && !_isLowHealthMusicPlaying)
         {
             Logger.LogWarning("Health critical: {Percentage:P0}", evt.HealthPercentage);
-            await audioManager.PlayMusicAsync("audio/music/low_health.ogg", true, cancellationToken);
+            await audioManager.PlayMusicAsync(
+                "audio/music/low_health.ogg",
+                true,
+                cancellationToken
+            );
             _isLowHealthMusicPlaying = true;
         }
         else if (evt.HealthPercentage > LowHealthThreshold && _isLowHealthMusicPlaying)

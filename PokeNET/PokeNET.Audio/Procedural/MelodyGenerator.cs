@@ -1,8 +1,8 @@
-using Melanchall.DryWetMidi.MusicTheory;
-using PokeNET.Audio.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Melanchall.DryWetMidi.MusicTheory;
+using PokeNET.Audio.Abstractions;
 using Note = Melanchall.DryWetMidi.MusicTheory.Note;
 
 namespace PokeNET.Audio.Procedural
@@ -13,12 +13,13 @@ namespace PokeNET.Audio.Procedural
     public class MelodyGenerator
     {
         private readonly IRandomProvider _randomProvider;
-        private const int MaxMelodicLeap = 7;  // Octave
-        private const int PreferredMaxLeap = 4;  // Major third
+        private const int MaxMelodicLeap = 7; // Octave
+        private const int PreferredMaxLeap = 4; // Major third
 
         public MelodyGenerator(IRandomProvider randomProvider)
         {
-            _randomProvider = randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
+            _randomProvider =
+                randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
         }
 
         /// <summary>
@@ -30,7 +31,8 @@ namespace PokeNET.Audio.Procedural
             int notesPerChord,
             int minOctave = 4,
             int maxOctave = 6,
-            MelodicStyle style = MelodicStyle.Balanced)
+            MelodicStyle style = MelodicStyle.Balanced
+        )
         {
             var melody = new List<MelodicNote>();
             var scaleNotes = MusicTheoryHelper.GetScaleNotes(scale, minOctave, maxOctave);
@@ -67,12 +69,14 @@ namespace PokeNET.Audio.Procedural
                         selectedNote = SelectBalancedNote(chordNotes, scaleNotes, previousNote, i);
                     }
 
-                    melody.Add(new MelodicNote
-                    {
-                        Note = selectedNote,
-                        Duration = noteDuration,
-                        IsChordTone = chordNotes.Any(n => n.NoteName == selectedNote.NoteName)
-                    });
+                    melody.Add(
+                        new MelodicNote
+                        {
+                            Note = selectedNote,
+                            Duration = noteDuration,
+                            IsChordTone = chordNotes.Any(n => n.NoteName == selectedNote.NoteName),
+                        }
+                    );
 
                     previousNote = selectedNote;
                 }
@@ -87,11 +91,12 @@ namespace PokeNET.Audio.Procedural
         public List<MelodicNote> GenerateEmotionalMelody(
             Scale scale,
             List<ChordInfo> progression,
-            float energy,        // 0.0 = sparse, 1.0 = dense
-            float movement,      // 0.0 = stepwise, 1.0 = leaps
-            float tension,       // 0.0 = consonant, 1.0 = dissonant
+            float energy, // 0.0 = sparse, 1.0 = dense
+            float movement, // 0.0 = stepwise, 1.0 = leaps
+            float tension, // 0.0 = consonant, 1.0 = dissonant
             int minOctave = 4,
-            int maxOctave = 6)
+            int maxOctave = 6
+        )
         {
             var melody = new List<MelodicNote>();
             var scaleNotes = MusicTheoryHelper.GetScaleNotes(scale, minOctave, maxOctave);
@@ -120,7 +125,11 @@ namespace PokeNET.Audio.Procedural
                         if (_randomProvider.NextDouble() < movement)
                         {
                             // Melodic leap
-                            selectedNote = SelectLeapNote(scaleNotes, previousNote, (int)(movement * MaxMelodicLeap));
+                            selectedNote = SelectLeapNote(
+                                scaleNotes,
+                                previousNote,
+                                (int)(movement * MaxMelodicLeap)
+                            );
                         }
                         else
                         {
@@ -129,19 +138,24 @@ namespace PokeNET.Audio.Procedural
                         }
 
                         // Add tension through non-chord tones
-                        if (_randomProvider.NextDouble() < tension && !chordNotes.Any(n => n.NoteName == selectedNote.NoteName))
+                        if (
+                            _randomProvider.NextDouble() < tension
+                            && !chordNotes.Any(n => n.NoteName == selectedNote.NoteName)
+                        )
                         {
                             // Use passing tone or neighbor tone
                             selectedNote = SelectTensionNote(scaleNotes, chordNotes, previousNote);
                         }
                     }
 
-                    melody.Add(new MelodicNote
-                    {
-                        Note = selectedNote,
-                        Duration = noteDuration,
-                        IsChordTone = chordNotes.Any(n => n.NoteName == selectedNote.NoteName)
-                    });
+                    melody.Add(
+                        new MelodicNote
+                        {
+                            Note = selectedNote,
+                            Duration = noteDuration,
+                            IsChordTone = chordNotes.Any(n => n.NoteName == selectedNote.NoteName),
+                        }
+                    );
 
                     previousNote = selectedNote;
                 }
@@ -150,7 +164,11 @@ namespace PokeNET.Audio.Procedural
             return melody;
         }
 
-        private Note SelectChordalNote(List<Note> chordNotes, List<Note> scaleNotes, Note? previousNote)
+        private Note SelectChordalNote(
+            List<Note> chordNotes,
+            List<Note> scaleNotes,
+            Note? previousNote
+        )
         {
             if (previousNote == null || _randomProvider.NextDouble() < 0.7)
             {
@@ -175,7 +193,8 @@ namespace PokeNET.Audio.Procedural
             }
 
             var currentIndex = scaleNotes.FindIndex(n => n.NoteNumber == previousNote.NoteNumber);
-            if (currentIndex < 0) currentIndex = scaleNotes.Count / 2;
+            if (currentIndex < 0)
+                currentIndex = scaleNotes.Count / 2;
 
             // Move up or down by step
             var direction = _randomProvider.Next(2) == 0 ? 1 : -1;
@@ -187,8 +206,10 @@ namespace PokeNET.Audio.Procedural
         private Note SelectLeapNote(List<Note> scaleNotes, Note previousNote, int maxLeap)
         {
             var validNotes = scaleNotes
-                .Where(n => Math.Abs(n.NoteNumber - previousNote.NoteNumber) >= 3
-                         && Math.Abs(n.NoteNumber - previousNote.NoteNumber) <= maxLeap)
+                .Where(n =>
+                    Math.Abs(n.NoteNumber - previousNote.NoteNumber) >= 3
+                    && Math.Abs(n.NoteNumber - previousNote.NoteNumber) <= maxLeap
+                )
                 .ToList();
 
             return validNotes.Count > 0
@@ -196,7 +217,12 @@ namespace PokeNET.Audio.Procedural
                 : scaleNotes[_randomProvider.Next(scaleNotes.Count)];
         }
 
-        private Note SelectBalancedNote(List<Note> chordNotes, List<Note> scaleNotes, Note? previousNote, int position)
+        private Note SelectBalancedNote(
+            List<Note> chordNotes,
+            List<Note> scaleNotes,
+            Note? previousNote,
+            int position
+        )
         {
             // Prefer chord tones on strong beats (position 0, 2, 4...)
             if (position % 2 == 0 || _randomProvider.NextDouble() < 0.6)
@@ -209,12 +235,18 @@ namespace PokeNET.Audio.Procedural
             }
         }
 
-        private Note SelectTensionNote(List<Note> scaleNotes, List<Note> chordNotes, Note previousNote)
+        private Note SelectTensionNote(
+            List<Note> scaleNotes,
+            List<Note> chordNotes,
+            Note previousNote
+        )
         {
             // Select non-chord tones near the previous note
             var tensionNotes = scaleNotes
-                .Where(n => !chordNotes.Any(c => c.NoteName == n.NoteName)
-                         && Math.Abs(n.NoteNumber - previousNote.NoteNumber) <= 2)
+                .Where(n =>
+                    !chordNotes.Any(c => c.NoteName == n.NoteName)
+                    && Math.Abs(n.NoteNumber - previousNote.NoteNumber) <= 2
+                )
                 .ToList();
 
             return tensionNotes.Count > 0
@@ -237,7 +269,7 @@ namespace PokeNET.Audio.Procedural
                         {
                             Note = MusicTheoryHelper.Transpose(melody[i].Note, 2),
                             Duration = melody[i].Duration,
-                            IsChordTone = melody[i].IsChordTone
+                            IsChordTone = melody[i].IsChordTone,
                         };
                     }
                 }
@@ -253,7 +285,7 @@ namespace PokeNET.Audio.Procedural
                         {
                             Note = MusicTheoryHelper.Transpose(melody[i].Note, -2),
                             Duration = melody[i].Duration,
-                            IsChordTone = melody[i].IsChordTone
+                            IsChordTone = melody[i].IsChordTone,
                         };
                     }
                 }
@@ -269,17 +301,17 @@ namespace PokeNET.Audio.Procedural
     public class MelodicNote
     {
         public Note Note { get; set; } = null!;
-        public double Duration { get; set; }  // Duration in bars
+        public double Duration { get; set; } // Duration in bars
         public bool IsChordTone { get; set; }
     }
 
     public enum MelodicStyle
     {
-        Balanced,      // Mix of steps and chord tones
-        Stepwise,      // Prefer stepwise motion
-        Chordal,       // Prefer chord tones
-        Arpeggiated,   // Arpeggiate through chords
-        Ascending,     // Upward contour
-        Descending     // Downward contour
+        Balanced, // Mix of steps and chord tones
+        Stepwise, // Prefer stepwise motion
+        Chordal, // Prefer chord tones
+        Arpeggiated, // Arpeggiate through chords
+        Ascending, // Upward contour
+        Descending, // Downward contour
     }
 }

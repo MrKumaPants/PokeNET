@@ -1,12 +1,13 @@
 using System.IO;
+using Melanchall.DryWetMidi.Core;
+using Melanchall.DryWetMidi.Multimedia;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Melanchall.DryWetMidi.Multimedia;
-using Melanchall.DryWetMidi.Core;
 using PokeNET.Audio.Abstractions;
 using PokeNET.Audio.Configuration;
 using PokeNET.Audio.Exceptions;
+using PokeNET.Audio.Infrastructure;
 using PokeNET.Audio.Models;
 using PokeNET.Audio.Services.Music;
 
@@ -46,7 +47,8 @@ public sealed class MusicPlayer : IMusicPlayer
     public AudioTrack? CurrentTrack => _stateManager.CurrentTrack;
     public AudioTrack? NextTrack => null; // TODO: Implement track queue
 
-    public MusicState MusicState => _stateManager.GetMusicState(_playbackEngine.GetPosition(), _volumeController.Volume);
+    public MusicState MusicState =>
+        _stateManager.GetMusicState(_playbackEngine.GetPosition(), _volumeController.Volume);
 
     public bool IsLooping
     {
@@ -73,31 +75,44 @@ public sealed class MusicPlayer : IMusicPlayer
     public float Tempo { get; private set; } = 1.0f;
 
     // Test compatibility constructor
-    public MusicPlayer(ILogger<MusicPlayer> logger, IOutputDevice outputDevice)
+    public MusicPlayer(ILogger<MusicPlayer> logger, IMidiOutputDevice outputDevice)
         : this(
             logger,
             CreateFileManager(logger),
             new MusicStateManager(NullLoggerFactory.Instance.CreateLogger<MusicStateManager>()),
             CreateVolumeController(logger),
             CreatePlaybackEngine(logger, outputDevice),
-            new MusicTransitionHandler(NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()))
-    {
-    }
+            new MusicTransitionHandler(
+                NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()
+            )
+        ) { }
 
     // Production constructor with DI
     public MusicPlayer(
         ILogger<MusicPlayer> logger,
         IOptions<AudioSettings> settings,
-        AudioCache cache)
+        AudioCache cache
+    )
         : this(
             logger,
-            new MusicFileManager(NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(), settings, cache),
+            new MusicFileManager(
+                NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(),
+                settings,
+                cache
+            ),
             new MusicStateManager(NullLoggerFactory.Instance.CreateLogger<MusicStateManager>()),
-            new MusicVolumeController(NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(), settings),
-            new MusicPlaybackEngine(NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(), settings),
-            new MusicTransitionHandler(NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()))
-    {
-    }
+            new MusicVolumeController(
+                NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(),
+                settings
+            ),
+            new MusicPlaybackEngine(
+                NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(),
+                settings
+            ),
+            new MusicTransitionHandler(
+                NullLoggerFactory.Instance.CreateLogger<MusicTransitionHandler>()
+            )
+        ) { }
 
     // Main constructor - accepts all services
     public MusicPlayer(
@@ -106,14 +121,17 @@ public sealed class MusicPlayer : IMusicPlayer
         IMusicStateManager stateManager,
         IMusicVolumeController volumeController,
         IMusicPlaybackEngine playbackEngine,
-        IMusicTransitionHandler transitionHandler)
+        IMusicTransitionHandler transitionHandler
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
         _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
-        _volumeController = volumeController ?? throw new ArgumentNullException(nameof(volumeController));
+        _volumeController =
+            volumeController ?? throw new ArgumentNullException(nameof(volumeController));
         _playbackEngine = playbackEngine ?? throw new ArgumentNullException(nameof(playbackEngine));
-        _transitionHandler = transitionHandler ?? throw new ArgumentNullException(nameof(transitionHandler));
+        _transitionHandler =
+            transitionHandler ?? throw new ArgumentNullException(nameof(transitionHandler));
 
         _operationLock = new SemaphoreSlim(1, 1);
 
@@ -136,7 +154,11 @@ public sealed class MusicPlayer : IMusicPlayer
         await _operationLock.WaitAsync(cancellationToken);
         try
         {
-            _logger.LogInformation("Playing music: {TrackName}, Loop: {Loop}", track.Name, track.Loop);
+            _logger.LogInformation(
+                "Playing music: {TrackName}, Loop: {Loop}",
+                track.Name,
+                track.Loop
+            );
 
             // Load MIDI file
             var midiFile = await _fileManager.LoadMidiFileAsync(track.FilePath, cancellationToken);
@@ -221,7 +243,11 @@ public sealed class MusicPlayer : IMusicPlayer
         }
     }
 
-    public async Task TransitionToAsync(AudioTrack track, bool useCrossfade = true, CancellationToken cancellationToken = default)
+    public async Task TransitionToAsync(
+        AudioTrack track,
+        bool useCrossfade = true,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -244,8 +270,14 @@ public sealed class MusicPlayer : IMusicPlayer
                     await _operationLock.WaitAsync(ct);
                 },
                 async (duration, ct) => await _volumeController.FadeOutAsync(duration, ct),
-                async (duration, ct) => await _volumeController.FadeInAsync(_volumeController.MasterVolume, duration, ct),
-                cancellationToken);
+                async (duration, ct) =>
+                    await _volumeController.FadeInAsync(
+                        _volumeController.MasterVolume,
+                        duration,
+                        ct
+                    ),
+                cancellationToken
+            );
         }
         finally
         {
@@ -268,8 +300,11 @@ public sealed class MusicPlayer : IMusicPlayer
                 return;
             }
 
-            _logger.LogInformation("Fading out music: {Track}, Duration: {Duration}ms",
-                _stateManager.CurrentTrack?.Name, duration.TotalMilliseconds);
+            _logger.LogInformation(
+                "Fading out music: {Track}, Duration: {Duration}ms",
+                _stateManager.CurrentTrack?.Name,
+                duration.TotalMilliseconds
+            );
 
             await _volumeController.FadeOutAsync(duration, cancellationToken);
             _playbackEngine.StopPlayback();
@@ -293,8 +328,11 @@ public sealed class MusicPlayer : IMusicPlayer
                 throw new AudioPlaybackException("No track is currently loaded");
             }
 
-            _logger.LogInformation("Fading in music: {Track}, Duration: {Duration}ms",
-                _stateManager.CurrentTrack?.Name, duration.TotalMilliseconds);
+            _logger.LogInformation(
+                "Fading in music: {Track}, Duration: {Duration}ms",
+                _stateManager.CurrentTrack?.Name,
+                duration.TotalMilliseconds
+            );
 
             // Start playback if not already playing
             if (!_stateManager.IsPlaying)
@@ -303,7 +341,11 @@ public sealed class MusicPlayer : IMusicPlayer
                 _stateManager.SetResumed();
             }
 
-            await _volumeController.FadeInAsync(_volumeController.MasterVolume, duration, cancellationToken);
+            await _volumeController.FadeInAsync(
+                _volumeController.MasterVolume,
+                duration,
+                cancellationToken
+            );
         }
         finally
         {
@@ -312,6 +354,7 @@ public sealed class MusicPlayer : IMusicPlayer
     }
 
     public void SetVolume(float volume) => _volumeController.SetVolume(volume);
+
     public float GetVolume() => _volumeController.GetVolume();
 
     // Legacy string-based PlayAsync (for backward compatibility)
@@ -319,13 +362,17 @@ public sealed class MusicPlayer : IMusicPlayer
         string assetPath,
         bool loop = true,
         int fadeInDuration = 0,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
         if (string.IsNullOrWhiteSpace(assetPath))
         {
-            throw new ArgumentException("Asset path cannot be null or whitespace", nameof(assetPath));
+            throw new ArgumentException(
+                "Asset path cannot be null or whitespace",
+                nameof(assetPath)
+            );
         }
 
         var track = new AudioTrack
@@ -333,7 +380,7 @@ public sealed class MusicPlayer : IMusicPlayer
             Name = Path.GetFileNameWithoutExtension(assetPath),
             FilePath = assetPath,
             Loop = loop,
-            Type = TrackType.Music
+            Type = TrackType.Music,
         };
 
         await PlayAsync(track, cancellationToken);
@@ -373,7 +420,8 @@ public sealed class MusicPlayer : IMusicPlayer
         if (fadeOutDuration > 0)
         {
             FadeOutAsync(TimeSpan.FromMilliseconds(fadeOutDuration), CancellationToken.None)
-                .GetAwaiter().GetResult();
+                .GetAwaiter()
+                .GetResult();
         }
         else
         {
@@ -431,29 +479,42 @@ public sealed class MusicPlayer : IMusicPlayer
         string assetPath,
         int crossfadeDuration = 1000,
         bool loop = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
         if (string.IsNullOrWhiteSpace(assetPath))
         {
-            throw new ArgumentException("Asset path cannot be null or whitespace", nameof(assetPath));
+            throw new ArgumentException(
+                "Asset path cannot be null or whitespace",
+                nameof(assetPath)
+            );
         }
 
         await _operationLock.WaitAsync(cancellationToken);
         try
         {
-            _logger.LogInformation("Crossfading to music: {AssetPath}, Duration: {Duration}ms", assetPath, crossfadeDuration);
+            _logger.LogInformation(
+                "Crossfading to music: {AssetPath}, Duration: {Duration}ms",
+                assetPath,
+                crossfadeDuration
+            );
 
             await _transitionHandler.CrossfadeAsync(
                 _volumeController.Volume,
                 _volumeController.MasterVolume,
                 crossfadeDuration,
                 async () => await PlayAsync(assetPath, loop, 0, cancellationToken),
-                async (from, to, duration, ct) => await _volumeController.FadeVolumeAsync(from, to, duration, ct),
-                cancellationToken);
+                async (from, to, duration, ct) =>
+                    await _volumeController.FadeVolumeAsync(from, to, duration, ct),
+                cancellationToken
+            );
 
-            _logger.LogInformation("Crossfade completed to: {Track}", _stateManager.CurrentTrack?.Name);
+            _logger.LogInformation(
+                "Crossfade completed to: {Track}",
+                _stateManager.CurrentTrack?.Name
+            );
         }
         finally
         {
@@ -479,7 +540,7 @@ public sealed class MusicPlayer : IMusicPlayer
         {
             Name = "loaded-track",
             FilePath = "memory",
-            Loop = _stateManager.IsLooping
+            Loop = _stateManager.IsLooping,
         };
 
         await LoadAsync(track);
@@ -498,13 +559,39 @@ public sealed class MusicPlayer : IMusicPlayer
         await LoadMidiAsync(midiData);
     }
 
-    public Task PlayAsync() => PlayAsync(_stateManager.CurrentTrack ?? throw new InvalidOperationException("No MIDI file loaded"));
-    public Task PauseAsync() { Pause(); return Task.CompletedTask; }
-    public Task ResumeAsync() { Resume(); return Task.CompletedTask; }
-    public Task StopAsync() { Stop(); return Task.CompletedTask; }
-    public Task SeekAsync(TimeSpan position) { Seek(position); return Task.CompletedTask; }
+    public Task PlayAsync() =>
+        PlayAsync(
+            _stateManager.CurrentTrack ?? throw new InvalidOperationException("No MIDI file loaded")
+        );
+
+    public Task PauseAsync()
+    {
+        Pause();
+        return Task.CompletedTask;
+    }
+
+    public Task ResumeAsync()
+    {
+        Resume();
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync()
+    {
+        Stop();
+        return Task.CompletedTask;
+    }
+
+    public Task SeekAsync(TimeSpan position)
+    {
+        Seek(position);
+        return Task.CompletedTask;
+    }
+
     public TimeSpan GetDuration() => _stateManager.GetDuration();
+
     public int GetTrackCount() => _stateManager.GetTrackCount();
+
     public void SetLoop(bool enabled) => IsLooping = enabled;
 
     public void SetTempo(float tempo)
@@ -525,7 +612,10 @@ public sealed class MusicPlayer : IMusicPlayer
 
     private void OnPlaybackFinished(object? sender, EventArgs e)
     {
-        _logger.LogInformation("Music playback finished: {Track}", _stateManager.CurrentTrack?.Name);
+        _logger.LogInformation(
+            "Music playback finished: {Track}",
+            _stateManager.CurrentTrack?.Name
+        );
 
         _operationLock.Wait();
         try
@@ -537,11 +627,10 @@ public sealed class MusicPlayer : IMusicPlayer
 
             if (completedTrack != null)
             {
-                TrackCompleted?.Invoke(this, new TrackCompletedEventArgs
-                {
-                    Track = completedTrack,
-                    WillLoop = willLoop
-                });
+                TrackCompleted?.Invoke(
+                    this,
+                    new TrackCompletedEventArgs { Track = completedTrack, WillLoop = willLoop }
+                );
             }
         }
         finally
@@ -592,20 +681,44 @@ public sealed class MusicPlayer : IMusicPlayer
     // Helper factory methods for test constructor
     private static IMusicFileManager CreateFileManager(ILogger logger)
     {
-        var settings = Options.Create(new AudioSettings { MusicVolume = 1.0f, AssetBasePath = "", MidiOutputDevice = 0 });
-        var cache = new AudioCache(NullLoggerFactory.Instance.CreateLogger<AudioCache>(), 50 * 1024 * 1024);
-        return new MusicFileManager(NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(), settings, cache);
+        var settings = Options.Create(
+            new AudioSettings
+            {
+                MusicVolume = 1.0f,
+                AssetBasePath = "",
+                MidiOutputDevice = 0,
+            }
+        );
+        var cache = new AudioCache(
+            NullLoggerFactory.Instance.CreateLogger<AudioCache>(),
+            50 * 1024 * 1024
+        );
+        return new MusicFileManager(
+            NullLoggerFactory.Instance.CreateLogger<MusicFileManager>(),
+            settings,
+            cache
+        );
     }
 
     private static IMusicVolumeController CreateVolumeController(ILogger logger)
     {
         var settings = Options.Create(new AudioSettings { MusicVolume = 1.0f });
-        return new MusicVolumeController(NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(), settings);
+        return new MusicVolumeController(
+            NullLoggerFactory.Instance.CreateLogger<MusicVolumeController>(),
+            settings
+        );
     }
 
-    private static IMusicPlaybackEngine CreatePlaybackEngine(ILogger logger, IOutputDevice outputDevice)
+    private static IMusicPlaybackEngine CreatePlaybackEngine(
+        ILogger logger,
+        IMidiOutputDevice outputDevice
+    )
     {
         var settings = new AudioSettings { MidiOutputDevice = 0 };
-        return new MusicPlaybackEngine(NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(), outputDevice, settings);
+        return new MusicPlaybackEngine(
+            NullLoggerFactory.Instance.CreateLogger<MusicPlaybackEngine>(),
+            outputDevice,
+            settings
+        );
     }
 }

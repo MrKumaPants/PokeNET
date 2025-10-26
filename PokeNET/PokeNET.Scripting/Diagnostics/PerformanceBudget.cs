@@ -31,7 +31,7 @@ namespace PokeNET.Scripting.Diagnostics
                 MaxMemoryUsage = 10 * 1024 * 1024, // 10 MB
                 MaxPeakMemory = 20 * 1024 * 1024, // 20 MB
                 MaxGCCollections = 5,
-                MaxHotReloadTime = TimeSpan.FromMilliseconds(200)
+                MaxHotReloadTime = TimeSpan.FromMilliseconds(200),
             };
         }
 
@@ -48,7 +48,7 @@ namespace PokeNET.Scripting.Diagnostics
                 MaxMemoryUsage = 50 * 1024 * 1024, // 50 MB
                 MaxPeakMemory = 100 * 1024 * 1024, // 100 MB
                 MaxGCCollections = 10,
-                MaxHotReloadTime = TimeSpan.FromMilliseconds(500)
+                MaxHotReloadTime = TimeSpan.FromMilliseconds(500),
             };
         }
 
@@ -65,7 +65,7 @@ namespace PokeNET.Scripting.Diagnostics
                 MaxMemoryUsage = 200 * 1024 * 1024, // 200 MB
                 MaxPeakMemory = 500 * 1024 * 1024, // 500 MB
                 MaxGCCollections = 50,
-                MaxHotReloadTime = TimeSpan.FromSeconds(2)
+                MaxHotReloadTime = TimeSpan.FromSeconds(2),
             };
         }
 
@@ -76,27 +76,39 @@ namespace PokeNET.Scripting.Diagnostics
         {
             var report = new BudgetViolationReport(metrics.ScriptName);
 
-            ValidateTimeMetric(report, "Compilation Time",
-                metrics.CompilationTime, MaxCompilationTime);
+            ValidateTimeMetric(
+                report,
+                "Compilation Time",
+                metrics.CompilationTime,
+                MaxCompilationTime
+            );
 
-            ValidateTimeMetric(report, "Execution Time",
-                metrics.ExecutionTime, MaxExecutionTime);
+            ValidateTimeMetric(report, "Execution Time", metrics.ExecutionTime, MaxExecutionTime);
 
-            ValidateTimeMetric(report, "Total Time",
-                metrics.TotalTime, MaxTotalTime);
+            ValidateTimeMetric(report, "Total Time", metrics.TotalTime, MaxTotalTime);
 
-            ValidateMemoryMetric(report, "Total Memory Usage",
-                metrics.TotalMemoryAllocated, MaxMemoryUsage);
+            ValidateMemoryMetric(
+                report,
+                "Total Memory Usage",
+                metrics.TotalMemoryAllocated,
+                MaxMemoryUsage
+            );
 
-            ValidateMemoryMetric(report, "Peak Memory Usage",
-                metrics.PeakMemoryUsage, MaxPeakMemory);
+            ValidateMemoryMetric(
+                report,
+                "Peak Memory Usage",
+                metrics.PeakMemoryUsage,
+                MaxPeakMemory
+            );
 
             if (MaxGCCollections.HasValue && metrics.TotalGCCollections > MaxGCCollections.Value)
             {
-                report.AddViolation("GC Collections",
+                report.AddViolation(
+                    "GC Collections",
                     metrics.TotalGCCollections.ToString(),
                     MaxGCCollections.Value.ToString(),
-                    BudgetViolationSeverity.Warning);
+                    BudgetViolationSeverity.Warning
+                );
             }
 
             if (MaxHotReloadTime.HasValue && metrics.HotReloadCount > 0)
@@ -104,45 +116,61 @@ namespace PokeNET.Scripting.Diagnostics
                 var maxReloadTime = metrics.HotReloadTimes.Max();
                 if (maxReloadTime > MaxHotReloadTime.Value)
                 {
-                    report.AddViolation("Hot Reload Time",
+                    report.AddViolation(
+                        "Hot Reload Time",
                         $"{maxReloadTime.TotalMilliseconds:F2} ms",
                         $"{MaxHotReloadTime.Value.TotalMilliseconds:F2} ms",
-                        BudgetViolationSeverity.Warning);
+                        BudgetViolationSeverity.Warning
+                    );
                 }
             }
 
             return report;
         }
 
-        private void ValidateTimeMetric(BudgetViolationReport report, string metricName,
-            TimeSpan actual, TimeSpan? budget)
+        private void ValidateTimeMetric(
+            BudgetViolationReport report,
+            string metricName,
+            TimeSpan actual,
+            TimeSpan? budget
+        )
         {
             if (budget.HasValue && actual > budget.Value)
             {
-                var severity = actual > budget.Value * 2
-                    ? BudgetViolationSeverity.Critical
-                    : BudgetViolationSeverity.Warning;
+                var severity =
+                    actual > budget.Value * 2
+                        ? BudgetViolationSeverity.Critical
+                        : BudgetViolationSeverity.Warning;
 
-                report.AddViolation(metricName,
+                report.AddViolation(
+                    metricName,
                     $"{actual.TotalMilliseconds:F2} ms",
                     $"{budget.Value.TotalMilliseconds:F2} ms",
-                    severity);
+                    severity
+                );
             }
         }
 
-        private void ValidateMemoryMetric(BudgetViolationReport report, string metricName,
-            long actual, long? budget)
+        private void ValidateMemoryMetric(
+            BudgetViolationReport report,
+            string metricName,
+            long actual,
+            long? budget
+        )
         {
             if (budget.HasValue && actual > budget.Value)
             {
-                var severity = actual > budget.Value * 2
-                    ? BudgetViolationSeverity.Critical
-                    : BudgetViolationSeverity.Warning;
+                var severity =
+                    actual > budget.Value * 2
+                        ? BudgetViolationSeverity.Critical
+                        : BudgetViolationSeverity.Warning;
 
-                report.AddViolation(metricName,
+                report.AddViolation(
+                    metricName,
                     FormatBytes(actual),
                     FormatBytes(budget.Value),
-                    severity);
+                    severity
+                );
             }
         }
 
@@ -167,7 +195,7 @@ namespace PokeNET.Scripting.Diagnostics
     {
         Info,
         Warning,
-        Critical
+        Critical,
     }
 
     /// <summary>
@@ -180,15 +208,22 @@ namespace PokeNET.Scripting.Diagnostics
         public string ScriptName { get; }
         public IReadOnlyList<BudgetViolation> Violations => _violations;
         public bool HasViolations => _violations.Any();
-        public bool HasCriticalViolations => _violations.Any(v => v.Severity == BudgetViolationSeverity.Critical);
-        public bool HasWarnings => _violations.Any(v => v.Severity == BudgetViolationSeverity.Warning);
+        public bool HasCriticalViolations =>
+            _violations.Any(v => v.Severity == BudgetViolationSeverity.Critical);
+        public bool HasWarnings =>
+            _violations.Any(v => v.Severity == BudgetViolationSeverity.Warning);
 
         public BudgetViolationReport(string scriptName)
         {
             ScriptName = scriptName;
         }
 
-        internal void AddViolation(string metric, string actual, string budget, BudgetViolationSeverity severity)
+        internal void AddViolation(
+            string metric,
+            string actual,
+            string budget,
+            BudgetViolationSeverity severity
+        )
         {
             _violations.Add(new BudgetViolation(metric, actual, budget, severity));
         }
@@ -200,7 +235,10 @@ namespace PokeNET.Scripting.Diagnostics
         {
             if (!HasViolations)
             {
-                logger.LogInformation("Script '{ScriptName}' passed all performance budget checks", ScriptName);
+                logger.LogInformation(
+                    "Script '{ScriptName}' passed all performance budget checks",
+                    ScriptName
+                );
                 return;
             }
 
@@ -210,12 +248,17 @@ namespace PokeNET.Scripting.Diagnostics
                 {
                     BudgetViolationSeverity.Critical => LogLevel.Error,
                     BudgetViolationSeverity.Warning => LogLevel.Warning,
-                    _ => LogLevel.Information
+                    _ => LogLevel.Information,
                 };
 
-                logger.Log(logLevel,
+                logger.Log(
+                    logLevel,
                     "Performance budget violation in '{ScriptName}': {Metric} = {Actual} (budget: {Budget})",
-                    ScriptName, violation.Metric, violation.Actual, violation.Budget);
+                    ScriptName,
+                    violation.Metric,
+                    violation.Actual,
+                    violation.Budget
+                );
             }
         }
 
@@ -229,11 +272,16 @@ namespace PokeNET.Scripting.Diagnostics
                 return $"✓ Script '{ScriptName}' passed all performance budget checks";
             }
 
-            var report = $@"Performance Budget Violations for '{ScriptName}'
+            var report =
+                $@"Performance Budget Violations for '{ScriptName}'
 {'='.Repeat(50)}";
 
-            var critical = _violations.Where(v => v.Severity == BudgetViolationSeverity.Critical).ToList();
-            var warnings = _violations.Where(v => v.Severity == BudgetViolationSeverity.Warning).ToList();
+            var critical = _violations
+                .Where(v => v.Severity == BudgetViolationSeverity.Critical)
+                .ToList();
+            var warnings = _violations
+                .Where(v => v.Severity == BudgetViolationSeverity.Warning)
+                .ToList();
 
             if (critical.Any())
             {
@@ -267,7 +315,12 @@ namespace PokeNET.Scripting.Diagnostics
         public string Budget { get; }
         public BudgetViolationSeverity Severity { get; }
 
-        public BudgetViolation(string metric, string actual, string budget, BudgetViolationSeverity severity)
+        public BudgetViolation(
+            string metric,
+            string actual,
+            string budget,
+            BudgetViolationSeverity severity
+        )
         {
             Metric = metric;
             Actual = actual;

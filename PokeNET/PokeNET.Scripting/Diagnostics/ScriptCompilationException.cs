@@ -44,7 +44,8 @@ public sealed class ScriptCompilationException : Exception
 
         var diagnosticSummary = string.Join(
             Environment.NewLine,
-            Diagnostics.Select(d => $"  - {d}"));
+            Diagnostics.Select(d => $"  - {d}")
+        );
 
         return $"{Message}{Environment.NewLine}{diagnosticSummary}";
     }

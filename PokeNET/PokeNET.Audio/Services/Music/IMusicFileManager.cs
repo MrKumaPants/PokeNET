@@ -14,7 +14,10 @@ public interface IMusicFileManager
     /// <param name="assetPath">Relative path to the MIDI file</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The loaded MIDI file</returns>
-    Task<MidiFile> LoadMidiFileAsync(string assetPath, CancellationToken cancellationToken = default);
+    Task<MidiFile> LoadMidiFileAsync(
+        string assetPath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Loads a MIDI file from raw byte data.
@@ -29,7 +32,10 @@ public interface IMusicFileManager
     /// <param name="filePath">Absolute file path</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The loaded MIDI file</returns>
-    Task<MidiFile> LoadMidiFromFileAsync(string filePath, CancellationToken cancellationToken = default);
+    Task<MidiFile> LoadMidiFromFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Checks if a MIDI file is cached.

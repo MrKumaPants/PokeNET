@@ -5,22 +5,22 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>ExampleMod</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\PokeNET.ModApi\PokeNET.ModApi.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.*" />
   </ItemGroup>
-
   <!-- Copy mod files to Mods directory after build -->
   <Target Name="CopyModFiles" AfterTargets="Build">
     <ItemGroup>
       <ModFiles Include="$(OutputPath)ExampleMod.dll" />
       <ModFiles Include="modinfo.json" />
     </ItemGroup>
-    <Copy SourceFiles="@(ModFiles)" DestinationFolder="..\..\PokeNET\PokeNET.DesktopGL\bin\$(Configuration)\net8.0\Mods\com.pokenet.examplemod" />
+    <Copy
+      SourceFiles="@(ModFiles)"
+      DestinationFolder="..\..\PokeNET\PokeNET.DesktopGL\bin\$(Configuration)\net8.0\Mods\com.pokenet.examplemod"
+    />
   </Target>
 </Project>

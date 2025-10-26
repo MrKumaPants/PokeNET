@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class LevelUpReaction : BaseAudioReaction
 {
-    public LevelUpReaction(ILogger<LevelUpReaction> logger) : base(logger)
-    {
-    }
+    public LevelUpReaction(ILogger<LevelUpReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 4;
 
@@ -20,7 +19,11 @@ public class LevelUpReaction : BaseAudioReaction
         return gameEvent is LevelUpEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;

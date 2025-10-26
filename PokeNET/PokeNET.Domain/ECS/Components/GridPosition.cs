@@ -72,7 +72,7 @@ public struct GridPosition
         TileX = tileX;
         TileY = tileY;
         MapId = mapId;
-        InterpolationProgress = 1.0f;  // Not moving initially
+        InterpolationProgress = 1.0f; // Not moving initially
         TargetTileX = tileX;
         TargetTileY = tileY;
     }

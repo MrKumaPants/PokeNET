@@ -12,7 +12,8 @@ public interface IAudioCache
     /// <param name="key">Unique identifier for the cached item</param>
     /// <param name="loader">Function to load data if not in cache</param>
     /// <returns>Cached or loaded data, or null if not found</returns>
-    Task<T?> GetOrLoadAsync<T>(string key, Func<Task<T>> loader) where T : class;
+    Task<T?> GetOrLoadAsync<T>(string key, Func<Task<T>> loader)
+        where T : class;
 
     /// <summary>
     /// Preloads data into the cache.

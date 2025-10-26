@@ -30,11 +30,12 @@ public sealed class FileScriptLoader : IScriptLoader
     public bool SupportsWatching => true;
 
     /// <inheritdoc/>
-    public IReadOnlyDictionary<string, object> Metadata => new Dictionary<string, object>
-    {
-        ["SupportedExtensions"] = _supportedExtensions,
-        ["LoaderType"] = "FileSystem"
-    };
+    public IReadOnlyDictionary<string, object> Metadata =>
+        new Dictionary<string, object>
+        {
+            ["SupportedExtensions"] = _supportedExtensions,
+            ["LoaderType"] = "FileSystem",
+        };
 
     /// <summary>
     /// Gets the supported file extensions.
@@ -42,7 +43,10 @@ public sealed class FileScriptLoader : IScriptLoader
     public IReadOnlyList<string> SupportedExtensions => _supportedExtensions;
 
     /// <inheritdoc/>
-    public async Task<ScriptLoadResult> LoadScriptAsync(string scriptPath, CancellationToken cancellationToken = default)
+    public async Task<ScriptLoadResult> LoadScriptAsync(
+        string scriptPath,
+        CancellationToken cancellationToken = default
+    )
     {
         var sourceCode = await LoadFromFileAsync(scriptPath, cancellationToken);
         var fileInfo = new FileInfo(scriptPath);
@@ -53,14 +57,19 @@ public sealed class FileScriptLoader : IScriptLoader
             SourceCode = sourceCode,
             SourcePath = scriptPath,
             LoaderName = LoaderName,
-            LastModified = fileInfo.Exists ? new DateTimeOffset(fileInfo.LastWriteTimeUtc) : DateTimeOffset.UtcNow,
+            LastModified = fileInfo.Exists
+                ? new DateTimeOffset(fileInfo.LastWriteTimeUtc)
+                : DateTimeOffset.UtcNow,
             SizeBytes = fileInfo.Exists ? fileInfo.Length : 0,
-            Encoding = "UTF-8"
+            Encoding = "UTF-8",
         };
     }
 
     /// <inheritdoc/>
-    public Task<bool> ScriptExistsAsync(string scriptPath, CancellationToken cancellationToken = default)
+    public Task<bool> ScriptExistsAsync(
+        string scriptPath,
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.FromResult(IsValidScriptFile(scriptPath));
     }
@@ -70,7 +79,8 @@ public sealed class FileScriptLoader : IScriptLoader
         string searchPath,
         string? searchPattern = null,
         bool recursive = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Directory.Exists(searchPath))
         {
@@ -83,11 +93,16 @@ public sealed class FileScriptLoader : IScriptLoader
 
         try
         {
-            var files = Directory.GetFiles(searchPath, pattern, searchOption)
+            var files = Directory
+                .GetFiles(searchPath, pattern, searchOption)
                 .Where(IsValidScriptFile)
                 .ToList();
 
-            _logger.LogInformation("Discovered {Count} scripts in {SearchPath}", files.Count, searchPath);
+            _logger.LogInformation(
+                "Discovered {Count} scripts in {SearchPath}",
+                files.Count,
+                searchPath
+            );
             return Task.FromResult<IReadOnlyList<string>>(files);
         }
         catch (Exception ex)
@@ -101,7 +116,8 @@ public sealed class FileScriptLoader : IScriptLoader
     public Task<IScriptWatcher> WatchScriptsAsync(
         string watchPath,
         Action<ScriptChangeEvent> onChange,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Directory.Exists(watchPath))
         {
@@ -115,7 +131,10 @@ public sealed class FileScriptLoader : IScriptLoader
     /// <summary>
     /// Loads script content from a file.
     /// </summary>
-    private async Task<string> LoadFromFileAsync(string scriptPath, CancellationToken cancellationToken = default)
+    private async Task<string> LoadFromFileAsync(
+        string scriptPath,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(scriptPath))
             throw new ArgumentException("Script path cannot be null or empty.", nameof(scriptPath));
@@ -136,11 +155,13 @@ public sealed class FileScriptLoader : IScriptLoader
             _logger.LogError(
                 "Unsupported script file extension: {Extension}. Supported: {SupportedExtensions}",
                 extension,
-                string.Join(", ", _supportedExtensions));
+                string.Join(", ", _supportedExtensions)
+            );
 
             throw new InvalidOperationException(
-                $"Unsupported script file extension: {extension}. " +
-                $"Supported extensions: {string.Join(", ", _supportedExtensions)}");
+                $"Unsupported script file extension: {extension}. "
+                    + $"Supported extensions: {string.Join(", ", _supportedExtensions)}"
+            );
         }
 
         try
@@ -151,7 +172,8 @@ public sealed class FileScriptLoader : IScriptLoader
             _logger.LogInformation(
                 "Successfully loaded script from file: {ScriptPath} ({Length} characters)",
                 scriptPath,
-                content.Length);
+                content.Length
+            );
 
             return content;
         }
@@ -163,7 +185,10 @@ public sealed class FileScriptLoader : IScriptLoader
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load script from file: {ScriptPath}", scriptPath);
-            throw new InvalidOperationException($"Failed to load script from file: {scriptPath}", ex);
+            throw new InvalidOperationException(
+                $"Failed to load script from file: {scriptPath}",
+                ex
+            );
         }
     }
 
@@ -193,7 +218,8 @@ public sealed class FileScriptLoader : IScriptLoader
             string watchPath,
             string[] supportedExtensions,
             Action<ScriptChangeEvent> onChange,
-            ILogger? logger)
+            ILogger? logger
+        )
         {
             WatchPath = watchPath;
             _onChange = onChange;
@@ -201,10 +227,11 @@ public sealed class FileScriptLoader : IScriptLoader
 
             _watcher = new FileSystemWatcher(watchPath)
             {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime,
+                NotifyFilter =
+                    NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime,
                 Filter = "*.cs*",
                 IncludeSubdirectories = true,
-                EnableRaisingEvents = true
+                EnableRaisingEvents = true,
             };
 
             _watcher.Created += OnFileChanged;
@@ -246,26 +273,30 @@ public sealed class FileScriptLoader : IScriptLoader
                 WatcherChangeTypes.Created => ScriptChangeType.Created,
                 WatcherChangeTypes.Changed => ScriptChangeType.Modified,
                 WatcherChangeTypes.Deleted => ScriptChangeType.Deleted,
-                _ => ScriptChangeType.Modified
+                _ => ScriptChangeType.Modified,
             };
 
-            _onChange(new ScriptChangeEvent
-            {
-                ChangeType = changeType,
-                ScriptPath = e.FullPath,
-                Timestamp = DateTimeOffset.UtcNow
-            });
+            _onChange(
+                new ScriptChangeEvent
+                {
+                    ChangeType = changeType,
+                    ScriptPath = e.FullPath,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
         }
 
         private void OnFileRenamed(object sender, RenamedEventArgs e)
         {
-            _onChange(new ScriptChangeEvent
-            {
-                ChangeType = ScriptChangeType.Renamed,
-                ScriptPath = e.FullPath,
-                OldPath = e.OldFullPath,
-                Timestamp = DateTimeOffset.UtcNow
-            });
+            _onChange(
+                new ScriptChangeEvent
+                {
+                    ChangeType = ScriptChangeType.Renamed,
+                    ScriptPath = e.FullPath,
+                    OldPath = e.OldFullPath,
+                    Timestamp = DateTimeOffset.UtcNow,
+                }
+            );
         }
     }
 }

@@ -41,7 +41,10 @@ public sealed class Party
     public bool AddPokemon(Guid pokemonEntityId)
     {
         if (pokemonEntityId == Guid.Empty)
-            throw new ArgumentException("Pokemon entity ID cannot be empty", nameof(pokemonEntityId));
+            throw new ArgumentException(
+                "Pokemon entity ID cannot be empty",
+                nameof(pokemonEntityId)
+            );
 
         for (int i = 0; i < MaxPartySize; i++)
         {
@@ -103,7 +106,10 @@ public sealed class Party
         if (index2 < 0 || index2 >= MaxPartySize)
             throw new ArgumentOutOfRangeException(nameof(index2), "Index must be 0-5");
 
-        (_pokemonSlots[index1], _pokemonSlots[index2]) = (_pokemonSlots[index2], _pokemonSlots[index1]);
+        (_pokemonSlots[index1], _pokemonSlots[index2]) = (
+            _pokemonSlots[index2],
+            _pokemonSlots[index1]
+        );
     }
 
     /// <summary>

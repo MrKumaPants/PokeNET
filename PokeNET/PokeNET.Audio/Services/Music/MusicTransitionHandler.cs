@@ -41,24 +41,31 @@ public sealed class MusicTransitionHandler : IMusicTransitionHandler
         Func<AudioTrack, CancellationToken, Task> playNewTrackAsync,
         Func<TimeSpan, CancellationToken, Task> fadeOutAsync,
         Func<TimeSpan, CancellationToken, Task> fadeInAsync,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (toTrack == null)
         {
             throw new ArgumentNullException(nameof(toTrack));
         }
 
-        _logger.LogInformation("Transitioning to music: {TrackName}, Crossfade: {UseCrossfade}",
-            toTrack.Name, useCrossfade);
+        _logger.LogInformation(
+            "Transitioning to music: {TrackName}, Crossfade: {UseCrossfade}",
+            toTrack.Name,
+            useCrossfade
+        );
 
         // Raise transition event
-        TrackTransitioning?.Invoke(this, new TrackTransitionEventArgs
-        {
-            FromTrack = fromTrack,
-            ToTrack = toTrack,
-            IsCrossfading = useCrossfade,
-            Duration = useCrossfade ? _crossfadeDuration : TimeSpan.Zero
-        });
+        TrackTransitioning?.Invoke(
+            this,
+            new TrackTransitionEventArgs
+            {
+                FromTrack = fromTrack,
+                ToTrack = toTrack,
+                IsCrossfading = useCrossfade,
+                Duration = useCrossfade ? _crossfadeDuration : TimeSpan.Zero,
+            }
+        );
 
         if (useCrossfade && fromTrack != null)
         {
@@ -85,7 +92,8 @@ public sealed class MusicTransitionHandler : IMusicTransitionHandler
         int crossfadeDurationMs,
         Func<Task> playNewTrackAsync,
         Func<float, float, int, CancellationToken, Task> fadeVolumeAsync,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         _logger.LogInformation("Performing crossfade, Duration: {Duration}ms", crossfadeDurationMs);
 

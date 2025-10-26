@@ -56,7 +56,8 @@ public interface IEntityApi
     /// <param name="entityId">The entity to add the component to.</param>
     /// <param name="data">The component data.</param>
     /// <exception cref="InvalidOperationException">Thrown when entity doesn't exist or already has the component.</exception>
-    void AddComponent<T>(int entityId, T data) where T : class;
+    void AddComponent<T>(int entityId, T data)
+        where T : class;
 
     /// <summary>
     /// Removes a component from an entity.
@@ -64,7 +65,8 @@ public interface IEntityApi
     /// <typeparam name="T">The component type to remove.</typeparam>
     /// <param name="entityId">The entity to remove the component from.</param>
     /// <returns>True if the component was removed, false if it didn't exist.</returns>
-    bool RemoveComponent<T>(int entityId) where T : class;
+    bool RemoveComponent<T>(int entityId)
+        where T : class;
 
     /// <summary>
     /// Retrieves a component from an entity.
@@ -72,5 +74,6 @@ public interface IEntityApi
     /// <typeparam name="T">The component type to retrieve.</typeparam>
     /// <param name="entityId">The entity to get the component from.</param>
     /// <returns>The component data, or null if not found.</returns>
-    T? GetComponent<T>(int entityId) where T : class;
+    T? GetComponent<T>(int entityId)
+        where T : class;
 }

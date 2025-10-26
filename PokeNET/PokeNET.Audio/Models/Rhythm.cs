@@ -54,12 +54,32 @@ public sealed record Rhythm
         {
             Beats = new[]
             {
-                new Beat { Duration = 1.0f, Accent = true, Velocity = 1.0f },
-                new Beat { Duration = 1.0f, Accent = false, Velocity = 0.7f },
-                new Beat { Duration = 1.0f, Accent = false, Velocity = 0.8f },
-                new Beat { Duration = 1.0f, Accent = false, Velocity = 0.7f }
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = true,
+                    Velocity = 1.0f,
+                },
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = false,
+                    Velocity = 0.7f,
+                },
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = false,
+                    Velocity = 0.8f,
+                },
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = false,
+                    Velocity = 0.7f,
+                },
             },
-            TimeSignature = TimeSignature.CommonTime
+            TimeSignature = TimeSignature.CommonTime,
         };
     }
 
@@ -72,14 +92,44 @@ public sealed record Rhythm
         {
             Beats = new[]
             {
-                new Beat { Duration = 0.5f, Accent = true, Velocity = 1.0f },
-                new Beat { Duration = 0.5f, Accent = false, Velocity = 0.6f },
-                new Beat { Duration = 1.0f, Accent = false, Velocity = 0.7f },
-                new Beat { Duration = 0.5f, Accent = true, Velocity = 0.9f },
-                new Beat { Duration = 0.5f, Accent = false, Velocity = 0.6f },
-                new Beat { Duration = 1.0f, Accent = false, Velocity = 0.7f }
+                new Beat
+                {
+                    Duration = 0.5f,
+                    Accent = true,
+                    Velocity = 1.0f,
+                },
+                new Beat
+                {
+                    Duration = 0.5f,
+                    Accent = false,
+                    Velocity = 0.6f,
+                },
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = false,
+                    Velocity = 0.7f,
+                },
+                new Beat
+                {
+                    Duration = 0.5f,
+                    Accent = true,
+                    Velocity = 0.9f,
+                },
+                new Beat
+                {
+                    Duration = 0.5f,
+                    Accent = false,
+                    Velocity = 0.6f,
+                },
+                new Beat
+                {
+                    Duration = 1.0f,
+                    Accent = false,
+                    Velocity = 0.7f,
+                },
             },
-            TimeSignature = TimeSignature.CommonTime
+            TimeSignature = TimeSignature.CommonTime,
         };
     }
 }

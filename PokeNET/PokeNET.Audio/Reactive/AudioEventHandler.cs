@@ -74,7 +74,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = false,
                 DefaultDuckingAmount = 0.0f,
                 MaxDuration = 0.0f, // No duration limit
-                SoundEffect = "battle_start_epic"
+                SoundEffect = "battle_start_epic",
             };
 
             _eventConfigs[AudioEventType.HealthCritical] = new AudioEventConfig
@@ -85,7 +85,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = true,
                 DefaultDuckingAmount = 0.4f,
                 MaxDuration = 2.0f,
-                SoundEffect = "health_critical_warning"
+                SoundEffect = "health_critical_warning",
             };
 
             _eventConfigs[AudioEventType.WildEncounter] = new AudioEventConfig
@@ -96,7 +96,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = true,
                 DefaultDuckingAmount = 0.6f,
                 MaxDuration = 1.5f,
-                SoundEffect = "wild_encounter"
+                SoundEffect = "wild_encounter",
             };
 
             // High priority events
@@ -108,7 +108,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = false,
                 DefaultDuckingAmount = 0.0f,
                 MaxDuration = 2.0f,
-                SoundEffect = "battle_start"
+                SoundEffect = "battle_start",
             };
 
             _eventConfigs[AudioEventType.LocationChange] = new AudioEventConfig
@@ -119,7 +119,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = false,
                 DefaultDuckingAmount = 0.0f,
                 MaxDuration = 0.0f,
-                SoundEffect = null // No sound effect, just music change
+                SoundEffect = null, // No sound effect, just music change
             };
 
             // Medium priority events
@@ -131,7 +131,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = false,
                 DefaultDuckingAmount = 0.0f,
                 MaxDuration = 3.0f,
-                SoundEffect = "battle_end"
+                SoundEffect = "battle_end",
             };
 
             _eventConfigs[AudioEventType.ItemPickup] = new AudioEventConfig
@@ -142,7 +142,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = true,
                 DefaultDuckingAmount = 0.7f,
                 MaxDuration = 1.0f,
-                SoundEffect = "item_get"
+                SoundEffect = "item_get",
             };
 
             // Low priority events
@@ -154,7 +154,7 @@ namespace PokeNET.Audio.Reactive
                 RequiresDucking = false,
                 DefaultDuckingAmount = 0.0f,
                 MaxDuration = 0.3f,
-                SoundEffect = "menu_select"
+                SoundEffect = "menu_select",
             };
         }
 
@@ -240,7 +240,8 @@ namespace PokeNET.Audio.Reactive
                     .FirstOrDefault();
 
                 // Can only interrupt if this event has higher priority
-                return lowestPriorityEvent != null && audioEvent.Priority > lowestPriorityEvent.Event.Priority;
+                return lowestPriorityEvent != null
+                    && audioEvent.Priority > lowestPriorityEvent.Event.Priority;
             }
 
             return true;
@@ -270,7 +271,7 @@ namespace PokeNET.Audio.Reactive
                 Event = audioEvent,
                 StartTime = 0.0f,
                 ElapsedTime = 0.0f,
-                IsPlaying = true
+                IsPlaying = true,
             };
 
             _activeEvents.Add(activeEvent);
@@ -340,8 +341,10 @@ namespace PokeNET.Audio.Reactive
                 activeEvent.ElapsedTime += deltaTime;
 
                 // Check if event has exceeded max duration
-                if (activeEvent.Event.MaxDuration > 0 &&
-                    activeEvent.ElapsedTime >= activeEvent.Event.MaxDuration)
+                if (
+                    activeEvent.Event.MaxDuration > 0
+                    && activeEvent.ElapsedTime >= activeEvent.Event.MaxDuration
+                )
                 {
                     completedEvents.Add(activeEvent);
                 }
@@ -427,7 +430,7 @@ namespace PokeNET.Audio.Reactive
         ItemPickup,
         MenuSound,
         Dialogue,
-        Achievement
+        Achievement,
     }
 
     public enum AudioPriority
@@ -435,7 +438,7 @@ namespace PokeNET.Audio.Reactive
         Low = 0,
         Medium = 1,
         High = 2,
-        Critical = 3
+        Critical = 3,
     }
 
     /// <summary>
@@ -492,7 +495,9 @@ namespace PokeNET.Audio.Reactive
 
         public PriorityQueue()
         {
-            _queues = new SortedDictionary<int, Queue<T>>(Comparer<int>.Create((a, b) => b.CompareTo(a)));
+            _queues = new SortedDictionary<int, Queue<T>>(
+                Comparer<int>.Create((a, b) => b.CompareTo(a))
+            );
             Count = 0;
         }
 

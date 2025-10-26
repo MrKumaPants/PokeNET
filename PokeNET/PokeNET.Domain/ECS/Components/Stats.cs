@@ -39,7 +39,14 @@ public struct Stats
     /// <summary>
     /// Initializes a new stats component with all values.
     /// </summary>
-    public Stats(int attack, int defense, int specialAttack, int specialDefense, int speed, int level = 1)
+    public Stats(
+        int attack,
+        int defense,
+        int specialAttack,
+        int specialDefense,
+        int speed,
+        int level = 1
+    )
     {
         Attack = attack;
         Defense = defense;

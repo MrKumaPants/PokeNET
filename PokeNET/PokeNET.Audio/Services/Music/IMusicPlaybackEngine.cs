@@ -1,6 +1,6 @@
 using Melanchall.DryWetMidi.Core;
-using Melanchall.DryWetMidi.Multimedia;
 using Melanchall.DryWetMidi.Interaction;
+using Melanchall.DryWetMidi.Multimedia;
 using PokeNET.Audio.Models;
 
 namespace PokeNET.Audio.Services.Music;

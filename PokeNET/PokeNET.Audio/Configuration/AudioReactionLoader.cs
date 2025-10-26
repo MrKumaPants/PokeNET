@@ -42,11 +42,13 @@ namespace PokeNET.Audio.Configuration
         public AudioReactionLoader(
             ILogger<AudioReactionLoader> logger,
             IAudioManager audioManager,
-            string configFilePath)
+            string configFilePath
+        )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
-            _configFilePath = configFilePath ?? throw new ArgumentNullException(nameof(configFilePath));
+            _configFilePath =
+                configFilePath ?? throw new ArgumentNullException(nameof(configFilePath));
         }
 
         /// <summary>
@@ -60,20 +62,28 @@ namespace PokeNET.Audio.Configuration
             if (!File.Exists(_configFilePath))
             {
                 _logger.LogError("Configuration file not found: {FilePath}", _configFilePath);
-                throw new FileNotFoundException($"Audio reaction config file not found: {_configFilePath}");
+                throw new FileNotFoundException(
+                    $"Audio reaction config file not found: {_configFilePath}"
+                );
             }
 
-            _logger.LogInformation("Loading audio reaction configuration from: {FilePath}", _configFilePath);
+            _logger.LogInformation(
+                "Loading audio reaction configuration from: {FilePath}",
+                _configFilePath
+            );
 
             try
             {
                 var json = await File.ReadAllTextAsync(_configFilePath);
-                var config = JsonSerializer.Deserialize<AudioReactionConfig>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
-                });
+                var config = JsonSerializer.Deserialize<AudioReactionConfig>(
+                    json,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        AllowTrailingCommas = true,
+                        ReadCommentHandling = JsonCommentHandling.Skip,
+                    }
+                );
 
                 if (config == null)
                 {
@@ -121,13 +131,29 @@ namespace PokeNET.Audio.Configuration
                 {
                     if (string.IsNullOrWhiteSpace(condition.Property))
                     {
-                        errors.Add($"Reaction '{reaction.Name}' has a condition without a property");
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' has a condition without a property"
+                        );
                     }
 
-                    var validOperators = new[] { "equals", "notEquals", "lessThan", "greaterThan", "contains" };
-                    if (!validOperators.Contains(condition.Operator, StringComparer.OrdinalIgnoreCase))
+                    var validOperators = new[]
                     {
-                        errors.Add($"Reaction '{reaction.Name}' has invalid operator '{condition.Operator}'. Valid operators: {string.Join(", ", validOperators)}");
+                        "equals",
+                        "notEquals",
+                        "lessThan",
+                        "greaterThan",
+                        "contains",
+                    };
+                    if (
+                        !validOperators.Contains(
+                            condition.Operator,
+                            StringComparer.OrdinalIgnoreCase
+                        )
+                    )
+                    {
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' has invalid operator '{condition.Operator}'. Valid operators: {string.Join(", ", validOperators)}"
+                        );
                     }
 
                     if (condition.Value == null)
@@ -144,32 +170,55 @@ namespace PokeNET.Audio.Configuration
 
                 foreach (var action in reaction.Actions)
                 {
-                    var validActionTypes = new[] { "PlayMusic", "PlaySound", "FadeIn", "FadeOut", "SetVolume", "StopAll" };
+                    var validActionTypes = new[]
+                    {
+                        "PlayMusic",
+                        "PlaySound",
+                        "FadeIn",
+                        "FadeOut",
+                        "SetVolume",
+                        "StopAll",
+                    };
                     if (!validActionTypes.Contains(action.Type, StringComparer.OrdinalIgnoreCase))
                     {
-                        errors.Add($"Reaction '{reaction.Name}' has invalid action type '{action.Type}'. Valid types: {string.Join(", ", validActionTypes)}");
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' has invalid action type '{action.Type}'. Valid types: {string.Join(", ", validActionTypes)}"
+                        );
                     }
 
                     // Validate path for playback actions
-                    if ((action.Type.Equals("PlayMusic", StringComparison.OrdinalIgnoreCase) ||
-                         action.Type.Equals("PlaySound", StringComparison.OrdinalIgnoreCase)) &&
-                        string.IsNullOrWhiteSpace(action.Path))
+                    if (
+                        (
+                            action.Type.Equals("PlayMusic", StringComparison.OrdinalIgnoreCase)
+                            || action.Type.Equals("PlaySound", StringComparison.OrdinalIgnoreCase)
+                        ) && string.IsNullOrWhiteSpace(action.Path)
+                    )
                     {
-                        errors.Add($"Reaction '{reaction.Name}' action '{action.Type}' requires a path");
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' action '{action.Type}' requires a path"
+                        );
                     }
 
                     // Validate volume range
                     if (action.Volume < 0.0f || action.Volume > 1.0f)
                     {
-                        errors.Add($"Reaction '{reaction.Name}' has invalid volume {action.Volume}. Must be between 0.0 and 1.0");
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' has invalid volume {action.Volume}. Must be between 0.0 and 1.0"
+                        );
                     }
 
                     // Validate duration for fade actions
-                    if ((action.Type.Equals("FadeIn", StringComparison.OrdinalIgnoreCase) ||
-                         action.Type.Equals("FadeOut", StringComparison.OrdinalIgnoreCase)) &&
-                        action.Duration <= 0)
+                    if (
+                        (
+                            action.Type.Equals("FadeIn", StringComparison.OrdinalIgnoreCase)
+                            || action.Type.Equals("FadeOut", StringComparison.OrdinalIgnoreCase)
+                        )
+                        && action.Duration <= 0
+                    )
                     {
-                        errors.Add($"Reaction '{reaction.Name}' fade action requires a positive duration");
+                        errors.Add(
+                            $"Reaction '{reaction.Name}' fade action requires a positive duration"
+                        );
                     }
                 }
             }
@@ -195,10 +244,16 @@ namespace PokeNET.Audio.Configuration
             if (eventObj == null)
                 return false;
 
-            var property = eventObj.GetType().GetProperty(condition.Property, BindingFlags.Public | BindingFlags.Instance);
+            var property = eventObj
+                .GetType()
+                .GetProperty(condition.Property, BindingFlags.Public | BindingFlags.Instance);
             if (property == null)
             {
-                _logger.LogWarning("Property '{Property}' not found on event type {EventType}", condition.Property, eventObj.GetType().Name);
+                _logger.LogWarning(
+                    "Property '{Property}' not found on event type {EventType}",
+                    condition.Property,
+                    eventObj.GetType().Name
+                );
                 return false;
             }
 
@@ -212,7 +267,7 @@ namespace PokeNET.Audio.Configuration
                 "lessthan" => CompareLessThan(actualValue, expectedValue),
                 "greaterthan" => CompareGreaterThan(actualValue, expectedValue),
                 "contains" => CompareContains(actualValue, expectedValue),
-                _ => false
+                _ => false,
             };
         }
 
@@ -287,10 +342,12 @@ namespace PokeNET.Audio.Configuration
         {
             return jsonElement.ValueKind switch
             {
-                JsonValueKind.True or JsonValueKind.False => actual is bool b && b == jsonElement.GetBoolean(),
-                JsonValueKind.Number => actual is IConvertible && Math.Abs(Convert.ToDouble(actual) - jsonElement.GetDouble()) < 0.0001,
+                JsonValueKind.True or JsonValueKind.False => actual is bool b
+                    && b == jsonElement.GetBoolean(),
+                JsonValueKind.Number => actual is IConvertible
+                    && Math.Abs(Convert.ToDouble(actual) - jsonElement.GetDouble()) < 0.0001,
                 JsonValueKind.String => actual.ToString() == jsonElement.GetString(),
-                _ => false
+                _ => false,
             };
         }
 
@@ -326,7 +383,10 @@ namespace PokeNET.Audio.Configuration
                         break;
 
                     case "fadeout":
-                        if (action.Channel?.Equals("Music", StringComparison.OrdinalIgnoreCase) == true)
+                        if (
+                            action.Channel?.Equals("Music", StringComparison.OrdinalIgnoreCase)
+                            == true
+                        )
                         {
                             await _audioManager.StopMusicAsync();
                         }
@@ -367,14 +427,17 @@ namespace PokeNET.Audio.Configuration
 
             if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName))
             {
-                _logger.LogError("Invalid config file path for hot-reload: {FilePath}", _configFilePath);
+                _logger.LogError(
+                    "Invalid config file path for hot-reload: {FilePath}",
+                    _configFilePath
+                );
                 return;
             }
 
             _fileWatcher = new FileSystemWatcher(directory, fileName)
             {
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
-                EnableRaisingEvents = true
+                EnableRaisingEvents = true,
             };
 
             _fileWatcher.Changed += async (sender, e) => await OnConfigFileChangedAsync(e);
@@ -395,11 +458,14 @@ namespace PokeNET.Audio.Configuration
                 await Task.Delay(100);
 
                 var newConfig = await LoadAsync();
-                ConfigurationReloaded?.Invoke(this, new ConfigurationReloadedEventArgs
-                {
-                    Configuration = newConfig,
-                    Timestamp = DateTime.UtcNow
-                });
+                ConfigurationReloaded?.Invoke(
+                    this,
+                    new ConfigurationReloadedEventArgs
+                    {
+                        Configuration = newConfig,
+                        Timestamp = DateTime.UtcNow,
+                    }
+                );
 
                 _logger.LogInformation("Configuration reloaded successfully");
             }

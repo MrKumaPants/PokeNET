@@ -1,10 +1,10 @@
-using Melanchall.DryWetMidi.MusicTheory;
-using Melanchall.DryWetMidi.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Note = Melanchall.DryWetMidi.MusicTheory.Note;
+using Melanchall.DryWetMidi.Common;
+using Melanchall.DryWetMidi.MusicTheory;
 using Chord = Melanchall.DryWetMidi.MusicTheory.Chord;
+using Note = Melanchall.DryWetMidi.MusicTheory.Note;
 
 namespace PokeNET.Audio.Procedural
 {
@@ -32,7 +32,7 @@ namespace PokeNET.Audio.Procedural
                 ScaleType.MelodicMinor => ScaleIntervals.MelodicMinor,
                 ScaleType.Pentatonic => ScaleIntervals.MajorPentatonic,
                 ScaleType.MinorPentatonic => ScaleIntervals.MinorPentatonic,
-                _ => ScaleIntervals.Major
+                _ => ScaleIntervals.Major,
             };
             return new Scale(intervals, rootNote);
         }
@@ -56,7 +56,12 @@ namespace PokeNET.Audio.Procedural
         /// <summary>
         /// Gets a chord from a scale degree
         /// </summary>
-        public static Chord GetChordFromDegree(Scale scale, int degree, ChordType chordType, int octave)
+        public static Chord GetChordFromDegree(
+            Scale scale,
+            int degree,
+            ChordType chordType,
+            int octave
+        )
         {
             var scaleNotes = scale.GetNotes().ToArray();
             var rootNote = scaleNotes[(degree - 1) % scaleNotes.Length];
@@ -67,14 +72,57 @@ namespace PokeNET.Audio.Procedural
             // Build chord notes based on type
             var noteNames = chordType switch
             {
-                ChordType.Major => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 4), GetTransposedNoteName(rootNoteName, 7) },
-                ChordType.Minor => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 3), GetTransposedNoteName(rootNoteName, 7) },
-                ChordType.Diminished => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 3), GetTransposedNoteName(rootNoteName, 6) },
-                ChordType.Augmented => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 4), GetTransposedNoteName(rootNoteName, 8) },
-                ChordType.Major7 => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 4), GetTransposedNoteName(rootNoteName, 7), GetTransposedNoteName(rootNoteName, 11) },
-                ChordType.Minor7 => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 3), GetTransposedNoteName(rootNoteName, 7), GetTransposedNoteName(rootNoteName, 10) },
-                ChordType.Dominant7 => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 4), GetTransposedNoteName(rootNoteName, 7), GetTransposedNoteName(rootNoteName, 10) },
-                _ => new[] { rootNoteName, GetTransposedNoteName(rootNoteName, 4), GetTransposedNoteName(rootNoteName, 7) }
+                ChordType.Major => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 4),
+                    GetTransposedNoteName(rootNoteName, 7),
+                },
+                ChordType.Minor => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 3),
+                    GetTransposedNoteName(rootNoteName, 7),
+                },
+                ChordType.Diminished => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 3),
+                    GetTransposedNoteName(rootNoteName, 6),
+                },
+                ChordType.Augmented => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 4),
+                    GetTransposedNoteName(rootNoteName, 8),
+                },
+                ChordType.Major7 => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 4),
+                    GetTransposedNoteName(rootNoteName, 7),
+                    GetTransposedNoteName(rootNoteName, 11),
+                },
+                ChordType.Minor7 => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 3),
+                    GetTransposedNoteName(rootNoteName, 7),
+                    GetTransposedNoteName(rootNoteName, 10),
+                },
+                ChordType.Dominant7 => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 4),
+                    GetTransposedNoteName(rootNoteName, 7),
+                    GetTransposedNoteName(rootNoteName, 10),
+                },
+                _ => new[]
+                {
+                    rootNoteName,
+                    GetTransposedNoteName(rootNoteName, 4),
+                    GetTransposedNoteName(rootNoteName, 7),
+                },
             };
 
             return new Chord(noteNames);
@@ -102,7 +150,11 @@ namespace PokeNET.Audio.Procedural
         public static Note Transpose(Note note, int semitones)
         {
             var newNoteNumber = note.NoteNumber + semitones;
-            newNoteNumber = Math.Clamp(newNoteNumber, (int)SevenBitNumber.MinValue, (int)SevenBitNumber.MaxValue);
+            newNoteNumber = Math.Clamp(
+                newNoteNumber,
+                (int)SevenBitNumber.MinValue,
+                (int)SevenBitNumber.MaxValue
+            );
             return Note.Get((SevenBitNumber)newNoteNumber);
         }
 
@@ -138,7 +190,7 @@ namespace PokeNET.Audio.Procedural
                 DynamicsLevel.F => 96,
                 DynamicsLevel.FF => 112,
                 DynamicsLevel.FFF => 127,
-                _ => 64
+                _ => 64,
             };
 
             // Add variation
@@ -167,7 +219,7 @@ namespace PokeNET.Audio.Procedural
         HarmonicMinor,
         MelodicMinor,
         Pentatonic,
-        MinorPentatonic
+        MinorPentatonic,
     }
 
     public enum ChordType
@@ -180,19 +232,19 @@ namespace PokeNET.Audio.Procedural
         Minor7,
         Dominant7,
         Suspended2,
-        Suspended4
+        Suspended4,
     }
 
     public enum DynamicsLevel
     {
-        PPP,  // Pianississimo
-        PP,   // Pianissimo
-        P,    // Piano
-        MP,   // Mezzo-piano
-        MF,   // Mezzo-forte
-        F,    // Forte
-        FF,   // Fortissimo
-        FFF   // Fortississimo
+        PPP, // Pianississimo
+        PP, // Pianissimo
+        P, // Piano
+        MP, // Mezzo-piano
+        MF, // Mezzo-forte
+        F, // Forte
+        FF, // Fortissimo
+        FFF, // Fortississimo
     }
 
     /// <summary>
@@ -200,28 +252,152 @@ namespace PokeNET.Audio.Procedural
     /// </summary>
     public static class ScaleIntervals
     {
-        public static readonly Interval[] Major = { Interval.Zero, Interval.Two, Interval.Four, Interval.Five, Interval.Seven, Interval.Nine, Interval.Eleven };
-        public static readonly Interval[] NaturalMinor = { Interval.Zero, Interval.Two, Interval.Three, Interval.Five, Interval.Seven, Interval.Eight, Interval.Ten };
-        public static readonly Interval[] HarmonicMinor = { Interval.Zero, Interval.Two, Interval.Three, Interval.Five, Interval.Seven, Interval.Eight, Interval.Eleven };
-        public static readonly Interval[] MelodicMinor = { Interval.Zero, Interval.Two, Interval.Three, Interval.Five, Interval.Seven, Interval.Nine, Interval.Eleven };
-        public static readonly Interval[] Dorian = { Interval.Zero, Interval.Two, Interval.Three, Interval.Five, Interval.Seven, Interval.Nine, Interval.Ten };
-        public static readonly Interval[] Phrygian = { Interval.Zero, Interval.One, Interval.Three, Interval.Five, Interval.Seven, Interval.Eight, Interval.Ten };
-        public static readonly Interval[] Lydian = { Interval.Zero, Interval.Two, Interval.Four, Interval.Six, Interval.Seven, Interval.Nine, Interval.Eleven };
-        public static readonly Interval[] Mixolydian = { Interval.Zero, Interval.Two, Interval.Four, Interval.Five, Interval.Seven, Interval.Nine, Interval.Ten };
-        public static readonly Interval[] MajorPentatonic = { Interval.Zero, Interval.Two, Interval.Four, Interval.Seven, Interval.Nine };
-        public static readonly Interval[] MinorPentatonic = { Interval.Zero, Interval.Three, Interval.Five, Interval.Seven, Interval.Ten };
+        public static readonly Interval[] Major =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Four,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Nine,
+            Interval.Eleven,
+        };
+        public static readonly Interval[] NaturalMinor =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Eight,
+            Interval.Ten,
+        };
+        public static readonly Interval[] HarmonicMinor =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Eight,
+            Interval.Eleven,
+        };
+        public static readonly Interval[] MelodicMinor =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Nine,
+            Interval.Eleven,
+        };
+        public static readonly Interval[] Dorian =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Nine,
+            Interval.Ten,
+        };
+        public static readonly Interval[] Phrygian =
+        {
+            Interval.Zero,
+            Interval.One,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Eight,
+            Interval.Ten,
+        };
+        public static readonly Interval[] Lydian =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Four,
+            Interval.Six,
+            Interval.Seven,
+            Interval.Nine,
+            Interval.Eleven,
+        };
+        public static readonly Interval[] Mixolydian =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Four,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Nine,
+            Interval.Ten,
+        };
+        public static readonly Interval[] MajorPentatonic =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Four,
+            Interval.Seven,
+            Interval.Nine,
+        };
+        public static readonly Interval[] MinorPentatonic =
+        {
+            Interval.Zero,
+            Interval.Three,
+            Interval.Five,
+            Interval.Seven,
+            Interval.Ten,
+        };
     }
 
     public static class ChordIntervals
     {
         public static readonly Interval[] Major = { Interval.Zero, Interval.Four, Interval.Seven };
         public static readonly Interval[] Minor = { Interval.Zero, Interval.Three, Interval.Seven };
-        public static readonly Interval[] Diminished = { Interval.Zero, Interval.Three, Interval.Six };
-        public static readonly Interval[] Augmented = { Interval.Zero, Interval.Four, Interval.Eight };
-        public static readonly Interval[] MajorSeventh = { Interval.Zero, Interval.Four, Interval.Seven, Interval.Eleven };
-        public static readonly Interval[] MinorSeventh = { Interval.Zero, Interval.Three, Interval.Seven, Interval.Ten };
-        public static readonly Interval[] DominantSeventh = { Interval.Zero, Interval.Four, Interval.Seven, Interval.Ten };
-        public static readonly Interval[] Suspended2 = { Interval.Zero, Interval.Two, Interval.Seven };
-        public static readonly Interval[] Suspended4 = { Interval.Zero, Interval.Five, Interval.Seven };
+        public static readonly Interval[] Diminished =
+        {
+            Interval.Zero,
+            Interval.Three,
+            Interval.Six,
+        };
+        public static readonly Interval[] Augmented =
+        {
+            Interval.Zero,
+            Interval.Four,
+            Interval.Eight,
+        };
+        public static readonly Interval[] MajorSeventh =
+        {
+            Interval.Zero,
+            Interval.Four,
+            Interval.Seven,
+            Interval.Eleven,
+        };
+        public static readonly Interval[] MinorSeventh =
+        {
+            Interval.Zero,
+            Interval.Three,
+            Interval.Seven,
+            Interval.Ten,
+        };
+        public static readonly Interval[] DominantSeventh =
+        {
+            Interval.Zero,
+            Interval.Four,
+            Interval.Seven,
+            Interval.Ten,
+        };
+        public static readonly Interval[] Suspended2 =
+        {
+            Interval.Zero,
+            Interval.Two,
+            Interval.Seven,
+        };
+        public static readonly Interval[] Suspended4 =
+        {
+            Interval.Zero,
+            Interval.Five,
+            Interval.Seven,
+        };
     }
 }

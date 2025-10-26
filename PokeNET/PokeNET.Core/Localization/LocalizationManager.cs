@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Threading;
@@ -36,7 +37,10 @@ public class LocalizationManager
         Assembly assembly = Assembly.GetExecutingAssembly();
 
         // Resource manager for your Resources.resx
-        ResourceManager resourceManager = new ResourceManager("PokeNET.Core.Localization.Resources", assembly);
+        ResourceManager resourceManager = new ResourceManager(
+            "PokeNET.Core.Localization.Resources",
+            assembly
+        );
 
         // Get all cultures defined in the satellite assemblies
         CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
@@ -78,7 +82,10 @@ public class LocalizationManager
     public static void SetCulture(string cultureCode)
     {
         if (string.IsNullOrEmpty(cultureCode))
-            throw new ArgumentNullException(nameof(cultureCode), "A culture code must be provided.");
+            throw new ArgumentNullException(
+                nameof(cultureCode),
+                "A culture code must be provided."
+            );
 
         try
         {
@@ -88,14 +95,16 @@ public class LocalizationManager
             // Validate against supported cultures
             var supportedCultures = GetSupportedCultures();
             bool isSupported = supportedCultures.Any(c =>
-                c.Name.Equals(cultureCode, StringComparison.OrdinalIgnoreCase) ||
-                c.Equals(CultureInfo.InvariantCulture));
+                c.Name.Equals(cultureCode, StringComparison.OrdinalIgnoreCase)
+                || c.Equals(CultureInfo.InvariantCulture)
+            );
 
             if (!isSupported)
             {
                 throw new NotSupportedException(
-                    $"Culture '{cultureCode}' is not supported by the game. " +
-                    $"Supported cultures: {string.Join(", ", supportedCultures.Select(c => c.Name))}");
+                    $"Culture '{cultureCode}' is not supported by the game. "
+                        + $"Supported cultures: {string.Join(", ", supportedCultures.Select(c => c.Name))}"
+                );
             }
 
             // Set the current culture and UI culture for the current thread
@@ -107,7 +116,8 @@ public class LocalizationManager
             throw new ArgumentException(
                 $"Invalid culture code: '{cultureCode}'. Please provide a valid culture code (e.g., 'en-US', 'fr-FR').",
                 nameof(cultureCode),
-                ex);
+                ex
+            );
         }
     }
 }

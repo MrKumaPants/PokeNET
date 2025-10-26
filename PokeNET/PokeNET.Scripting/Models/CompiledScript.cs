@@ -29,7 +29,8 @@ public sealed class CompiledScript : ICompiledScript
         string? scriptPath,
         IReadOnlyList<ScriptDiagnostic> diagnostics,
         IReadOnlyDictionary<string, object>? metadata = null,
-        IReadOnlyList<string>? exposedFunctions = null)
+        IReadOnlyList<string>? exposedFunctions = null
+    )
     {
         RoslynScript = roslynScript ?? throw new ArgumentNullException(nameof(roslynScript));
         SourceCode = sourceCode ?? throw new ArgumentNullException(nameof(sourceCode));

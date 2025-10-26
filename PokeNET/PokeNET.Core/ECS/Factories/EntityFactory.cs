@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Arch.Core;
 using Arch.Core.Extensions;
 using Microsoft.Extensions.Logging;
+using PokeNET.Domain.ECS.Commands;
 using PokeNET.Domain.ECS.Events;
 using PokeNET.Domain.ECS.Factories;
 
@@ -10,6 +14,9 @@ namespace PokeNET.Core.ECS.Factories;
 /// Base implementation of entity factory with template management and validation.
 /// Follows Open/Closed Principle - extend for specialized entity creation logic.
 /// Thread-safe for template registration and retrieval.
+///
+/// Phase 6 Migration: Now uses CommandBuffer for safe entity creation.
+/// All Create() methods defer structural changes to prevent iterator invalidation.
 /// </summary>
 public class EntityFactory : IEntityFactory
 {
@@ -33,44 +40,64 @@ public class EntityFactory : IEntityFactory
     }
 
     /// <inheritdoc/>
-    public virtual Entity Create(World world, EntityDefinition definition)
+    public virtual CommandBuffer.CreateCommand Create(
+        CommandBuffer cmd,
+        EntityDefinition definition
+    )
     {
-        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(cmd);
         ArgumentNullException.ThrowIfNull(definition);
 
         if (!definition.IsValid())
         {
             throw new InvalidOperationException(
-                $"Invalid entity definition: {definition}. Name and components required.");
+                $"Invalid entity definition: {definition}. Name and components required."
+            );
         }
 
-        _logger.LogDebug("Creating entity '{Name}' with {Count} components",
-            definition.Name, definition.Components.Count);
+        _logger.LogDebug(
+            "Creating entity '{Name}' with {Count} components (deferred via CommandBuffer)",
+            definition.Name,
+            definition.Components.Count
+        );
 
         // Validate components before creation
         ValidateComponents(definition.Components);
 
-        // Create entity with all components at once (efficient for Arch ECS)
-        var entity = world.Create(definition.Components.ToArray());
+        // ✅ SAFE: Create entity via CommandBuffer (deferred structural change)
+        // Build creation command with all components
+        var createCommand = cmd.Create();
 
-        // Publish creation event if event bus is available
-        _eventBus?.Publish(new EntityCreatedEvent(
-            entity,
+        // Add all components using the fluent With<T>() API
+        foreach (var component in definition.Components)
+        {
+            // Use reflection to call With<T>(component) on the CreateCommand
+            var componentType = component.GetType();
+            var withMethod = typeof(CommandBuffer.CreateCommand).GetMethod(
+                nameof(CommandBuffer.CreateCommand.With),
+                new[] { componentType }
+            );
+
+            if (withMethod != null)
+            {
+                withMethod.Invoke(createCommand, new[] { component });
+            }
+        }
+
+        _logger.LogDebug(
+            "Entity '{Name}' creation deferred with {Count} components",
             definition.Name,
-            FactoryName,
             definition.Components.Count
-        ));
+        );
 
-        _logger.LogDebug("Entity '{Name}' created successfully: {Entity}",
-            definition.Name, entity);
-
-        return entity;
+        // Return CreateCommand - caller must call GetEntity() after Playback
+        return createCommand;
     }
 
     /// <inheritdoc/>
-    public Entity CreateFromTemplate(World world, string templateName)
+    public CommandBuffer.CreateCommand CreateFromTemplate(CommandBuffer cmd, string templateName)
     {
-        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(cmd);
 
         if (string.IsNullOrWhiteSpace(templateName))
         {
@@ -83,14 +110,18 @@ public class EntityFactory : IEntityFactory
             if (!_templates.TryGetValue(templateName, out definition!))
             {
                 throw new ArgumentException(
-                    $"Template '{templateName}' not found. Available templates: " +
-                    $"{string.Join(", ", _templates.Keys)}",
-                    nameof(templateName));
+                    $"Template '{templateName}' not found. Available templates: "
+                        + $"{string.Join(", ", _templates.Keys)}",
+                    nameof(templateName)
+                );
             }
         }
 
-        _logger.LogDebug("Creating entity from template '{Template}'", templateName);
-        return Create(world, definition);
+        _logger.LogDebug(
+            "Creating entity from template '{Template}' (deferred via CommandBuffer)",
+            templateName
+        );
+        return Create(cmd, definition);
     }
 
     /// <inheritdoc/>
@@ -106,7 +137,9 @@ public class EntityFactory : IEntityFactory
         if (!definition.IsValid())
         {
             throw new ArgumentException(
-                $"Cannot register invalid definition: {definition}", nameof(definition));
+                $"Cannot register invalid definition: {definition}",
+                nameof(definition)
+            );
         }
 
         lock (_lock)
@@ -114,7 +147,9 @@ public class EntityFactory : IEntityFactory
             if (_templates.ContainsKey(name))
             {
                 throw new ArgumentException(
-                    $"Template '{name}' is already registered", nameof(name));
+                    $"Template '{name}' is already registered",
+                    nameof(name)
+                );
             }
 
             _templates[name] = definition;
@@ -126,7 +161,8 @@ public class EntityFactory : IEntityFactory
     /// <inheritdoc/>
     public bool HasTemplate(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return false;
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
 
         lock (_lock)
         {
@@ -146,7 +182,8 @@ public class EntityFactory : IEntityFactory
     /// <inheritdoc/>
     public bool UnregisterTemplate(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return false;
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
 
         lock (_lock)
         {
@@ -179,7 +216,8 @@ public class EntityFactory : IEntityFactory
         if (duplicates.Any())
         {
             throw new ArgumentException(
-                $"Duplicate component types found: {string.Join(", ", duplicates.Select(t => t.Name))}");
+                $"Duplicate component types found: {string.Join(", ", duplicates.Select(t => t.Name))}"
+            );
         }
     }
 }

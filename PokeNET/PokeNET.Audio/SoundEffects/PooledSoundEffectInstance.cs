@@ -1,6 +1,6 @@
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework;
 using System;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 
 namespace PokeNET.Audio.SoundEffects
 {
@@ -171,15 +171,9 @@ namespace PokeNET.Audio.SoundEffects
             if (_disposed || _instance == null)
                 return;
 
-            var listener = new AudioListener
-            {
-                Position = listenerPosition
-            };
+            var listener = new AudioListener { Position = listenerPosition };
 
-            var emitter = new AudioEmitter
-            {
-                Position = emitterPosition
-            };
+            var emitter = new AudioEmitter { Position = emitterPosition };
 
             Apply3D(listener, emitter);
         }
@@ -208,9 +202,13 @@ namespace PokeNET.Audio.SoundEffects
             try
             {
                 // MonoGame stores the parent SoundEffect in a private field
-                var field = _instance.GetType().GetField("_soundEffect",
-                    System.Reflection.BindingFlags.NonPublic |
-                    System.Reflection.BindingFlags.Instance);
+                var field = _instance
+                    .GetType()
+                    .GetField(
+                        "_soundEffect",
+                        System.Reflection.BindingFlags.NonPublic
+                            | System.Reflection.BindingFlags.Instance
+                    );
 
                 if (field != null)
                 {
@@ -243,7 +241,11 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Fade in a sound effect instance
         /// </summary>
-        public static void FadeIn(this PooledSoundEffectInstance instance, float duration, float targetVolume = 1.0f)
+        public static void FadeIn(
+            this PooledSoundEffectInstance instance,
+            float duration,
+            float targetVolume = 1.0f
+        )
         {
             if (instance == null || duration <= 0)
                 return;

@@ -40,30 +40,41 @@ public sealed class ScriptingEngine : IScriptingEngine
         ILogger<ScriptingEngine> logger,
         IScriptLoader? scriptLoader = null,
         ILogger<ScriptCompilationCache>? cacheLogger = null,
-        int maxCacheSize = 100)
+        int maxCacheSize = 100
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _scriptLoader = scriptLoader;
 
         // Create cache logger if not provided - use NullLogger as fallback
-        cacheLogger ??= Microsoft.Extensions.Logging.Abstractions.NullLogger<ScriptCompilationCache>.Instance;
+        cacheLogger ??= Microsoft
+            .Extensions
+            .Logging
+            .Abstractions
+            .NullLogger<ScriptCompilationCache>
+            .Instance;
         _cache = new ScriptCompilationCache(cacheLogger, maxCacheSize);
 
         // Configure default script options with common imports and references
-        _defaultScriptOptions = ScriptOptions.Default
-            .WithImports(
+        _defaultScriptOptions = ScriptOptions
+            .Default.WithImports(
                 "System",
                 "System.Collections.Generic",
                 "System.Linq",
                 "System.Text",
-                "System.Threading.Tasks")
+                "System.Threading.Tasks"
+            )
             .WithReferences(
-                typeof(object).Assembly,              // System.Private.CoreLib
-                typeof(Enumerable).Assembly,          // System.Linq
-                typeof(List<>).Assembly)              // System.Collections.Generic
+                typeof(object).Assembly, // System.Private.CoreLib
+                typeof(Enumerable).Assembly, // System.Linq
+                typeof(List<>).Assembly
+            ) // System.Collections.Generic
             .WithOptimizationLevel(OptimizationLevel.Release);
 
-        _logger.LogInformation("ScriptingEngine initialized with cache size: {CacheSize}", maxCacheSize);
+        _logger.LogInformation(
+            "ScriptingEngine initialized with cache size: {CacheSize}",
+            maxCacheSize
+        );
     }
 
     /// <inheritdoc/>
@@ -71,7 +82,8 @@ public sealed class ScriptingEngine : IScriptingEngine
         string scriptId,
         string sourceCode,
         ScriptCompilationOptions? options = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return await CompileInternalAsync(sourceCode, scriptId, options, cancellationToken);
     }
@@ -79,11 +91,14 @@ public sealed class ScriptingEngine : IScriptingEngine
     /// <inheritdoc/>
     public async Task<ICompiledScript> LoadScriptAsync(
         string scriptPath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (_scriptLoader == null)
         {
-            throw new InvalidOperationException("No script loader configured. Cannot load scripts from files.");
+            throw new InvalidOperationException(
+                "No script loader configured. Cannot load scripts from files."
+            );
         }
 
         _logger.LogDebug("Loading script from: {ScriptPath}", scriptPath);
@@ -93,14 +108,16 @@ public sealed class ScriptingEngine : IScriptingEngine
             loadResult.SourceCode,
             loadResult.ScriptId,
             null,
-            cancellationToken);
+            cancellationToken
+        );
     }
 
     /// <inheritdoc/>
     public async Task<ScriptExecutionResult> ExecuteAsync(
         ICompiledScript script,
         IScriptContext context,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (script is not CompiledScript internalScript)
         {
@@ -121,7 +138,7 @@ public sealed class ScriptingEngine : IScriptingEngine
             {
                 Success = true,
                 ReturnValue = result.ReturnValue,
-                ExecutionTime = stopwatch.Elapsed
+                ExecutionTime = stopwatch.Elapsed,
             };
         }
         catch (Exception ex)
@@ -133,7 +150,7 @@ public sealed class ScriptingEngine : IScriptingEngine
             {
                 Success = false,
                 Exception = ex,
-                ExecutionTime = stopwatch.Elapsed
+                ExecutionTime = stopwatch.Elapsed,
             };
         }
     }
@@ -144,7 +161,8 @@ public sealed class ScriptingEngine : IScriptingEngine
         string functionName,
         IScriptContext context,
         object?[]? arguments = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (script is not CompiledScript internalScript)
         {
@@ -155,7 +173,11 @@ public sealed class ScriptingEngine : IScriptingEngine
 
         try
         {
-            _logger.LogDebug("Executing function {FunctionName} in script: {ScriptId}", functionName, script.ScriptId);
+            _logger.LogDebug(
+                "Executing function {FunctionName} in script: {ScriptId}",
+                functionName,
+                script.ScriptId
+            );
 
             // Execute the script first to get the state
             var state = await internalScript.RoslynScript.RunAsync(context, cancellationToken);
@@ -164,13 +186,17 @@ public sealed class ScriptingEngine : IScriptingEngine
             var scriptType = state.ReturnValue?.GetType();
             if (scriptType == null)
             {
-                throw new InvalidOperationException($"Script did not return an object with methods");
+                throw new InvalidOperationException(
+                    $"Script did not return an object with methods"
+                );
             }
 
             var method = scriptType.GetMethod(functionName);
             if (method == null)
             {
-                throw new InvalidOperationException($"Function '{functionName}' not found in script");
+                throw new InvalidOperationException(
+                    $"Function '{functionName}' not found in script"
+                );
             }
 
             var result = method.Invoke(state.ReturnValue, arguments);
@@ -181,19 +207,24 @@ public sealed class ScriptingEngine : IScriptingEngine
             {
                 Success = true,
                 ReturnValue = result,
-                ExecutionTime = stopwatch.Elapsed
+                ExecutionTime = stopwatch.Elapsed,
             };
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "Function execution failed: {FunctionName} in {ScriptId}", functionName, script.ScriptId);
+            _logger.LogError(
+                ex,
+                "Function execution failed: {FunctionName} in {ScriptId}",
+                functionName,
+                script.ScriptId
+            );
 
             return new ScriptExecutionResult
             {
                 Success = false,
                 Exception = ex,
-                ExecutionTime = stopwatch.Elapsed
+                ExecutionTime = stopwatch.Elapsed,
             };
         }
     }
@@ -227,8 +258,8 @@ public sealed class ScriptingEngine : IScriptingEngine
                 ["HitRate"] = stats.HitRate,
                 ["TotalRequests"] = stats.TotalRequests,
                 ["MaxCacheSize"] = stats.MaxSize,
-                ["UsagePercentage"] = stats.UsagePercentage
-            }
+                ["UsagePercentage"] = stats.UsagePercentage,
+            },
         };
     }
 
@@ -239,7 +270,8 @@ public sealed class ScriptingEngine : IScriptingEngine
         string scriptCode,
         string scriptId,
         ScriptCompilationOptions? options = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(scriptCode))
             throw new ArgumentException("Script code cannot be null or empty.", nameof(scriptCode));
@@ -259,7 +291,8 @@ public sealed class ScriptingEngine : IScriptingEngine
                 _logger.LogInformation(
                     "Retrieved compiled script from cache in {ElapsedMs}ms: {ScriptId}",
                     stopwatch.ElapsedMilliseconds,
-                    scriptId);
+                    scriptId
+                );
                 return Task.FromResult(cachedScript!);
             }
 
@@ -269,14 +302,17 @@ public sealed class ScriptingEngine : IScriptingEngine
             var script = CSharpScript.Create<object>(
                 scriptCode,
                 _defaultScriptOptions,
-                globalsType: null);
+                globalsType: null
+            );
 
             // Compile with cancellation support
             var compilation = script.GetCompilation();
             var diagnostics = compilation.GetDiagnostics();
 
             // Check for compilation errors
-            var errors = diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error).ToList();
+            var errors = diagnostics
+                .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+                .ToList();
             if (errors.Any())
             {
                 var errorMessages = errors.Select(e => $"{e.Id}: {e.GetMessage()}");
@@ -286,11 +322,13 @@ public sealed class ScriptingEngine : IScriptingEngine
                     "Script compilation failed with {ErrorCount} errors: {ScriptId}\n{Errors}",
                     errors.Count,
                     scriptId,
-                    errorSummary);
+                    errorSummary
+                );
 
                 throw new Abstractions.ScriptCompilationException(
                     scriptId,
-                    $"Script compilation failed with {errors.Count} error(s).");
+                    $"Script compilation failed with {errors.Count} error(s)."
+                );
             }
 
             // Convert diagnostics to our model
@@ -301,7 +339,8 @@ public sealed class ScriptingEngine : IScriptingEngine
                 script,
                 scriptCode,
                 scriptId,
-                scriptDiagnostics);
+                scriptDiagnostics
+            );
 
             // Add to cache
             _cache.Add(sourceHash, compiledScript);
@@ -312,7 +351,8 @@ public sealed class ScriptingEngine : IScriptingEngine
                 "Script compiled successfully in {ElapsedMs}ms: {ScriptId} (Warnings: {WarningCount})",
                 stopwatch.ElapsedMilliseconds,
                 scriptId,
-                scriptDiagnostics.Count(d => d.Severity == Models.DiagnosticSeverity.Warning));
+                scriptDiagnostics.Count(d => d.Severity == Models.DiagnosticSeverity.Warning)
+            );
 
             return Task.FromResult<ICompiledScript>(compiledScript);
         }
@@ -330,10 +370,12 @@ public sealed class ScriptingEngine : IScriptingEngine
             _logger.LogError(
                 ex,
                 "Unexpected error during script compilation: {ScriptId}",
-                scriptId);
+                scriptId
+            );
             throw new Abstractions.ScriptCompilationException(
                 scriptId,
-                "An unexpected error occurred during compilation.");
+                "An unexpected error occurred during compilation."
+            );
         }
     }
 
@@ -343,7 +385,6 @@ public sealed class ScriptingEngine : IScriptingEngine
         _logger.LogInformation("Clearing script compilation cache");
         _cache.Clear();
     }
-
 
     /// <summary>
     /// Computes a SHA256 hash of the source code for cache validation.
@@ -367,21 +408,26 @@ public sealed class ScriptingEngine : IScriptingEngine
             var severity = diagnostic.Severity switch
             {
                 Microsoft.CodeAnalysis.DiagnosticSeverity.Info => Models.DiagnosticSeverity.Info,
-                Microsoft.CodeAnalysis.DiagnosticSeverity.Warning => Models.DiagnosticSeverity.Warning,
+                Microsoft.CodeAnalysis.DiagnosticSeverity.Warning => Models
+                    .DiagnosticSeverity
+                    .Warning,
                 Microsoft.CodeAnalysis.DiagnosticSeverity.Error => Models.DiagnosticSeverity.Error,
-                _ => Models.DiagnosticSeverity.Info
+                _ => Models.DiagnosticSeverity.Info,
             };
 
             var lineSpan = diagnostic.Location.GetLineSpan();
             var lineNumber = lineSpan.StartLinePosition.Line + 1;
             var columnNumber = lineSpan.StartLinePosition.Character + 1;
 
-            result.Add(new ScriptDiagnostic(
-                severity,
-                diagnostic.GetMessage(),
-                diagnostic.Id,
-                lineNumber,
-                columnNumber));
+            result.Add(
+                new ScriptDiagnostic(
+                    severity,
+                    diagnostic.GetMessage(),
+                    diagnostic.Id,
+                    lineNumber,
+                    columnNumber
+                )
+            );
         }
 
         return result;

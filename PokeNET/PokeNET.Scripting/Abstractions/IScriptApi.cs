@@ -141,7 +141,8 @@ public interface IComponentApi
     /// <param name="entityId">The entity to add the component to.</param>
     /// <param name="component">The component data.</param>
     /// <exception cref="InvalidOperationException">Thrown if entity doesn't exist or already has this component.</exception>
-    void AddComponent<T>(ulong entityId, T component) where T : struct;
+    void AddComponent<T>(ulong entityId, T component)
+        where T : struct;
 
     /// <summary>
     /// Removes a component from an entity.
@@ -149,7 +150,8 @@ public interface IComponentApi
     /// <typeparam name="T">The component type.</typeparam>
     /// <param name="entityId">The entity to remove the component from.</param>
     /// <returns>True if the component was removed; false if it didn't exist.</returns>
-    bool RemoveComponent<T>(ulong entityId) where T : struct;
+    bool RemoveComponent<T>(ulong entityId)
+        where T : struct;
 
     /// <summary>
     /// Gets a component from an entity.
@@ -158,7 +160,8 @@ public interface IComponentApi
     /// <param name="entityId">The entity to query.</param>
     /// <returns>The component data.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the entity doesn't have this component.</exception>
-    T GetComponent<T>(ulong entityId) where T : struct;
+    T GetComponent<T>(ulong entityId)
+        where T : struct;
 
     /// <summary>
     /// Attempts to get a component from an entity.
@@ -167,7 +170,8 @@ public interface IComponentApi
     /// <param name="entityId">The entity to query.</param>
     /// <param name="component">The component data if found.</param>
     /// <returns>True if the component exists; otherwise false.</returns>
-    bool TryGetComponent<T>(ulong entityId, out T component) where T : struct;
+    bool TryGetComponent<T>(ulong entityId, out T component)
+        where T : struct;
 
     /// <summary>
     /// Updates a component on an entity.
@@ -176,7 +180,8 @@ public interface IComponentApi
     /// <param name="entityId">The entity to update.</param>
     /// <param name="component">The new component data.</param>
     /// <exception cref="InvalidOperationException">Thrown if the entity doesn't have this component.</exception>
-    void SetComponent<T>(ulong entityId, T component) where T : struct;
+    void SetComponent<T>(ulong entityId, T component)
+        where T : struct;
 
     /// <summary>
     /// Checks if an entity has a specific component.
@@ -184,7 +189,8 @@ public interface IComponentApi
     /// <typeparam name="T">The component type.</typeparam>
     /// <param name="entityId">The entity to check.</param>
     /// <returns>True if the entity has this component; otherwise false.</returns>
-    bool HasComponent<T>(ulong entityId) where T : struct;
+    bool HasComponent<T>(ulong entityId)
+        where T : struct;
 
     /// <summary>
     /// Gets all component types attached to an entity.
@@ -209,7 +215,8 @@ public interface IEventApi
     /// <remarks>
     /// Subscriptions are automatically cleaned up when the script context is disposed.
     /// </remarks>
-    IEventSubscription Subscribe<T>(Action<T> handler) where T : class;
+    IEventSubscription Subscribe<T>(Action<T> handler)
+        where T : class;
 
     /// <summary>
     /// Subscribes to an event by name (for dynamic languages).
@@ -233,7 +240,8 @@ public interface IEventApi
     /// <remarks>
     /// Events are processed asynchronously to avoid blocking the script.
     /// </remarks>
-    void Emit<T>(T eventData) where T : class;
+    void Emit<T>(T eventData)
+        where T : class;
 
     /// <summary>
     /// Emits an event by name (for dynamic languages).
@@ -281,14 +289,16 @@ public interface IQueryApi
     /// </summary>
     /// <typeparam name="T">The component type to filter by.</typeparam>
     /// <returns>Collection of entity IDs that have the component.</returns>
-    IReadOnlyList<ulong> GetEntitiesWith<T>() where T : struct;
+    IReadOnlyList<ulong> GetEntitiesWith<T>()
+        where T : struct;
 
     /// <summary>
     /// Gets the count of entities matching a component filter.
     /// </summary>
     /// <typeparam name="T">The component type.</typeparam>
     /// <returns>Number of entities with this component.</returns>
-    int CountEntitiesWith<T>() where T : struct;
+    int CountEntitiesWith<T>()
+        where T : struct;
 }
 
 /// <summary>
@@ -301,14 +311,16 @@ public interface IQueryBuilder
     /// </summary>
     /// <typeparam name="T">The required component type.</typeparam>
     /// <returns>This builder for chaining.</returns>
-    IQueryBuilder With<T>() where T : struct;
+    IQueryBuilder With<T>()
+        where T : struct;
 
     /// <summary>
     /// Filters for entities that do NOT have a specific component.
     /// </summary>
     /// <typeparam name="T">The excluded component type.</typeparam>
     /// <returns>This builder for chaining.</returns>
-    IQueryBuilder Without<T>() where T : struct;
+    IQueryBuilder Without<T>()
+        where T : struct;
 
     /// <summary>
     /// Limits the number of results returned.
@@ -336,7 +348,8 @@ public interface IResourceApi
     /// <typeparam name="T">The resource type.</typeparam>
     /// <returns>The resource instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the resource doesn't exist.</exception>
-    T GetResource<T>() where T : class;
+    T GetResource<T>()
+        where T : class;
 
     /// <summary>
     /// Attempts to get a singleton resource from the world.
@@ -344,12 +357,14 @@ public interface IResourceApi
     /// <typeparam name="T">The resource type.</typeparam>
     /// <param name="resource">The resource if found.</param>
     /// <returns>True if the resource exists; otherwise false.</returns>
-    bool TryGetResource<T>(out T? resource) where T : class;
+    bool TryGetResource<T>(out T? resource)
+        where T : class;
 
     /// <summary>
     /// Checks if a resource exists in the world.
     /// </summary>
     /// <typeparam name="T">The resource type.</typeparam>
     /// <returns>True if the resource exists; otherwise false.</returns>
-    bool HasResource<T>() where T : class;
+    bool HasResource<T>()
+        where T : class;
 }

@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Components;
 
 /// <summary>
@@ -23,7 +25,7 @@ public enum CollisionLayer
     Object = 1 << 2,
 
     /// <summary>Terrain/tile layer (walls, water, grass, etc.).</summary>
-    Terrain = 1 << 3
+    Terrain = 1 << 3,
 }
 
 /// <summary>
@@ -75,7 +77,12 @@ public struct TileCollider
     public TileCollider(
         CollisionLayer layer,
         bool isSolid = true,
-        CollisionLayer interactsWithLayers = CollisionLayer.Player | CollisionLayer.NPC | CollisionLayer.Object | CollisionLayer.Terrain)
+        CollisionLayer interactsWithLayers =
+            CollisionLayer.Player
+            | CollisionLayer.NPC
+            | CollisionLayer.Object
+            | CollisionLayer.Terrain
+    )
     {
         Layer = layer;
         IsSolid = isSolid;

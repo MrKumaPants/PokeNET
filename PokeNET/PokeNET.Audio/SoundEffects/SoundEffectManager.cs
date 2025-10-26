@@ -1,8 +1,8 @@
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 
 namespace PokeNET.Audio.SoundEffects
 {
@@ -17,7 +17,7 @@ namespace PokeNET.Audio.SoundEffects
         Character,
         Environment,
         Item,
-        System
+        System,
     }
 
     /// <summary>
@@ -98,7 +98,11 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Load a sound effect into the cache
         /// </summary>
-        public void LoadSoundEffect(string soundKey, SoundEffect soundEffect, SoundCategory category = SoundCategory.System)
+        public void LoadSoundEffect(
+            string soundKey,
+            SoundEffect soundEffect,
+            SoundCategory category = SoundCategory.System
+        )
         {
             if (string.IsNullOrEmpty(soundKey))
                 throw new ArgumentNullException(nameof(soundKey));
@@ -111,7 +115,10 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a sound effect with optional configuration
         /// </summary>
-        public PooledSoundEffectInstance? Play(string soundKey, SoundEffectPlaybackConfig? config = null)
+        public PooledSoundEffectInstance? Play(
+            string soundKey,
+            SoundEffectPlaybackConfig? config = null
+        )
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SoundEffectManager));
@@ -151,7 +158,8 @@ namespace PokeNET.Audio.SoundEffects
 
             if (config.RandomizeVariations)
             {
-                finalVolume *= 1.0f + ((float)_random.NextDouble() * 2.0f - 1.0f) * config.VolumeVariation;
+                finalVolume *=
+                    1.0f + ((float)_random.NextDouble() * 2.0f - 1.0f) * config.VolumeVariation;
                 finalPitch += ((float)_random.NextDouble() * 2.0f - 1.0f) * config.PitchVariation;
             }
 
@@ -159,7 +167,8 @@ namespace PokeNET.Audio.SoundEffects
             finalPitch = Math.Clamp(finalPitch, -1.0f, 1.0f);
 
             // Apply category and master volume
-            float effectiveVolume = finalVolume * GetCategoryVolume(config.Category) * _masterVolume;
+            float effectiveVolume =
+                finalVolume * GetCategoryVolume(config.Category) * _masterVolume;
 
             // Configure the instance
             instance.Volume = effectiveVolume;
@@ -187,43 +196,62 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Play a simple sound effect with default settings
         /// </summary>
-        public PooledSoundEffectInstance? PlaySimple(string soundKey, SoundCategory category = SoundCategory.System, float volume = 1.0f)
+        public PooledSoundEffectInstance? PlaySimple(
+            string soundKey,
+            SoundCategory category = SoundCategory.System,
+            float volume = 1.0f
+        )
         {
-            return Play(soundKey, new SoundEffectPlaybackConfig
-            {
-                Category = category,
-                Volume = volume
-            });
+            return Play(
+                soundKey,
+                new SoundEffectPlaybackConfig { Category = category, Volume = volume }
+            );
         }
 
         /// <summary>
         /// Play a 3D positional sound effect
         /// </summary>
-        public PooledSoundEffectInstance? Play3D(string soundKey, Vector3 position, SoundCategory category = SoundCategory.System, float volume = 1.0f)
+        public PooledSoundEffectInstance? Play3D(
+            string soundKey,
+            Vector3 position,
+            SoundCategory category = SoundCategory.System,
+            float volume = 1.0f
+        )
         {
-            return Play(soundKey, new SoundEffectPlaybackConfig
-            {
-                Category = category,
-                Volume = volume,
-                Use3D = true,
-                Position = position
-            });
+            return Play(
+                soundKey,
+                new SoundEffectPlaybackConfig
+                {
+                    Category = category,
+                    Volume = volume,
+                    Use3D = true,
+                    Position = position,
+                }
+            );
         }
 
         /// <summary>
         /// Play a sound effect with random variations
         /// </summary>
-        public PooledSoundEffectInstance? PlayWithVariation(string soundKey, SoundCategory category = SoundCategory.System,
-            float volume = 1.0f, float pitchVariation = 0.1f, float volumeVariation = 0.1f)
+        public PooledSoundEffectInstance? PlayWithVariation(
+            string soundKey,
+            SoundCategory category = SoundCategory.System,
+            float volume = 1.0f,
+            float pitchVariation = 0.1f,
+            float volumeVariation = 0.1f
+        )
         {
-            return Play(soundKey, new SoundEffectPlaybackConfig
-            {
-                Category = category,
-                Volume = volume,
-                RandomizeVariations = true,
-                PitchVariation = pitchVariation,
-                VolumeVariation = volumeVariation
-            });
+            return Play(
+                soundKey,
+                new SoundEffectPlaybackConfig
+                {
+                    Category = category,
+                    Volume = volume,
+                    RandomizeVariations = true,
+                    PitchVariation = pitchVariation,
+                    VolumeVariation = volumeVariation,
+                }
+            );
         }
 
         /// <summary>
@@ -297,7 +325,9 @@ namespace PokeNET.Audio.SoundEffects
         /// <summary>
         /// Preload multiple sound effects
         /// </summary>
-        public void PreloadSounds(Dictionary<string, (SoundEffect effect, SoundCategory category)> sounds)
+        public void PreloadSounds(
+            Dictionary<string, (SoundEffect effect, SoundCategory category)> sounds
+        )
         {
             foreach (var kvp in sounds)
             {
@@ -324,7 +354,9 @@ namespace PokeNET.Audio.SoundEffects
 
         private void CleanupStoppedSounds()
         {
-            var stoppedInstances = _activeInstances.Where(i => i.State == SoundState.Stopped).ToList();
+            var stoppedInstances = _activeInstances
+                .Where(i => i.State == SoundState.Stopped)
+                .ToList();
 
             foreach (var instance in stoppedInstances)
             {

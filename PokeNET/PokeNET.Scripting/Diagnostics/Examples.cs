@@ -19,7 +19,8 @@ namespace PokeNET.Scripting.Diagnostics
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate(),
-                enableProfiling: true);
+                enableProfiling: true
+            );
 
             // Start monitoring
             var metrics = monitor.StartMonitoring("PlayerController.psl");
@@ -58,7 +59,8 @@ namespace PokeNET.Scripting.Diagnostics
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Strict(),
-                enableProfiling: true);
+                enableProfiling: true
+            );
 
             var metrics = monitor.StartMonitoring("ComplexGameLogic.psl");
 
@@ -114,7 +116,8 @@ namespace PokeNET.Scripting.Diagnostics
         {
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
-                PerformanceBudget.Moderate());
+                PerformanceBudget.Moderate()
+            );
 
             var metrics = monitor.StartMonitoring("DevelopmentScript.psl");
 
@@ -137,12 +140,17 @@ namespace PokeNET.Scripting.Diagnostics
                 reloadTimer.Stop();
                 metrics.RecordHotReload(reloadTimer.Elapsed);
 
-                logger.LogInformation("Hot reload #{Count} completed in {Time}ms",
-                    i + 1, reloadTimer.ElapsedMilliseconds);
+                logger.LogInformation(
+                    "Hot reload #{Count} completed in {Time}ms",
+                    i + 1,
+                    reloadTimer.ElapsedMilliseconds
+                );
             }
 
             var report = monitor.StopMonitoring("DevelopmentScript.psl");
-            Console.WriteLine($"Average hot reload time: {metrics.AverageHotReloadTime.TotalMilliseconds:F2}ms");
+            Console.WriteLine(
+                $"Average hot reload time: {metrics.AverageHotReloadTime.TotalMilliseconds:F2}ms"
+            );
         }
 
         /// <summary>
@@ -152,7 +160,8 @@ namespace PokeNET.Scripting.Diagnostics
         {
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
-                PerformanceBudget.Moderate());
+                PerformanceBudget.Moderate()
+            );
 
             // Simulate multiple executions
             for (int i = 0; i < 10; i++)
@@ -199,15 +208,16 @@ namespace PokeNET.Scripting.Diagnostics
                 MaxExecutionTime = TimeSpan.FromMilliseconds(250),
                 MaxTotalTime = TimeSpan.FromSeconds(1),
                 MaxMemoryUsage = 25 * 1024 * 1024, // 25 MB
-                MaxPeakMemory = 50 * 1024 * 1024,  // 50 MB
+                MaxPeakMemory = 50 * 1024 * 1024, // 50 MB
                 MaxGCCollections = 8,
-                MaxHotReloadTime = TimeSpan.FromMilliseconds(300)
+                MaxHotReloadTime = TimeSpan.FromMilliseconds(300),
             };
 
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 customBudget,
-                enableProfiling: true);
+                enableProfiling: true
+            );
 
             var metrics = monitor.StartMonitoring("CustomBudgetScript.psl");
 
@@ -230,8 +240,10 @@ namespace PokeNET.Scripting.Diagnostics
                     Console.WriteLine("Budget Violations:");
                     foreach (var violation in report.BudgetReport.Violations)
                     {
-                        Console.WriteLine($"  [{violation.Severity}] {violation.Metric}: " +
-                                        $"{violation.Actual} (budget: {violation.Budget})");
+                        Console.WriteLine(
+                            $"  [{violation.Severity}] {violation.Metric}: "
+                                + $"{violation.Actual} (budget: {violation.Budget})"
+                        );
                     }
                 }
             }
@@ -245,7 +257,8 @@ namespace PokeNET.Scripting.Diagnostics
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Strict(),
-                enableProfiling: true);
+                enableProfiling: true
+            );
 
             var metrics = monitor.StartMonitoring("MemoryIntensiveScript.psl");
 
@@ -283,8 +296,10 @@ namespace PokeNET.Scripting.Diagnostics
 
                 if (metrics.TotalGCCollections > 5)
                 {
-                    logger.LogWarning("High GC pressure detected: {Count} collections",
-                        metrics.TotalGCCollections);
+                    logger.LogWarning(
+                        "High GC pressure detected: {Count} collections",
+                        metrics.TotalGCCollections
+                    );
                 }
             }
         }
@@ -297,7 +312,8 @@ namespace PokeNET.Scripting.Diagnostics
             var monitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 PerformanceBudget.Moderate(),
-                enableProfiling: true);
+                enableProfiling: true
+            );
 
             // Run two versions of a script
             var results = new System.Collections.Generic.Dictionary<string, PerformanceReport>();
@@ -320,13 +336,17 @@ namespace PokeNET.Scripting.Diagnostics
 
             // Compare results
             Console.WriteLine("Performance Comparison:");
-            Console.WriteLine($"v1 Total: {results["v1"].Metrics?.TotalTime.TotalMilliseconds:F2}ms");
-            Console.WriteLine($"v2 Total: {results["v2"].Metrics?.TotalTime.TotalMilliseconds:F2}ms");
+            Console.WriteLine(
+                $"v1 Total: {results["v1"].Metrics?.TotalTime.TotalMilliseconds:F2}ms"
+            );
+            Console.WriteLine(
+                $"v2 Total: {results["v2"].Metrics?.TotalTime.TotalMilliseconds:F2}ms"
+            );
 
             var v1Metrics = results["v1"].Metrics!;
             var v2Metrics = results["v2"].Metrics!;
-            var improvement = ((v1Metrics.TotalTime - v2Metrics.TotalTime)
-                             / v1Metrics.TotalTime) * 100;
+            var improvement =
+                ((v1Metrics.TotalTime - v2Metrics.TotalTime) / v1Metrics.TotalTime) * 100;
             Console.WriteLine($"Improvement: {improvement:F1}%");
         }
 
@@ -364,16 +384,21 @@ namespace PokeNET.Scripting.Diagnostics
 
         public PerformanceMonitoredScriptEngine(
             ILogger<PerformanceMonitoredScriptEngine> logger,
-            PerformanceBudget? budget = null)
+            PerformanceBudget? budget = null
+        )
         {
             _logger = logger;
             _perfMonitor = new ScriptPerformanceMonitor(
                 (logger as ILogger<ScriptPerformanceMonitor>)!,
                 budget ?? PerformanceBudget.Moderate(),
-                enableProfiling: true);
+                enableProfiling: true
+            );
         }
 
-        public async Task<ExecutionResult> ExecuteScriptAsync(string scriptPath, object? context = null)
+        public async Task<ExecutionResult> ExecuteScriptAsync(
+            string scriptPath,
+            object? context = null
+        )
         {
             var scriptName = System.IO.Path.GetFileName(scriptPath);
             var metrics = _perfMonitor.StartMonitoring(scriptName);
@@ -448,12 +473,16 @@ namespace PokeNET.Scripting.Diagnostics
                     scriptName,
                     metrics.CompilationTime.TotalMilliseconds,
                     metrics.ExecutionTime.TotalMilliseconds,
-                    FormatBytes(metrics.TotalMemoryAllocated));
+                    FormatBytes(metrics.TotalMemoryAllocated)
+                );
 
                 // Check for budget violations
                 if (report.BudgetReport?.HasCriticalViolations == true)
                 {
-                    _logger.LogError("Critical performance budget violations in {Script}", scriptName);
+                    _logger.LogError(
+                        "Critical performance budget violations in {Script}",
+                        scriptName
+                    );
                     report.BudgetReport.LogViolations(_logger);
                 }
                 else if (report.BudgetReport?.HasWarnings == true)

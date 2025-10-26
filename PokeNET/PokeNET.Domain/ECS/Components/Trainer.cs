@@ -52,7 +52,13 @@ public sealed class Trainer
     /// <param name="trainerClass">Trainer class/type.</param>
     /// <param name="isPlayer">Whether this is the player character.</param>
     /// <param name="gender">Trainer's gender.</param>
-    public Trainer(Guid trainerId, string trainerName, string trainerClass, bool isPlayer, TrainerGender gender)
+    public Trainer(
+        Guid trainerId,
+        string trainerName,
+        string trainerClass,
+        bool isPlayer,
+        TrainerGender gender
+    )
     {
         TrainerId = trainerId;
         TrainerName = trainerName ?? throw new ArgumentNullException(nameof(trainerName));
@@ -68,7 +74,8 @@ public sealed class Trainer
     /// </summary>
     public void AddMoney(int amount)
     {
-        if (amount < 0) throw new ArgumentException("Amount must be positive", nameof(amount));
+        if (amount < 0)
+            throw new ArgumentException("Amount must be positive", nameof(amount));
         Money = Math.Min(Money + amount, 999999); // Cap at 999,999
     }
 
@@ -78,8 +85,10 @@ public sealed class Trainer
     /// <returns>True if successful, false if insufficient funds.</returns>
     public bool RemoveMoney(int amount)
     {
-        if (amount < 0) throw new ArgumentException("Amount must be positive", nameof(amount));
-        if (Money < amount) return false;
+        if (amount < 0)
+            throw new ArgumentException("Amount must be positive", nameof(amount));
+        if (Money < amount)
+            return false;
         Money -= amount;
         return true;
     }
@@ -100,7 +109,8 @@ public sealed class Trainer
     /// </summary>
     public bool HasBadge(int badgeNumber)
     {
-        if (badgeNumber < 0 || badgeNumber > 7) return false;
+        if (badgeNumber < 0 || badgeNumber > 7)
+            return false;
         return (BadgesOwned & (1 << badgeNumber)) != 0;
     }
 
@@ -117,5 +127,5 @@ public enum TrainerGender
 {
     Male,
     Female,
-    NonBinary
+    NonBinary,
 }

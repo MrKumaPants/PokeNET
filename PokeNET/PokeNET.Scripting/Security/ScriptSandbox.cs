@@ -105,7 +105,10 @@ public sealed class ScriptSandbox : IDisposable
             : base(isCollectible: true) // Allows unloading
         {
             _resolver = new AssemblyDependencyResolver(assemblyPath);
-            _allowedAssemblies = new HashSet<string>(allowedAssemblies, StringComparer.OrdinalIgnoreCase);
+            _allowedAssemblies = new HashSet<string>(
+                allowedAssemblies,
+                StringComparer.OrdinalIgnoreCase
+            );
         }
 
         protected override Assembly? Load(AssemblyName assemblyName)
@@ -113,7 +116,9 @@ public sealed class ScriptSandbox : IDisposable
             // Only allow explicitly permitted assemblies
             if (!_allowedAssemblies.Contains(assemblyName.Name ?? string.Empty))
             {
-                throw new SecurityException($"Assembly '{assemblyName.Name}' is not allowed in this sandbox");
+                throw new SecurityException(
+                    $"Assembly '{assemblyName.Name}' is not allowed in this sandbox"
+                );
             }
 
             var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
@@ -128,7 +133,9 @@ public sealed class ScriptSandbox : IDisposable
         protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
         {
             // Deny all unmanaged DLL loading
-            throw new SecurityException($"Loading unmanaged DLL '{unmanagedDllName}' is not permitted");
+            throw new SecurityException(
+                $"Loading unmanaged DLL '{unmanagedDllName}' is not permitted"
+            );
         }
     }
 
@@ -137,8 +144,11 @@ public sealed class ScriptSandbox : IDisposable
     /// </summary>
     public sealed class SecurityException : Exception
     {
-        public SecurityException(string message) : base(message) { }
-        public SecurityException(string message, Exception inner) : base(message, inner) { }
+        public SecurityException(string message)
+            : base(message) { }
+
+        public SecurityException(string message, Exception inner)
+            : base(message, inner) { }
     }
 
     public ScriptSandbox(ScriptPermissions permissions, ILogger<ScriptSandbox>? logger = null)
@@ -157,7 +167,7 @@ public sealed class ScriptSandbox : IDisposable
                 "System.Linq",
                 "System.Console",
                 "netstandard",
-                "PokeNET.Scripting"
+                "PokeNET.Scripting",
             };
 
             // Use a temporary assembly path for the resolver
@@ -175,7 +185,8 @@ public sealed class ScriptSandbox : IDisposable
         string code,
         string? methodName = null,
         object?[]? parameters = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(ScriptSandbox));
@@ -192,12 +203,20 @@ public sealed class ScriptSandbox : IDisposable
 
             if (!validationResult.IsValid)
             {
-                var errors = string.Join("; ", validationResult.Violations
-                    .Where(v => v.Level >= SecurityValidator.SecurityViolation.Severity.Error)
-                    .Select(v => v.Message));
+                var errors = string.Join(
+                    "; ",
+                    validationResult
+                        .Violations.Where(v =>
+                            v.Level >= SecurityValidator.SecurityViolation.Severity.Error
+                        )
+                        .Select(v => v.Message)
+                );
 
-                _logger?.LogWarning("Script validation failed for {ScriptId}: {Errors}",
-                    _permissions.ScriptId, errors);
+                _logger?.LogWarning(
+                    "Script validation failed for {ScriptId}: {Errors}",
+                    _permissions.ScriptId,
+                    errors
+                );
 
                 securityEvents.Add($"Validation failed: {errors}");
 
@@ -206,7 +225,7 @@ public sealed class ScriptSandbox : IDisposable
                     Success = false,
                     Exception = new SecurityException($"Security validation failed: {errors}"),
                     ExecutionTime = stopwatch.Elapsed,
-                    SecurityEvents = securityEvents
+                    SecurityEvents = securityEvents,
                 };
             }
 
@@ -223,15 +242,18 @@ public sealed class ScriptSandbox : IDisposable
                     Success = false,
                     Exception = new SecurityException("Compilation failed"),
                     ExecutionTime = stopwatch.Elapsed,
-                    SecurityEvents = securityEvents
+                    SecurityEvents = securityEvents,
                 };
             }
 
             securityEvents.Add("Compilation successful");
 
             // Step 3: Execute with timeout and resource monitoring
-            _logger?.LogDebug("Executing script {ScriptId} with timeout {Timeout}",
-                _permissions.ScriptId, _permissions.MaxExecutionTime);
+            _logger?.LogDebug(
+                "Executing script {ScriptId} with timeout {Timeout}",
+                _permissions.ScriptId,
+                _permissions.MaxExecutionTime
+            );
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(_permissions.MaxExecutionTime);
@@ -241,7 +263,8 @@ public sealed class ScriptSandbox : IDisposable
                 methodName ?? "Execute",
                 parameters,
                 cts.Token,
-                securityEvents);
+                securityEvents
+            );
 
             stopwatch.Stop();
             long endMemory = GC.GetTotalMemory(forceFullCollection: false);
@@ -251,8 +274,12 @@ public sealed class ScriptSandbox : IDisposable
             bool memoryExceeded = memoryUsed > _permissions.MaxMemoryBytes;
             if (memoryExceeded)
             {
-                _logger?.LogWarning("Script {ScriptId} exceeded memory limit: {Used} > {Limit}",
-                    _permissions.ScriptId, memoryUsed, _permissions.MaxMemoryBytes);
+                _logger?.LogWarning(
+                    "Script {ScriptId} exceeded memory limit: {Used} > {Limit}",
+                    _permissions.ScriptId,
+                    memoryUsed,
+                    _permissions.MaxMemoryBytes
+                );
                 securityEvents.Add($"Memory limit exceeded: {memoryUsed} bytes");
             }
 
@@ -265,7 +292,7 @@ public sealed class ScriptSandbox : IDisposable
                 MemoryUsed = memoryUsed,
                 SecurityEvents = securityEvents,
                 TimedOut = result.exception is OperationCanceledException,
-                MemoryLimitExceeded = memoryExceeded
+                MemoryLimitExceeded = memoryExceeded,
             };
         }
         catch (Exception ex)
@@ -278,7 +305,7 @@ public sealed class ScriptSandbox : IDisposable
                 Success = false,
                 Exception = ex,
                 ExecutionTime = stopwatch.Elapsed,
-                SecurityEvents = securityEvents
+                SecurityEvents = securityEvents,
             };
         }
     }
@@ -294,7 +321,9 @@ public sealed class ScriptSandbox : IDisposable
             var references = GetAllowedReferences();
 
             // Compilation options with security restrictions
-            var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            var compilationOptions = new CSharpCompilationOptions(
+                OutputKind.DynamicallyLinkedLibrary
+            )
                 .WithOptimizationLevel(OptimizationLevel.Release)
                 .WithAllowUnsafe(false) // Disable unsafe code
                 .WithPlatform(Platform.AnyCpu)
@@ -305,7 +334,8 @@ public sealed class ScriptSandbox : IDisposable
                 $"Script_{_permissions.ScriptId}_{Guid.NewGuid():N}",
                 new[] { syntaxTree },
                 references,
-                compilationOptions);
+                compilationOptions
+            );
 
             // Emit to memory
             using var ms = new MemoryStream();
@@ -313,9 +343,12 @@ public sealed class ScriptSandbox : IDisposable
 
             if (!emitResult.Success)
             {
-                var errors = string.Join("; ", emitResult.Diagnostics
-                    .Where(d => d.Severity == DiagnosticSeverity.Error)
-                    .Select(d => d.GetMessage()));
+                var errors = string.Join(
+                    "; ",
+                    emitResult
+                        .Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)
+                        .Select(d => d.GetMessage())
+                );
 
                 _logger?.LogWarning("Compilation failed: {Errors}", errors);
                 securityEvents.Add($"Compilation errors: {errors}");
@@ -378,17 +411,23 @@ public sealed class ScriptSandbox : IDisposable
         string methodName,
         object?[]? parameters,
         CancellationToken cancellationToken,
-        List<string> securityEvents)
+        List<string> securityEvents
+    )
     {
         try
         {
             // Find the first type with the specified method
-            var type = assembly.GetTypes()
-                .FirstOrDefault(t => t.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static) != null);
+            var type = assembly
+                .GetTypes()
+                .FirstOrDefault(t =>
+                    t.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static) != null
+                );
 
             if (type == null)
             {
-                throw new SecurityException($"No public static method '{methodName}' found in script");
+                throw new SecurityException(
+                    $"No public static method '{methodName}' found in script"
+                );
             }
 
             var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
@@ -405,28 +444,98 @@ public sealed class ScriptSandbox : IDisposable
             var timeoutMs = (int)_permissions.MaxExecutionTime.TotalMilliseconds;
             cts.CancelAfter(timeoutMs);
 
-            var task = Task.Run(() =>
-            {
-                // Check cancellation before execution
-                cts.Token.ThrowIfCancellationRequested();
+            // SECURITY FIX VULN-STACK-001: Run with limited stack to prevent stack overflow crashes
+            // Use a separate thread with small stack size (256KB) to force early overflow
+            // NOTE: StackOverflowException CANNOT be caught and will always terminate the process
+            // The smaller stack makes malicious scripts fail FASTER, limiting damage
+            (bool success, object? value, Exception? exception) threadResult = (
+                false,
+                null,
+                new SecurityException("Thread execution failed")
+            );
+            Exception? threadException = null;
 
+            var thread = new Thread(
+                () =>
+                {
+                    try
+                    {
+                        // Check cancellation
+                        cts.Token.ThrowIfCancellationRequested();
+
+                        var result = method.Invoke(null, parameters);
+                        threadResult = (true, result, null);
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        threadResult = (
+                            false,
+                            null,
+                            new OperationCanceledException("Script execution timed out")
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        // Catch all exceptions including reflection-wrapped ones
+                        threadResult = (false, null, ex);
+                        threadException = ex;
+                    }
+                },
+                maxStackSize: 256 * 1024
+            ); // 256KB stack limit - smaller stack = earlier overflow detection
+
+            thread.IsBackground = true;
+            thread.Start();
+
+            // Wait for thread completion with timeout
+            if (!thread.Join(timeoutMs))
+            {
+                // Thread didn't complete in time - interrupt and fail
                 try
                 {
-                    var result = method.Invoke(null, parameters);
-                    return (true, result, (Exception?)null);
+                    thread.Interrupt();
                 }
-                catch (Exception ex)
-                {
-                    return (false, (object?)null, ex);
-                }
-            }, cts.Token);
+                catch { }
+                securityEvents.Add($"Thread execution exceeded timeout, interrupted");
+                return (
+                    false,
+                    null,
+                    new ScriptTimeoutException(
+                        $"Script execution exceeded maximum time of {timeoutMs}ms"
+                    )
+                );
+            }
+
+            // Check if thread crashed due to stack overflow (thread will abort without setting result)
+            if (
+                !threadResult.success
+                && threadException == null
+                && threadResult.exception?.Message == "Thread execution failed"
+            )
+            {
+                securityEvents.Add("Stack overflow detected - thread terminated");
+                return (
+                    false,
+                    null,
+                    new SecurityException(
+                        "Stack overflow detected. Maximum recursion depth likely exceeded."
+                    )
+                );
+            }
+
+            var task = Task.FromResult(threadResult);
 
             // Hard timeout check - if task doesn't complete within timeout, throw
             if (!task.Wait(timeoutMs, cancellationToken))
             {
-                _logger?.LogError("Script execution exceeded hard timeout for {ScriptId}", _permissions.ScriptId);
+                _logger?.LogError(
+                    "Script execution exceeded hard timeout for {ScriptId}",
+                    _permissions.ScriptId
+                );
                 securityEvents.Add("Hard timeout exceeded - execution forcibly terminated");
-                throw new ScriptTimeoutException($"Script execution exceeded maximum time of {timeoutMs}ms");
+                throw new ScriptTimeoutException(
+                    $"Script execution exceeded maximum time of {timeoutMs}ms"
+                );
             }
 
             return await task;
@@ -450,7 +559,8 @@ public sealed class ScriptSandbox : IDisposable
     /// </summary>
     public sealed class ScriptTimeoutException : Exception
     {
-        public ScriptTimeoutException(string message) : base(message) { }
+        public ScriptTimeoutException(string message)
+            : base(message) { }
     }
 
     public void Dispose()

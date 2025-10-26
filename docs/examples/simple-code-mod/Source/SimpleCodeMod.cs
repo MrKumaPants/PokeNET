@@ -79,7 +79,9 @@ namespace SimpleCodeMod
         /// </summary>
         private void OnBattleStart(object sender, BattleEventArgs e)
         {
-            _context.Logger.Info($"Battle started: {e.PlayerCreature.Name} vs {e.OpponentCreature.Name}");
+            _context.Logger.Info(
+                $"Battle started: {e.PlayerCreature.Name} vs {e.OpponentCreature.Name}"
+            );
         }
 
         /// <summary>

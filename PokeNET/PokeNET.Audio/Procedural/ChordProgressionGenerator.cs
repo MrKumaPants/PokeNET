@@ -1,10 +1,10 @@
-using Melanchall.DryWetMidi.MusicTheory;
-using PokeNET.Audio.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Note = Melanchall.DryWetMidi.MusicTheory.Note;
+using Melanchall.DryWetMidi.MusicTheory;
+using PokeNET.Audio.Abstractions;
 using Chord = Melanchall.DryWetMidi.MusicTheory.Chord;
+using Note = Melanchall.DryWetMidi.MusicTheory.Note;
 
 namespace PokeNET.Audio.Procedural
 {
@@ -22,13 +22,19 @@ namespace PokeNET.Audio.Procedural
             ["blues"] = new[] { new[] { 1, 1, 1, 1, 4, 4, 1, 1, 5, 4, 1, 5 } },
             ["calm"] = new[] { new[] { 1, 4, 1, 5 }, new[] { 6, 4, 1, 5 }, new[] { 1, 3, 4, 1 } },
             ["tense"] = new[] { new[] { 1, 2, 5, 1 }, new[] { 6, 7, 1 }, new[] { 4, 7, 3, 6 } },
-            ["mysterious"] = new[] { new[] { 1, 6, 4, 5 }, new[] { 6, 2, 3, 7 }, new[] { 1, 7, 6, 5 } },
-            ["epic"] = new[] { new[] { 1, 5, 6, 3, 4, 1, 4, 5 }, new[] { 6, 4, 1, 5 } }
+            ["mysterious"] = new[]
+            {
+                new[] { 1, 6, 4, 5 },
+                new[] { 6, 2, 3, 7 },
+                new[] { 1, 7, 6, 5 },
+            },
+            ["epic"] = new[] { new[] { 1, 5, 6, 3, 4, 1, 4, 5 }, new[] { 6, 4, 1, 5 } },
         };
 
         public ChordProgressionGenerator(IRandomProvider randomProvider)
         {
-            _randomProvider = randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
+            _randomProvider =
+                randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
         }
 
         /// <summary>
@@ -39,7 +45,8 @@ namespace PokeNET.Audio.Procedural
             string style,
             int bars,
             int chordsPerBar = 1,
-            int octave = 3)
+            int octave = 3
+        )
         {
             var progression = new List<ChordInfo>();
             var pattern = GetProgressionPattern(style);
@@ -51,13 +58,15 @@ namespace PokeNET.Audio.Procedural
                 var chordType = GetChordTypeForDegree(scale, degree, style);
                 var chord = MusicTheoryHelper.GetChordFromDegree(scale, degree, chordType, octave);
 
-                progression.Add(new ChordInfo
-                {
-                    Chord = chord,
-                    Degree = degree,
-                    ChordType = chordType,
-                    Duration = 1.0 / chordsPerBar  // Duration in bars
-                });
+                progression.Add(
+                    new ChordInfo
+                    {
+                        Chord = chord,
+                        Degree = degree,
+                        ChordType = chordType,
+                        Duration = 1.0 / chordsPerBar, // Duration in bars
+                    }
+                );
             }
 
             return progression;
@@ -68,10 +77,11 @@ namespace PokeNET.Audio.Procedural
         /// </summary>
         public List<ChordInfo> GenerateEmotionalProgression(
             Scale scale,
-            float tension,      // 0.0 = calm, 1.0 = tense
-            float complexity,   // 0.0 = simple, 1.0 = complex
+            float tension, // 0.0 = calm, 1.0 = tense
+            float complexity, // 0.0 = simple, 1.0 = complex
             int bars,
-            int octave = 3)
+            int octave = 3
+        )
         {
             var progression = new List<ChordInfo>();
             var chordsPerBar = complexity > 0.5f ? 2 : 1;
@@ -85,35 +95,54 @@ namespace PokeNET.Audio.Procedural
                 // Choose next chord based on tension
                 currentDegree = GetNextDegree(currentDegree, tension, complexity);
                 var chordType = GetChordTypeForDegree(scale, currentDegree, tension, complexity);
-                var chord = MusicTheoryHelper.GetChordFromDegree(scale, currentDegree, chordType, octave);
+                var chord = MusicTheoryHelper.GetChordFromDegree(
+                    scale,
+                    currentDegree,
+                    chordType,
+                    octave
+                );
 
                 // Add extensions for complexity
                 if (complexity > 0.7f && _randomProvider.NextDouble() < 0.3)
                 {
                     chordType = AddChordExtension(chordType);
-                    chord = MusicTheoryHelper.GetChordFromDegree(scale, currentDegree, chordType, octave);
+                    chord = MusicTheoryHelper.GetChordFromDegree(
+                        scale,
+                        currentDegree,
+                        chordType,
+                        octave
+                    );
                 }
 
-                progression.Add(new ChordInfo
-                {
-                    Chord = chord,
-                    Degree = currentDegree,
-                    ChordType = chordType,
-                    Duration = 1.0 / chordsPerBar
-                });
+                progression.Add(
+                    new ChordInfo
+                    {
+                        Chord = chord,
+                        Degree = currentDegree,
+                        ChordType = chordType,
+                        Duration = 1.0 / chordsPerBar,
+                    }
+                );
             }
 
             // Resolve to tonic if ending with tension
             if (progression.Last().Degree != 1)
             {
-                var resolveChord = MusicTheoryHelper.GetChordFromDegree(scale, 1, ChordType.Major, octave);
-                progression.Add(new ChordInfo
-                {
-                    Chord = resolveChord,
-                    Degree = 1,
-                    ChordType = ChordType.Major,
-                    Duration = 1.0
-                });
+                var resolveChord = MusicTheoryHelper.GetChordFromDegree(
+                    scale,
+                    1,
+                    ChordType.Major,
+                    octave
+                );
+                progression.Add(
+                    new ChordInfo
+                    {
+                        Chord = resolveChord,
+                        Degree = 1,
+                        ChordType = ChordType.Major,
+                        Duration = 1.0,
+                    }
+                );
             }
 
             return progression;
@@ -145,7 +174,7 @@ namespace PokeNET.Audio.Procedural
                     5 => ChordType.Dominant7,
                     6 => ChordType.Minor7,
                     7 => ChordType.Minor7,
-                    _ => ChordType.Major
+                    _ => ChordType.Major,
                 };
             }
             else
@@ -159,12 +188,17 @@ namespace PokeNET.Audio.Procedural
                     5 => ChordType.Major,
                     6 => ChordType.Minor,
                     7 => ChordType.Diminished,
-                    _ => ChordType.Major
+                    _ => ChordType.Major,
                 };
             }
         }
 
-        private ChordType GetChordTypeForDegree(Scale scale, int degree, float tension, float complexity)
+        private ChordType GetChordTypeForDegree(
+            Scale scale,
+            int degree,
+            float tension,
+            float complexity
+        )
         {
             // Use 7th chords for higher complexity
             if (complexity > 0.5f)
@@ -178,7 +212,7 @@ namespace PokeNET.Audio.Procedural
                     5 => tension > 0.5f ? ChordType.Dominant7 : ChordType.Major7,
                     6 => ChordType.Minor7,
                     7 => ChordType.Minor7,
-                    _ => ChordType.Major
+                    _ => ChordType.Major,
                 };
             }
             else
@@ -192,7 +226,7 @@ namespace PokeNET.Audio.Procedural
                     5 => ChordType.Major,
                     6 => ChordType.Minor,
                     7 => tension > 0.7f ? ChordType.Diminished : ChordType.Minor,
-                    _ => ChordType.Major
+                    _ => ChordType.Major,
                 };
             }
         }
@@ -208,7 +242,7 @@ namespace PokeNET.Audio.Procedural
                 [4] = new[] { 1, 5, 2 },
                 [5] = new[] { 1, 6 },
                 [6] = new[] { 2, 4, 5 },
-                [7] = new[] { 1, 3 }
+                [7] = new[] { 1, 3 },
             };
 
             var tenseTransitions = new Dictionary<int, int[]>
@@ -219,7 +253,7 @@ namespace PokeNET.Audio.Procedural
                 [4] = new[] { 7, 5 },
                 [5] = new[] { 1, 6 },
                 [6] = new[] { 2, 7 },
-                [7] = new[] { 1, 3 }
+                [7] = new[] { 1, 3 },
             };
 
             var transitions = tension > 0.5f ? tenseTransitions : calmTransitions;
@@ -234,7 +268,7 @@ namespace PokeNET.Audio.Procedural
             {
                 ChordType.Major => ChordType.Major7,
                 ChordType.Minor => ChordType.Minor7,
-                _ => baseType
+                _ => baseType,
             };
         }
     }
@@ -247,7 +281,7 @@ namespace PokeNET.Audio.Procedural
         public Chord Chord { get; set; } = null!;
         public int Degree { get; set; }
         public ChordType ChordType { get; set; }
-        public double Duration { get; set; }  // Duration in bars
+        public double Duration { get; set; } // Duration in bars
         public Note RootNote { get; set; } = null!;
 
         public List<Note> Notes

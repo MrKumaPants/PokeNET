@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using Arch.Core;
+using PokeNET.Domain.ECS.Commands;
 
 namespace PokeNET.Domain.ECS.Factories;
 
@@ -6,27 +9,32 @@ namespace PokeNET.Domain.ECS.Factories;
 /// Factory interface for creating entities with predefined component configurations.
 /// Follows the Open/Closed Principle - extend by creating new factory implementations.
 /// Enables separation of entity creation logic from business logic.
+///
+/// Phase 6 Migration: Now uses CommandBuffer for safe deferred entity creation.
+/// This prevents iterator invalidation crashes when factories are called during queries.
 /// </summary>
 public interface IEntityFactory
 {
     /// <summary>
-    /// Creates an entity from an entity definition with validation.
+    /// Creates an entity from an entity definition with validation using CommandBuffer.
+    /// Safe to call during query execution - structural changes are deferred.
     /// </summary>
-    /// <param name="world">The world to create the entity in.</param>
+    /// <param name="cmd">CommandBuffer for deferred entity creation.</param>
     /// <param name="definition">The entity definition containing components and metadata.</param>
-    /// <returns>The created entity.</returns>
-    /// <exception cref="ArgumentNullException">If world or definition is null.</exception>
+    /// <returns>CreateCommand that can be used to get the entity after Playback via GetEntity().</returns>
+    /// <exception cref="ArgumentNullException">If cmd or definition is null.</exception>
     /// <exception cref="InvalidOperationException">If entity creation fails validation.</exception>
-    Entity Create(World world, EntityDefinition definition);
+    CommandBuffer.CreateCommand Create(CommandBuffer cmd, EntityDefinition definition);
 
     /// <summary>
-    /// Creates an entity from a registered template by name.
+    /// Creates an entity from a registered template by name using CommandBuffer.
+    /// Safe to call during query execution - structural changes are deferred.
     /// </summary>
-    /// <param name="world">The world to create the entity in.</param>
+    /// <param name="cmd">CommandBuffer for deferred entity creation.</param>
     /// <param name="templateName">The name of the registered template.</param>
-    /// <returns>The created entity.</returns>
+    /// <returns>CreateCommand that can be used to get the entity after Playback via GetEntity().</returns>
     /// <exception cref="ArgumentException">If template name is not found.</exception>
-    Entity CreateFromTemplate(World world, string templateName);
+    CommandBuffer.CreateCommand CreateFromTemplate(CommandBuffer cmd, string templateName);
 
     /// <summary>
     /// Registers a named template for reuse.

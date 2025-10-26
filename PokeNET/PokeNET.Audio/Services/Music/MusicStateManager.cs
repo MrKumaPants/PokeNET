@@ -29,8 +29,10 @@ public sealed class MusicStateManager : IMusicStateManager
     {
         get
         {
-            if (_isPlaying && !_isPaused) return PlaybackState.Playing;
-            if (_isPaused) return PlaybackState.Paused;
+            if (_isPlaying && !_isPaused)
+                return PlaybackState.Playing;
+            if (_isPaused)
+                return PlaybackState.Paused;
             return PlaybackState.Stopped;
         }
     }
@@ -74,7 +76,7 @@ public sealed class MusicStateManager : IMusicStateManager
             IsLooping = _isLooping,
             IsMuted = volume == 0.0f,
             IsTransitioning = false,
-            TransitionProgress = 0.0f
+            TransitionProgress = 0.0f,
         };
     }
 

@@ -36,7 +36,10 @@ public interface IScriptLoader
     /// <exception cref="ArgumentNullException">File path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Script file does not exist.</exception>
     /// <exception cref="InvalidOperationException">Script file is invalid or corrupted.</exception>
-    Task<(IScriptMetadata Metadata, string SourceCode)> LoadScriptAsync(string filePath, CancellationToken cancellationToken = default);
+    Task<(IScriptMetadata Metadata, string SourceCode)> LoadScriptAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Validates whether a file is a valid script file.

@@ -46,7 +46,8 @@ public class AudioConfiguration
     public AudioConfiguration(
         IConfiguration configuration,
         ILogger<AudioConfiguration>? logger = null,
-        string? settingsFilePath = null)
+        string? settingsFilePath = null
+    )
     {
         _logger = logger;
         _settingsFilePath = settingsFilePath;
@@ -68,7 +69,10 @@ public class AudioConfiguration
 
         _logger?.LogInformation(
             "Audio configuration loaded: Quality={Quality}, SampleRate={SampleRate}, BufferSize={BufferSize}",
-            _options.Quality, _options.SampleRate, _options.BufferSize);
+            _options.Quality,
+            _options.SampleRate,
+            _options.BufferSize
+        );
 
         // Initialize settings
         _settings = new AudioSettings();
@@ -84,7 +88,8 @@ public class AudioConfiguration
     public AudioConfiguration(
         AudioOptions options,
         ILogger<AudioConfiguration>? logger = null,
-        string? settingsFilePath = null)
+        string? settingsFilePath = null
+    )
     {
         _logger = logger;
         _settingsFilePath = settingsFilePath;
@@ -113,10 +118,9 @@ public class AudioConfiguration
     public AudioConfiguration(
         IOptions<AudioOptions> options,
         ILogger<AudioConfiguration>? logger = null,
-        string? settingsFilePath = null)
-        : this(options.Value, logger, settingsFilePath)
-    {
-    }
+        string? settingsFilePath = null
+    )
+        : this(options.Value, logger, settingsFilePath) { }
 
     /// <summary>
     /// Update audio quality and apply preset
@@ -128,7 +132,10 @@ public class AudioConfiguration
 
         _logger?.LogInformation(
             "Audio quality changed to {Quality}: SampleRate={SampleRate}, BufferSize={BufferSize}",
-            quality, _options.SampleRate, _options.BufferSize);
+            quality,
+            _options.SampleRate,
+            _options.BufferSize
+        );
 
         ConfigurationReloaded?.Invoke(this, EventArgs.Empty);
     }
@@ -226,7 +233,10 @@ Runtime Settings:
     {
         _logger?.LogDebug(
             "Audio setting changed: {Setting} from {OldValue} to {NewValue}",
-            e.SettingName, e.OldValue, e.NewValue);
+            e.SettingName,
+            e.OldValue,
+            e.NewValue
+        );
     }
 
     /// <summary>

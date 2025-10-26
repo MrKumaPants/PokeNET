@@ -18,7 +18,8 @@ public sealed class CacheStatistics
         long cacheHits,
         long cacheMisses,
         int currentSize,
-        int maxSize)
+        int maxSize
+    )
     {
         TotalRequests = totalRequests;
         CacheHits = cacheHits;
@@ -65,6 +66,5 @@ public sealed class CacheStatistics
     /// <summary>
     /// Creates a statistics snapshot with no activity.
     /// </summary>
-    public static CacheStatistics Empty(int maxSize) =>
-        new CacheStatistics(0, 0, 0, 0, maxSize);
+    public static CacheStatistics Empty(int maxSize) => new CacheStatistics(0, 0, 0, 0, maxSize);
 }

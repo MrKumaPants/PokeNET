@@ -1,3 +1,5 @@
+using System;
+
 namespace PokeNET.Domain.ECS.Events;
 
 /// <summary>
@@ -69,5 +71,5 @@ public enum BattleEventType
     SuperEffective,
 
     /// <summary>Not very effective hit.</summary>
-    NotVeryEffective
+    NotVeryEffective,
 }

@@ -34,7 +34,12 @@ public interface IMusicVolumeController
     /// <param name="toVolume">Target volume</param>
     /// <param name="durationMs">Duration in milliseconds</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task FadeVolumeAsync(float fromVolume, float toVolume, int durationMs, CancellationToken cancellationToken = default);
+    Task FadeVolumeAsync(
+        float fromVolume,
+        float toVolume,
+        int durationMs,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Fades in from silence to the specified volume.
@@ -42,7 +47,11 @@ public interface IMusicVolumeController
     /// <param name="targetVolume">Target volume</param>
     /// <param name="duration">Fade duration</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task FadeInAsync(float targetVolume, TimeSpan duration, CancellationToken cancellationToken = default);
+    Task FadeInAsync(
+        float targetVolume,
+        TimeSpan duration,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Fades out from current volume to silence.

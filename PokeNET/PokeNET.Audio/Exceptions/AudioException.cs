@@ -10,18 +10,14 @@ public class AudioException : Exception
     /// Initializes a new instance of the <see cref="AudioException"/> class.
     /// </summary>
     public AudioException()
-        : base("An audio system error occurred.")
-    {
-    }
+        : base("An audio system error occurred.") { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public AudioException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioException"/> class with a message and inner exception.
@@ -29,9 +25,7 @@ public class AudioException : Exception
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public AudioException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }
 
 /// <summary>
@@ -43,18 +37,14 @@ public class PlaybackException : AudioException
     /// Initializes a new instance of the <see cref="PlaybackException"/> class.
     /// </summary>
     public PlaybackException()
-        : base("Audio playback failed.")
-    {
-    }
+        : base("Audio playback failed.") { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlaybackException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public PlaybackException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlaybackException"/> class with a message and inner exception.
@@ -62,9 +52,7 @@ public class PlaybackException : AudioException
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public PlaybackException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }
 
 /// <summary>
@@ -81,18 +69,14 @@ public class AudioLoadException : AudioException
     /// Initializes a new instance of the <see cref="AudioLoadException"/> class.
     /// </summary>
     public AudioLoadException()
-        : base("Failed to load audio file.")
-    {
-    }
+        : base("Failed to load audio file.") { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioLoadException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public AudioLoadException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioLoadException"/> class with a message and file path.
@@ -111,9 +95,7 @@ public class AudioLoadException : AudioException
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public AudioLoadException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }
 
 /// <summary>
@@ -125,18 +107,14 @@ public class AudioInitializationException : AudioException
     /// Initializes a new instance of the <see cref="AudioInitializationException"/> class.
     /// </summary>
     public AudioInitializationException()
-        : base("Audio system initialization failed.")
-    {
-    }
+        : base("Audio system initialization failed.") { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioInitializationException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public AudioInitializationException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioInitializationException"/> class with a message and inner exception.
@@ -144,9 +122,7 @@ public class AudioInitializationException : AudioException
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public AudioInitializationException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }
 
 /// <summary>
@@ -163,18 +139,14 @@ public class AudioConfigurationException : AudioException
     /// Initializes a new instance of the <see cref="AudioConfigurationException"/> class.
     /// </summary>
     public AudioConfigurationException()
-        : base("Audio configuration is invalid.")
-    {
-    }
+        : base("Audio configuration is invalid.") { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioConfigurationException"/> class with a message.
     /// </summary>
     /// <param name="message">The error message.</param>
     public AudioConfigurationException(string message)
-        : base(message)
-    {
-    }
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AudioConfigurationException"/> class with validation errors.
@@ -193,7 +165,5 @@ public class AudioConfigurationException : AudioException
     /// <param name="message">The error message.</param>
     /// <param name="innerException">The inner exception.</param>
     public AudioConfigurationException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+        : base(message, innerException) { }
 }

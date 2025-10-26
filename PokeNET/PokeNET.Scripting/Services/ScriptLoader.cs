@@ -57,8 +57,11 @@ public sealed class ScriptLoader : IScriptLoader
         if (!Directory.Exists(directory))
             throw new DirectoryNotFoundException($"Directory not found: {directory}");
 
-        _logger.LogInformation("Discovering scripts in directory: {Directory} (recursive: {Recursive})",
-            directory, recursive);
+        _logger.LogInformation(
+            "Discovering scripts in directory: {Directory} (recursive: {Recursive})",
+            directory,
+            recursive
+        );
 
         var scripts = new List<IScriptMetadata>();
         var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
@@ -76,25 +79,37 @@ public sealed class ScriptLoader : IScriptLoader
                     {
                         var metadata = ExtractMetadata(file);
                         scripts.Add(metadata);
-                        _logger.LogDebug("Discovered script: {ScriptId} at {FilePath}",
-                            metadata.Id, file);
+                        _logger.LogDebug(
+                            "Discovered script: {ScriptId} at {FilePath}",
+                            metadata.Id,
+                            file
+                        );
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to extract metadata from script file: {FilePath}", file);
+                        _logger.LogWarning(
+                            ex,
+                            "Failed to extract metadata from script file: {FilePath}",
+                            file
+                        );
                     }
                 }
             }
         }
 
-        _logger.LogInformation("Discovered {Count} scripts in {Directory}", scripts.Count, directory);
+        _logger.LogInformation(
+            "Discovered {Count} scripts in {Directory}",
+            scripts.Count,
+            directory
+        );
         return scripts.AsReadOnly();
     }
 
     /// <inheritdoc/>
     public async Task<(IScriptMetadata Metadata, string SourceCode)> LoadScriptAsync(
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentNullException(nameof(filePath));
@@ -112,8 +127,11 @@ public sealed class ScriptLoader : IScriptLoader
             var sourceCode = await File.ReadAllTextAsync(filePath, cancellationToken);
             var metadata = ExtractMetadata(filePath, sourceCode);
 
-            _logger.LogInformation("Loaded script: {ScriptId} ({Size} bytes)",
-                metadata.Id, sourceCode.Length);
+            _logger.LogInformation(
+                "Loaded script: {ScriptId} ({Size} bytes)",
+                metadata.Id,
+                sourceCode.Length
+            );
 
             return (metadata, sourceCode);
         }
@@ -192,8 +210,10 @@ public sealed class ScriptLoader : IScriptLoader
         var pattern = $@"//\s*@{tagName}:\s*(.+)";
 
         // Get or create cached compiled regex
-        var regex = _regexCache.GetOrAdd(pattern,
-            p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+        var regex = _regexCache.GetOrAdd(
+            pattern,
+            p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled)
+        );
 
         var match = regex.Match(sourceCode);
         return match.Success ? match.Groups[1].Value.Trim() : null;
@@ -211,7 +231,8 @@ public sealed class ScriptLoader : IScriptLoader
         if (string.IsNullOrWhiteSpace(value))
             return new List<string>();
 
-        return value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .ToList();

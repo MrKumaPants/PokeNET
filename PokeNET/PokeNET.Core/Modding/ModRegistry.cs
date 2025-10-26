@@ -32,7 +32,8 @@ public class ModRegistry : IModRegistry
         return _modLoader.IsModLoaded(modId);
     }
 
-    public TApi? GetApi<TApi>(string modId) where TApi : class
+    public TApi? GetApi<TApi>(string modId)
+        where TApi : class
     {
         var mod = _modLoader.GetMod(modId);
         if (mod == null)
@@ -44,9 +45,12 @@ public class ModRegistry : IModRegistry
 
         // Check if the mod exposes an API through a GetApi method
         // This allows mods to implement separate API interfaces
-        var getApiMethod = mod.GetType().GetMethod("GetApi",
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
-            Type.EmptyTypes);
+        var getApiMethod = mod.GetType()
+            .GetMethod(
+                "GetApi",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                Type.EmptyTypes
+            );
 
         if (getApiMethod != null && typeof(TApi).IsAssignableFrom(getApiMethod.ReturnType))
         {
@@ -66,18 +70,17 @@ public class ModRegistry : IModRegistry
 
     public IReadOnlyList<IModManifest> GetDependentMods(string modId)
     {
-        return _modLoader.LoadedMods
-            .Where(m => m.Dependencies.Any(d => d.ModId == modId))
-            .ToList();
+        return _modLoader.LoadedMods.Where(m => m.Dependencies.Any(d => d.ModId == modId)).ToList();
     }
 
     public IReadOnlyList<IModManifest> GetDependencies(string modId)
     {
         var mod = GetMod(modId);
-        if (mod == null) return Array.Empty<IModManifest>();
+        if (mod == null)
+            return Array.Empty<IModManifest>();
 
-        return mod.Dependencies
-            .Select(d => GetMod(d.ModId))
+        return mod
+            .Dependencies.Select(d => GetMod(d.ModId))
             .Where(m => m != null)
             .Cast<IModManifest>()
             .ToList();

@@ -43,7 +43,8 @@ public interface IWorldApi
     /// </summary>
     /// <typeparam name="T">The component type to filter by.</typeparam>
     /// <returns>A read-only collection of entity definitions with the component.</returns>
-    IReadOnlyList<EntityDefinition> GetEntitiesWithComponent<T>() where T : class;
+    IReadOnlyList<EntityDefinition> GetEntitiesWithComponent<T>()
+        where T : class;
 
     /// <summary>
     /// Gets the total number of active entities in the world.

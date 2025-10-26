@@ -39,7 +39,8 @@ public interface IScriptContext
     /// <typeparam name="T">The service type to retrieve.</typeparam>
     /// <returns>The requested service instance.</returns>
     /// <exception cref="InvalidOperationException">Service not found.</exception>
-    T GetService<T>() where T : notnull;
+    T GetService<T>()
+        where T : notnull;
 
     /// <summary>
     /// Attempts to retrieve a service from the dependency injection container.
@@ -47,5 +48,6 @@ public interface IScriptContext
     /// <typeparam name="T">The service type to retrieve.</typeparam>
     /// <param name="service">The service instance if found; otherwise null.</param>
     /// <returns>True if the service was found; otherwise false.</returns>
-    bool TryGetService<T>(out T? service) where T : class;
+    bool TryGetService<T>(out T? service)
+        where T : class;
 }

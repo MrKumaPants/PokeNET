@@ -5,11 +5,9 @@ namespace PokeNET.Audio.Exceptions;
 /// </summary>
 public class AudioPlaybackException : AudioException
 {
-    public AudioPlaybackException(string message) : base(message)
-    {
-    }
+    public AudioPlaybackException(string message)
+        : base(message) { }
 
-    public AudioPlaybackException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public AudioPlaybackException(string message, Exception innerException)
+        : base(message, innerException) { }
 }

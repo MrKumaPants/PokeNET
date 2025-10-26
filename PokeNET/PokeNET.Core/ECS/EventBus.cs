@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.ECS.Events;
 
@@ -24,7 +26,8 @@ public class EventBus : IEventBus
     }
 
     /// <inheritdoc/>
-    public void Subscribe<T>(Action<T> handler) where T : IGameEvent
+    public void Subscribe<T>(Action<T> handler)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -43,7 +46,8 @@ public class EventBus : IEventBus
     }
 
     /// <inheritdoc/>
-    public void Unsubscribe<T>(Action<T> handler) where T : IGameEvent
+    public void Unsubscribe<T>(Action<T> handler)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -53,7 +57,10 @@ public class EventBus : IEventBus
             if (_subscriptions.TryGetValue(eventType, out var handlers))
             {
                 handlers.Remove(handler);
-                _logger.LogDebug("Unsubscribed handler from event type {EventType}", eventType.Name);
+                _logger.LogDebug(
+                    "Unsubscribed handler from event type {EventType}",
+                    eventType.Name
+                );
 
                 if (handlers.Count == 0)
                 {
@@ -64,7 +71,8 @@ public class EventBus : IEventBus
     }
 
     /// <inheritdoc/>
-    public void Publish<T>(T gameEvent) where T : IGameEvent
+    public void Publish<T>(T gameEvent)
+        where T : IGameEvent
     {
         ArgumentNullException.ThrowIfNull(gameEvent);
 
@@ -81,8 +89,11 @@ public class EventBus : IEventBus
             handlersCopy = new List<Delegate>(handlers);
         }
 
-        _logger.LogTrace("Publishing event {EventType} to {HandlerCount} handlers",
-            typeof(T).Name, handlersCopy.Count);
+        _logger.LogTrace(
+            "Publishing event {EventType} to {HandlerCount} handlers",
+            typeof(T).Name,
+            handlersCopy.Count
+        );
 
         foreach (var handler in handlersCopy)
         {
@@ -92,7 +103,11 @@ public class EventBus : IEventBus
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error invoking event handler for {EventType}", typeof(T).Name);
+                _logger.LogError(
+                    ex,
+                    "Error invoking event handler for {EventType}",
+                    typeof(T).Name
+                );
             }
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 
 namespace PokeNET.Domain.ECS.Events;
@@ -46,7 +47,15 @@ public class MovementEvent : IGameEvent
     /// </summary>
     public bool WasConstrained { get; }
 
-    public MovementEvent(Entity entity, float oldX, float oldY, float newX, float newY, float deltaTime, bool wasConstrained = false)
+    public MovementEvent(
+        Entity entity,
+        float oldX,
+        float oldY,
+        float newX,
+        float newY,
+        float deltaTime,
+        bool wasConstrained = false
+    )
     {
         Timestamp = DateTime.UtcNow;
         Entity = entity;
@@ -71,5 +80,6 @@ public class MovementEvent : IGameEvent
         }
     }
 
-    public override string ToString() => $"Movement: ({OldX:F2},{OldY:F2}) -> ({NewX:F2},{NewY:F2}) [{DistanceMoved:F2} units]";
+    public override string ToString() =>
+        $"Movement: ({OldX:F2},{OldY:F2}) -> ({NewX:F2},{NewY:F2}) [{DistanceMoved:F2} units]";
 }

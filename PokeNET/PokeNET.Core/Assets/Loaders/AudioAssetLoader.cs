@@ -1,7 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Audio;
 using PokeNET.Domain.Assets;
-using System.Diagnostics;
 using AudioSoundEffect = PokeNET.Audio.Models.SoundEffect;
 
 namespace PokeNET.Core.Assets.Loaders;
@@ -22,7 +28,17 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
     private static readonly string[] DefaultSupportedFormats = { ".wav", ".ogg" };
 
     // Supported sample rates for validation
-    private static readonly int[] SupportedSampleRates = { 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000 };
+    private static readonly int[] SupportedSampleRates =
+    {
+        8000,
+        11025,
+        16000,
+        22050,
+        24000,
+        32000,
+        44100,
+        48000,
+    };
 
     /// <summary>
     /// Initializes a new instance of the AudioAssetLoader class.
@@ -32,11 +48,16 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
     public AudioAssetLoader(ILogger<AudioAssetLoader> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _supportedExtensions = new HashSet<string>(DefaultSupportedFormats, StringComparer.OrdinalIgnoreCase);
+        _supportedExtensions = new HashSet<string>(
+            DefaultSupportedFormats,
+            StringComparer.OrdinalIgnoreCase
+        );
         _memoryUsage = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
-        _logger.LogInformation("AudioAssetLoader initialized with supported formats: {Formats}",
-            string.Join(", ", _supportedExtensions));
+        _logger.LogInformation(
+            "AudioAssetLoader initialized with supported formats: {Formats}",
+            string.Join(", ", _supportedExtensions)
+        );
     }
 
     /// <summary>
@@ -73,7 +94,10 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A task that represents the asynchronous load operation.</returns>
     /// <exception cref="AssetLoadException">Thrown when the audio file cannot be loaded.</exception>
-    public async Task<AudioSoundEffect> LoadAsync(string path, CancellationToken cancellationToken = default)
+    public async Task<AudioSoundEffect> LoadAsync(
+        string path,
+        CancellationToken cancellationToken = default
+    )
     {
         ThrowIfDisposed();
 
@@ -98,8 +122,10 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
             var extension = Path.GetExtension(path);
             if (!CanHandle(extension))
             {
-                throw new AssetLoadException(path,
-                    $"Unsupported audio format: {extension}. Supported formats: {string.Join(", ", _supportedExtensions)}");
+                throw new AssetLoadException(
+                    path,
+                    $"Unsupported audio format: {extension}. Supported formats: {string.Join(", ", _supportedExtensions)}"
+                );
             }
 
             // Check cancellation before file I/O
@@ -125,8 +151,11 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
             }
             catch (Exception ex)
             {
-                throw new AssetLoadException(path,
-                    $"Failed to load audio with MonoGame. The file may be corrupted or in an unsupported format.", ex);
+                throw new AssetLoadException(
+                    path,
+                    $"Failed to load audio with MonoGame. The file may be corrupted or in an unsupported format.",
+                    ex
+                );
             }
 
             // Validate audio properties
@@ -150,8 +179,8 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
                 {
                     { "BufferSize", bufferSize },
                     { "Format", extension },
-                    { "LoadTime", stopwatch.ElapsedMilliseconds }
-                }
+                    { "LoadTime", stopwatch.ElapsedMilliseconds },
+                },
             };
 
             stopwatch.Stop();
@@ -163,7 +192,8 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
                 bufferSize,
                 stopwatch.ElapsedMilliseconds,
                 soundEffect.SampleRate,
-                soundEffect.Channels);
+                soundEffect.Channels
+            );
 
             // Dispose MonoGame SoundEffect as we've extracted what we need
             monoGameSound.Dispose();
@@ -206,15 +236,20 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
         {
             _logger.LogWarning(
                 "Audio file {Path} has non-standard sample rate: {SampleRate}Hz. Supported rates: {SupportedRates}",
-                path, sampleRate, string.Join(", ", SupportedSampleRates));
+                path,
+                sampleRate,
+                string.Join(", ", SupportedSampleRates)
+            );
         }
 
         // Validate channel count (1 = mono, 2 = stereo)
         int channels = GetChannelCount(soundEffect);
         if (channels < 1 || channels > 2)
         {
-            throw new AssetLoadException(path,
-                $"Unsupported channel count: {channels}. Only mono (1) and stereo (2) are supported.");
+            throw new AssetLoadException(
+                path,
+                $"Unsupported channel count: {channels}. Only mono (1) and stereo (2) are supported."
+            );
         }
     }
 
@@ -309,7 +344,10 @@ public sealed class AudioAssetLoader : IAssetLoader<AudioSoundEffect>, IDisposab
             return;
         }
 
-        _logger.LogInformation("Disposing AudioAssetLoader. Total memory tracked: {Memory} bytes", GetTotalMemoryUsage());
+        _logger.LogInformation(
+            "Disposing AudioAssetLoader. Total memory tracked: {Memory} bytes",
+            GetTotalMemoryUsage()
+        );
         _memoryUsage.Clear();
         _disposed = true;
     }

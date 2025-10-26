@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class PokemonFaintReaction : BaseAudioReaction
 {
-    public PokemonFaintReaction(ILogger<PokemonFaintReaction> logger) : base(logger)
-    {
-    }
+    public PokemonFaintReaction(ILogger<PokemonFaintReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 7;
 
@@ -20,7 +19,11 @@ public class PokemonFaintReaction : BaseAudioReaction
         return gameEvent is PokemonFaintEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;

@@ -170,7 +170,7 @@ namespace PokeNET.Audio.Mixing
                 ChannelType.Voice => "Voice/Dialogue",
                 ChannelType.Ambient => "Ambient",
                 ChannelType.UI => "UI",
-                _ => channelType.ToString()
+                _ => channelType.ToString(),
             };
         }
     }

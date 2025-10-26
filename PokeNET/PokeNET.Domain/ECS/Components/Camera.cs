@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PokeNET.Domain.ECS.Components;
@@ -60,10 +61,10 @@ public struct Camera
     /// </summary>
     public readonly Matrix GetTransformMatrix()
     {
-        return Matrix.CreateTranslation(new Vector3(-Position.X, -Position.Y, 0)) *
-               Matrix.CreateRotationZ(Rotation) *
-               Matrix.CreateScale(Zoom, Zoom, 1) *
-               Matrix.CreateTranslation(new Vector3(ViewportWidth * 0.5f, ViewportHeight * 0.5f, 0));
+        return Matrix.CreateTranslation(new Vector3(-Position.X, -Position.Y, 0))
+            * Matrix.CreateRotationZ(Rotation)
+            * Matrix.CreateScale(Zoom, Zoom, 1)
+            * Matrix.CreateTranslation(new Vector3(ViewportWidth * 0.5f, ViewportHeight * 0.5f, 0));
     }
 
     /// <summary>

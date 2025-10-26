@@ -45,7 +45,7 @@ public struct MoveSet
                 {
                     MoveId = moveId,
                     PP = maxPP,
-                    MaxPP = maxPP
+                    MaxPP = maxPP,
                 };
                 return true;
             }

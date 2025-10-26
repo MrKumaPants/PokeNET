@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.ECS.Factories;
 
@@ -20,7 +25,7 @@ public sealed class TemplateLoader
         {
             PropertyNameCaseInsensitive = true,
             AllowTrailingCommas = true,
-            ReadCommentHandling = JsonCommentHandling.Skip
+            ReadCommentHandling = JsonCommentHandling.Skip,
         };
     }
 
@@ -50,7 +55,9 @@ public sealed class TemplateLoader
         {
             await using var fileStream = File.OpenRead(filePath);
             var templateData = await JsonSerializer.DeserializeAsync<TemplateFileData>(
-                fileStream, _jsonOptions);
+                fileStream,
+                _jsonOptions
+            );
 
             if (templateData?.Templates == null || templateData.Templates.Count == 0)
             {
@@ -74,16 +81,18 @@ public sealed class TemplateLoader
                 }
             }
 
-            _logger.LogInformation("Loaded {Count} templates from {FilePath}",
-                loadedCount, filePath);
+            _logger.LogInformation(
+                "Loaded {Count} templates from {FilePath}",
+                loadedCount,
+                filePath
+            );
 
             return loadedCount;
         }
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Invalid JSON in template file: {FilePath}", filePath);
-            throw new InvalidOperationException(
-                $"Failed to parse template file: {filePath}", ex);
+            throw new InvalidOperationException($"Failed to parse template file: {filePath}", ex);
         }
     }
 
@@ -114,7 +123,8 @@ public sealed class TemplateLoader
         // Note: This is a simplified version. In production, you'd need to retrieve
         // the actual EntityDefinition objects from the factory.
         _logger.LogWarning(
-            "Template export requires factory API enhancement to retrieve definitions");
+            "Template export requires factory API enhancement to retrieve definitions"
+        );
 
         return Task.FromResult(0);
     }
@@ -128,11 +138,7 @@ public sealed class TemplateLoader
         // In a real implementation, you'd use reflection or a component registry
         // to instantiate components from the JSON data
 
-        return new EntityDefinition(
-            template.Name,
-            components,
-            template.Metadata
-        );
+        return new EntityDefinition(template.Name, components, template.Metadata);
     }
 
     #region JSON Data Models

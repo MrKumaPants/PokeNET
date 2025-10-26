@@ -2,12 +2,36 @@
 
 Welcome to the PokeNET Framework documentation! PokeNET is a flexible, moddable Pokémon-style game framework built with MonoGame, .NET 9, and designed with SOLID principles.
 
+> **📌 Essential Docs**: [`ACTIONABLE_TASKS.md`](ACTIONABLE_TASKS.md) | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | [`ARCHITECTURE.md`](ARCHITECTURE.md) | [`codebase-audit-2025-10-26.md`](codebase-audit-2025-10-26.md)
+
+## 🎯 Start Here
+
+**New to the project?**
+1. Read [`ACTIONABLE_TASKS.md`](ACTIONABLE_TASKS.md) - **Single source of truth** for all TODOs and implementation work
+2. Check [`PROJECT_STATUS.md`](PROJECT_STATUS.md) - Current implementation status and MVP roadmap
+3. Review [`codebase-audit-2025-10-26.md`](codebase-audit-2025-10-26.md) - Comprehensive audit findings
+
+**Looking for something specific?**
+- **📋 Complete Documentation Index**: [`INDEX.md`](INDEX.md) - All documentation organized
+- **Architecture & Design**: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- **Testing**: [`TESTING_GUIDE.md`](TESTING_GUIDE.md)
+- **API Reference**: [`API_REFERENCE.md`](API_REFERENCE.md)
+- **Audio System**: [`AUDIO_INDEX.md`](AUDIO_INDEX.md)
+- **Scripting**: [`SCRIPTING_INDEX.md`](SCRIPTING_INDEX.md)
+
+## Current Documentation Structure
+
+After consolidation cleanup (2025-10-26), the documentation is now organized as:
+- **Current Documentation**: Active, maintained docs in this directory
+- **Historical Archive**: [`archive/`](archive/) - Phase reports, old audits, refactoring summaries
+- **Consolidated TODOs**: All actionable tasks are now in [`ACTIONABLE_TASKS.md`](ACTIONABLE_TASKS.md)
+
 ## Table of Contents
+
+> **📋 For complete documentation index, see [`INDEX.md`](INDEX.md)**
 
 ### Getting Started
 - [Quick Start Guide](developer/quick-start.md)
-- [Installation](developer/installation.md)
-- [Building from Source](developer/building.md)
 
 ### Architecture
 - [System Overview](architecture/overview.md)

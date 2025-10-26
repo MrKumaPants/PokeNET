@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Arch.Core;
 using Microsoft.Extensions.Logging;
 
@@ -68,8 +70,11 @@ public class CommandHistory
         _undoStack.Push(command);
         _redoStack.Clear(); // Clear redo stack when new command is executed
 
-        _logger.LogTrace("Recorded command in history: {CommandType} (History size: {HistorySize})",
-            command.GetType().Name, _undoStack.Count);
+        _logger.LogTrace(
+            "Recorded command in history: {CommandType} (History size: {HistorySize})",
+            command.GetType().Name,
+            _undoStack.Count
+        );
     }
 
     /// <summary>

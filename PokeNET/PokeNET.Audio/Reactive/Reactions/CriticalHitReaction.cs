@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class CriticalHitReaction : BaseAudioReaction
 {
-    public CriticalHitReaction(ILogger<CriticalHitReaction> logger) : base(logger)
-    {
-    }
+    public CriticalHitReaction(ILogger<CriticalHitReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 6;
 
@@ -20,7 +19,11 @@ public class CriticalHitReaction : BaseAudioReaction
         return gameEvent is CriticalHitEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;

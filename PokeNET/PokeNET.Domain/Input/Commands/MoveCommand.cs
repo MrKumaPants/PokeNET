@@ -1,7 +1,8 @@
+using System;
+using System.Numerics;
 using Arch.Core;
 using Arch.Core.Extensions;
 using PokeNET.Domain.ECS.Components;
-using System.Numerics;
 
 namespace PokeNET.Domain.Input.Commands;
 
@@ -41,10 +42,10 @@ public class MoveCommand : CommandBase
         if (!base.CanExecute(world))
             return false;
 
-        return world.IsAlive(_entity) &&
-               world.Has<GridPosition>(_entity) &&
-               world.Has<Direction>(_entity) &&
-               world.Has<MovementState>(_entity);
+        return world.IsAlive(_entity)
+            && world.Has<GridPosition>(_entity)
+            && world.Has<Direction>(_entity)
+            && world.Has<MovementState>(_entity);
     }
 
     /// <inheritdoc/>
@@ -102,7 +103,8 @@ public class MoveCommand : CommandBase
 
         // Convert to angle in degrees (0 = right, 90 = up, etc.)
         float angle = MathF.Atan2(-vector.Y, vector.X) * (180f / MathF.PI);
-        if (angle < 0) angle += 360f;
+        if (angle < 0)
+            angle += 360f;
 
         // Convert angle to 8 directions (45-degree segments)
         // East: 337.5-22.5, NE: 22.5-67.5, North: 67.5-112.5, etc.

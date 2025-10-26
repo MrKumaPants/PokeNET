@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.Assets;
 
@@ -37,7 +41,8 @@ public class AssetManager : IAssetManager
     }
 
     /// <inheritdoc/>
-    public void RegisterLoader<T>(IAssetLoader<T> loader) where T : class
+    public void RegisterLoader<T>(IAssetLoader<T> loader)
+        where T : class
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(AssetManager));
@@ -83,7 +88,8 @@ public class AssetManager : IAssetManager
     }
 
     /// <inheritdoc/>
-    public T Load<T>(string path) where T : class
+    public T Load<T>(string path)
+        where T : class
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(AssetManager));
@@ -107,8 +113,10 @@ public class AssetManager : IAssetManager
         // Get the appropriate loader
         if (!_loaders.TryGetValue(typeof(T), out var loaderObj))
         {
-            throw new AssetLoadException(path,
-                $"No asset loader registered for type {typeof(T).Name}");
+            throw new AssetLoadException(
+                path,
+                $"No asset loader registered for type {typeof(T).Name}"
+            );
         }
 
         var loader = (IAssetLoader<T>)loaderObj;
@@ -116,8 +124,10 @@ public class AssetManager : IAssetManager
 
         if (!loader.CanHandle(extension))
         {
-            throw new AssetLoadException(path,
-                $"Loader for {typeof(T).Name} cannot handle extension {extension}");
+            throw new AssetLoadException(
+                path,
+                $"Loader for {typeof(T).Name} cannot handle extension {extension}"
+            );
         }
 
         // Load the asset
@@ -139,7 +149,8 @@ public class AssetManager : IAssetManager
     }
 
     /// <inheritdoc/>
-    public T? TryLoad<T>(string path) where T : class
+    public T? TryLoad<T>(string path)
+        where T : class
     {
         try
         {
@@ -235,13 +246,21 @@ public class AssetManager : IAssetManager
 
                 if (File.Exists(resolvedFullPath))
                 {
-                    _logger.LogTrace("Resolved asset {Path} to mod path: {FullPath}", path, resolvedFullPath);
+                    _logger.LogTrace(
+                        "Resolved asset {Path} to mod path: {FullPath}",
+                        path,
+                        resolvedFullPath
+                    );
                     return resolvedFullPath;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resolving asset path in mod directory: {Path}", fullPath);
+                _logger.LogError(
+                    ex,
+                    "Error resolving asset path in mod directory: {Path}",
+                    fullPath
+                );
                 continue;
             }
         }
@@ -262,7 +281,11 @@ public class AssetManager : IAssetManager
 
             if (File.Exists(resolvedBasePath))
             {
-                _logger.LogTrace("Resolved asset {Path} to base path: {BasePath}", path, resolvedBasePath);
+                _logger.LogTrace(
+                    "Resolved asset {Path} to base path: {BasePath}",
+                    path,
+                    resolvedBasePath
+                );
                 return resolvedBasePath;
             }
         }
@@ -292,7 +315,10 @@ public class AssetManager : IAssetManager
         // Check for path traversal patterns
         if (path.Contains(".."))
         {
-            throw new AssetLoadException(path, "Asset path contains directory traversal sequence (..)");
+            throw new AssetLoadException(
+                path,
+                "Asset path contains directory traversal sequence (..)"
+            );
         }
 
         // Check for absolute paths
@@ -303,7 +329,7 @@ public class AssetManager : IAssetManager
 
         // Normalize path separators
         var normalizedPath = path.Replace('\\', Path.DirectorySeparatorChar)
-                                .Replace('/', Path.DirectorySeparatorChar);
+            .Replace('/', Path.DirectorySeparatorChar);
 
         // Additional validation - ensure path doesn't start with separator
         if (normalizedPath.StartsWith(Path.DirectorySeparatorChar))

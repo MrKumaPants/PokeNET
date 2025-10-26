@@ -6,7 +6,8 @@ namespace PokeNET.Domain.Assets;
 /// Implementations can be added for new asset types without modifying existing code.
 /// </summary>
 /// <typeparam name="T">The type of asset this loader handles.</typeparam>
-public interface IAssetLoader<T> where T : class
+public interface IAssetLoader<T>
+    where T : class
 {
     /// <summary>
     /// Loads an asset from the specified path.

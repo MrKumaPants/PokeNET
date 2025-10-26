@@ -1,7 +1,12 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using PokeNET.Domain.Assets;
-using System.Collections.Concurrent;
 
 namespace PokeNET.Core.Assets.Loaders;
 
@@ -23,9 +28,15 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
     private long _totalMemoryUsageBytes;
     private bool _disposed;
 
-    private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> SupportedExtensions = new(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
-        ".png", ".jpg", ".jpeg", ".bmp", ".gif"
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".bmp",
+        ".gif",
     };
 
     /// <summary>
@@ -48,15 +59,18 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
     public TextureAssetLoader(
         ILogger<TextureAssetLoader> logger,
         GraphicsDevice graphicsDevice,
-        TextureLoadOptions? options = null)
+        TextureLoadOptions? options = null
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         _texturePool = new ConcurrentDictionary<string, TexturePoolEntry>();
         _defaultOptions = options ?? TextureLoadOptions.Default;
 
-        _logger.LogInformation("TextureAssetLoader initialized with default options: PremultiplyAlpha={PremultiplyAlpha}",
-            _defaultOptions.PremultiplyAlpha);
+        _logger.LogInformation(
+            "TextureAssetLoader initialized with default options: PremultiplyAlpha={PremultiplyAlpha}",
+            _defaultOptions.PremultiplyAlpha
+        );
     }
 
     /// <inheritdoc/>
@@ -90,7 +104,8 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
     public async Task<Texture2D> LoadAsync(
         string path,
         TextureLoadOptions? options = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(TextureAssetLoader));
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -107,7 +122,11 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
         if (options.UsePooling && _texturePool.TryGetValue(path, out var poolEntry))
         {
             poolEntry.ReferenceCount++;
-            _logger.LogTrace("Texture pool hit for {Path} (References: {RefCount})", path, poolEntry.ReferenceCount);
+            _logger.LogTrace(
+                "Texture pool hit for {Path} (References: {RefCount})",
+                path,
+                poolEntry.ReferenceCount
+            );
             return poolEntry.Texture;
         }
 
@@ -121,24 +140,35 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
         var extension = Path.GetExtension(path);
         if (!CanHandle(extension))
         {
-            throw new AssetLoadException(path,
-                $"Unsupported texture format: {extension}. Supported formats: {string.Join(", ", SupportedExtensions)}");
+            throw new AssetLoadException(
+                path,
+                $"Unsupported texture format: {extension}. Supported formats: {string.Join(", ", SupportedExtensions)}"
+            );
         }
 
         try
         {
-            _logger.LogDebug("Loading texture from {Path} with options: PremultiplyAlpha={PremultiplyAlpha}, UsePooling={UsePooling}",
-                path, options.PremultiplyAlpha, options.UsePooling);
+            _logger.LogDebug(
+                "Loading texture from {Path} with options: PremultiplyAlpha={PremultiplyAlpha}, UsePooling={UsePooling}",
+                path,
+                options.PremultiplyAlpha,
+                options.UsePooling
+            );
 
             // Read file asynchronously
             byte[] imageData;
             try
             {
-                imageData = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+                imageData = await File.ReadAllBytesAsync(path, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                throw new AssetLoadException(path, $"Failed to read texture file: {ex.Message}", ex);
+                throw new AssetLoadException(
+                    path,
+                    $"Failed to read texture file: {ex.Message}",
+                    ex
+                );
             }
 
             // Check for cancellation before expensive texture creation
@@ -191,12 +221,20 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
             {
                 var entry = new TexturePoolEntry(texture, memoryUsage, 1);
                 _texturePool[path] = entry;
-                _logger.LogTrace("Added texture to pool: {Path} ({MemoryMB:F2} MB)",
-                    path, memoryUsage / (1024.0 * 1024.0));
+                _logger.LogTrace(
+                    "Added texture to pool: {Path} ({MemoryMB:F2} MB)",
+                    path,
+                    memoryUsage / (1024.0 * 1024.0)
+                );
             }
 
-            _logger.LogInformation("Successfully loaded texture: {Path} (Size: {Width}x{Height}, Memory: {MemoryMB:F2} MB)",
-                path, texture.Width, texture.Height, memoryUsage / (1024.0 * 1024.0));
+            _logger.LogInformation(
+                "Successfully loaded texture: {Path} (Size: {Width}x{Height}, Memory: {MemoryMB:F2} MB)",
+                path,
+                texture.Width,
+                texture.Height,
+                memoryUsage / (1024.0 * 1024.0)
+            );
 
             return texture;
         }
@@ -211,12 +249,19 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
         }
         catch (OutOfMemoryException ex)
         {
-            throw new AssetLoadException(path,
-                $"Out of memory while loading texture (Current usage: {MemoryUsageMB:F2} MB)", ex);
+            throw new AssetLoadException(
+                path,
+                $"Out of memory while loading texture (Current usage: {MemoryUsageMB:F2} MB)",
+                ex
+            );
         }
         catch (Exception ex)
         {
-            throw new AssetLoadException(path, $"Unexpected error loading texture: {ex.Message}", ex);
+            throw new AssetLoadException(
+                path,
+                $"Unexpected error loading texture: {ex.Message}",
+                ex
+            );
         }
     }
 
@@ -229,7 +274,11 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
         if (_texturePool.TryGetValue(path, out var entry))
         {
             entry.ReferenceCount--;
-            _logger.LogTrace("Released texture reference: {Path} (Remaining: {RefCount})", path, entry.ReferenceCount);
+            _logger.LogTrace(
+                "Released texture reference: {Path} (Remaining: {RefCount})",
+                path,
+                entry.ReferenceCount
+            );
 
             if (entry.ReferenceCount <= 0)
             {
@@ -246,8 +295,11 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
     /// </summary>
     public void ClearPool()
     {
-        _logger.LogInformation("Clearing texture pool ({Count} textures, {MemoryMB:F2} MB)",
-            _texturePool.Count, MemoryUsageMB);
+        _logger.LogInformation(
+            "Clearing texture pool ({Count} textures, {MemoryMB:F2} MB)",
+            _texturePool.Count,
+            MemoryUsageMB
+        );
 
         foreach (var kvp in _texturePool)
         {
@@ -279,7 +331,7 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
             ".jpg" or ".jpeg" => data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF,
             ".bmp" => data[0] == 0x42 && data[1] == 0x4D,
             ".gif" => data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46,
-            _ => true // Unknown format, let MonoGame handle it
+            _ => true, // Unknown format, let MonoGame handle it
         };
     }
 
@@ -328,7 +380,10 @@ public class TextureAssetLoader : IAssetLoader<Texture2D>, IDisposable
         if (_disposed)
             return;
 
-        _logger.LogInformation("Disposing TextureAssetLoader (Total memory freed: {MemoryMB:F2} MB)", MemoryUsageMB);
+        _logger.LogInformation(
+            "Disposing TextureAssetLoader (Total memory freed: {MemoryMB:F2} MB)",
+            MemoryUsageMB
+        );
         ClearPool();
         _disposed = true;
 
@@ -356,11 +411,8 @@ public class TextureLoadOptions
     /// <summary>
     /// Default loading options.
     /// </summary>
-    public static TextureLoadOptions Default => new()
-    {
-        PremultiplyAlpha = true,
-        UsePooling = true
-    };
+    public static TextureLoadOptions Default =>
+        new() { PremultiplyAlpha = true, UsePooling = true };
 }
 
 /// <summary>

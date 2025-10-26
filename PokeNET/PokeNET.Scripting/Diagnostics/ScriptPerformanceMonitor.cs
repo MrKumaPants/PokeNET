@@ -17,7 +17,8 @@ namespace PokeNET.Scripting.Diagnostics
     {
         private readonly ILogger<ScriptPerformanceMonitor> _logger;
         private readonly ConcurrentDictionary<string, PerformanceMetrics> _activeMetrics = new();
-        private readonly ConcurrentDictionary<string, List<PerformanceMetrics>> _historicalMetrics = new();
+        private readonly ConcurrentDictionary<string, List<PerformanceMetrics>> _historicalMetrics =
+            new();
         private readonly PerformanceBudget _budget;
         private readonly bool _enableProfiling;
 
@@ -28,7 +29,8 @@ namespace PokeNET.Scripting.Diagnostics
         public ScriptPerformanceMonitor(
             ILogger<ScriptPerformanceMonitor> logger,
             PerformanceBudget? budget = null,
-            bool enableProfiling = false)
+            bool enableProfiling = false
+        )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _budget = budget ?? PerformanceBudget.Moderate();
@@ -45,7 +47,10 @@ namespace PokeNET.Scripting.Diagnostics
 
             if (!_activeMetrics.TryAdd(scriptName, metrics))
             {
-                _logger.LogWarning("Script '{ScriptName}' is already being monitored. Returning existing metrics.", scriptName);
+                _logger.LogWarning(
+                    "Script '{ScriptName}' is already being monitored. Returning existing metrics.",
+                    scriptName
+                );
                 return _activeMetrics[scriptName];
             }
 
@@ -55,7 +60,10 @@ namespace PokeNET.Scripting.Diagnostics
                 _memoryProfiles[scriptName] = new MemoryProfile(scriptName);
             }
 
-            _logger.LogDebug("Started performance monitoring for script '{ScriptName}'", scriptName);
+            _logger.LogDebug(
+                "Started performance monitoring for script '{ScriptName}'",
+                scriptName
+            );
             return metrics;
         }
 
@@ -66,14 +74,18 @@ namespace PokeNET.Scripting.Diagnostics
         {
             if (!_activeMetrics.TryRemove(scriptName, out var metrics))
             {
-                _logger.LogWarning("No active monitoring found for script '{ScriptName}'", scriptName);
+                _logger.LogWarning(
+                    "No active monitoring found for script '{ScriptName}'",
+                    scriptName
+                );
                 return new PerformanceReport(scriptName, null, null, null, null);
             }
 
             metrics.End();
 
             // Store in historical data
-            _historicalMetrics.AddOrUpdate(scriptName,
+            _historicalMetrics.AddOrUpdate(
+                scriptName,
                 _ => new List<PerformanceMetrics> { metrics },
                 (_, list) =>
                 {
@@ -84,7 +96,8 @@ namespace PokeNET.Scripting.Diagnostics
                         list.RemoveAt(0);
                     }
                     return list;
-                });
+                }
+            );
 
             // Validate against budget
             var budgetReport = _budget.Validate(metrics);
@@ -103,10 +116,20 @@ namespace PokeNET.Scripting.Diagnostics
                 _memoryProfiles.TryRemove(scriptName, out memProfile);
             }
 
-            var report = new PerformanceReport(scriptName, metrics, budgetReport, execProfile, memProfile);
+            var report = new PerformanceReport(
+                scriptName,
+                metrics,
+                budgetReport,
+                execProfile,
+                memProfile
+            );
 
-            _logger.LogInformation("Performance monitoring completed for '{ScriptName}': {TotalTime}ms, {Memory}",
-                scriptName, metrics.TotalTime.TotalMilliseconds, FormatBytes(metrics.TotalMemoryAllocated));
+            _logger.LogInformation(
+                "Performance monitoring completed for '{ScriptName}': {TotalTime}ms, {Memory}",
+                scriptName,
+                metrics.TotalTime.TotalMilliseconds,
+                FormatBytes(metrics.TotalMemoryAllocated)
+            );
 
             return report;
         }
@@ -122,9 +145,15 @@ namespace PokeNET.Scripting.Diagnostics
         /// <summary>
         /// Records a custom profiling sample.
         /// </summary>
-        public void RecordProfileSample(string scriptName, string operation, TimeSpan duration, long memoryDelta)
+        public void RecordProfileSample(
+            string scriptName,
+            string operation,
+            TimeSpan duration,
+            long memoryDelta
+        )
         {
-            if (!_enableProfiling) return;
+            if (!_enableProfiling)
+                return;
 
             if (_executionProfiles.TryGetValue(scriptName, out var execProfile))
             {
@@ -179,7 +208,9 @@ namespace PokeNET.Scripting.Diagnostics
                 sb.AppendLine($"Active Monitoring ({_activeMetrics.Count}):");
                 foreach (var kvp in _activeMetrics.OrderBy(x => x.Key))
                 {
-                    sb.AppendLine($"  • {kvp.Key}: Running for {kvp.Value.TotalTime.TotalSeconds:F2}s");
+                    sb.AppendLine(
+                        $"  • {kvp.Key}: Running for {kvp.Value.TotalTime.TotalSeconds:F2}s"
+                    );
                 }
                 sb.AppendLine();
             }
@@ -227,7 +258,11 @@ namespace PokeNET.Scripting.Diagnostics
             private readonly Stopwatch _stopwatch;
             private readonly long _startMemory;
 
-            public ProfilingScope(ScriptPerformanceMonitor monitor, string scriptName, string operation)
+            public ProfilingScope(
+                ScriptPerformanceMonitor monitor,
+                string scriptName,
+                string operation
+            )
             {
                 _monitor = monitor;
                 _scriptName = scriptName;
@@ -241,7 +276,12 @@ namespace PokeNET.Scripting.Diagnostics
                 _stopwatch.Stop();
                 var endMemory = GC.GetTotalMemory(false);
                 var memoryDelta = endMemory - _startMemory;
-                _monitor.RecordProfileSample(_scriptName, _operation, _stopwatch.Elapsed, memoryDelta);
+                _monitor.RecordProfileSample(
+                    _scriptName,
+                    _operation,
+                    _stopwatch.Elapsed,
+                    memoryDelta
+                );
             }
         }
 
@@ -274,20 +314,20 @@ namespace PokeNET.Scripting.Diagnostics
 
         public void RecordSample(string operation, TimeSpan duration)
         {
-            _samples.AddOrUpdate(operation,
+            _samples.AddOrUpdate(
+                operation,
                 _ => new List<TimeSpan> { duration },
                 (_, list) =>
                 {
                     list.Add(duration);
                     return list;
-                });
+                }
+            );
         }
 
         public Dictionary<string, OperationStats> GetStatistics()
         {
-            return _samples.ToDictionary(
-                kvp => kvp.Key,
-                kvp => new OperationStats(kvp.Value));
+            return _samples.ToDictionary(kvp => kvp.Key, kvp => new OperationStats(kvp.Value));
         }
     }
 
@@ -307,20 +347,20 @@ namespace PokeNET.Scripting.Diagnostics
 
         public void RecordAllocation(string operation, long bytes)
         {
-            _allocations.AddOrUpdate(operation,
+            _allocations.AddOrUpdate(
+                operation,
                 _ => new List<long> { bytes },
                 (_, list) =>
                 {
                     list.Add(bytes);
                     return list;
-                });
+                }
+            );
         }
 
         public Dictionary<string, MemoryStats> GetStatistics()
         {
-            return _allocations.ToDictionary(
-                kvp => kvp.Key,
-                kvp => new MemoryStats(kvp.Value));
+            return _allocations.ToDictionary(kvp => kvp.Key, kvp => new MemoryStats(kvp.Value));
         }
     }
 
@@ -340,7 +380,8 @@ namespace PokeNET.Scripting.Diagnostics
         public OperationStats(List<TimeSpan> samples)
         {
             SampleCount = samples.Count;
-            if (SampleCount == 0) return;
+            if (SampleCount == 0)
+                return;
 
             var sorted = samples.OrderBy(s => s.TotalMilliseconds).ToList();
             Average = TimeSpan.FromMilliseconds(samples.Average(s => s.TotalMilliseconds));
@@ -366,7 +407,8 @@ namespace PokeNET.Scripting.Diagnostics
         public MemoryStats(List<long> samples)
         {
             SampleCount = samples.Count;
-            if (SampleCount == 0) return;
+            if (SampleCount == 0)
+                return;
 
             Average = (long)samples.Average();
             Min = samples.Min();
@@ -398,11 +440,14 @@ namespace PokeNET.Scripting.Diagnostics
             if (ExecutionCount > 0)
             {
                 AverageCompilationTime = TimeSpan.FromMilliseconds(
-                    history.Average(m => m.CompilationTime.TotalMilliseconds));
+                    history.Average(m => m.CompilationTime.TotalMilliseconds)
+                );
                 AverageExecutionTime = TimeSpan.FromMilliseconds(
-                    history.Average(m => m.ExecutionTime.TotalMilliseconds));
+                    history.Average(m => m.ExecutionTime.TotalMilliseconds)
+                );
                 AverageTotalTime = TimeSpan.FromMilliseconds(
-                    history.Average(m => m.TotalTime.TotalMilliseconds));
+                    history.Average(m => m.TotalTime.TotalMilliseconds)
+                );
                 AverageMemoryUsage = (long)history.Average(m => m.TotalMemoryAllocated);
                 AverageGCCollections = history.Average(m => m.TotalGCCollections);
                 FirstExecution = history.First().StartTime;
@@ -452,7 +497,8 @@ namespace PokeNET.Scripting.Diagnostics
             PerformanceMetrics? metrics,
             BudgetViolationReport? budgetReport,
             ExecutionProfile? executionProfile,
-            MemoryProfile? memoryProfile)
+            MemoryProfile? memoryProfile
+        )
         {
             ScriptName = scriptName;
             Metrics = metrics;

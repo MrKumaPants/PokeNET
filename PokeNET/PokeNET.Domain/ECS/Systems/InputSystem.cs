@@ -1,10 +1,12 @@
+using System;
+using System.Numerics;
 using Arch.Core;
+using Arch.System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Input;
 using PokeNET.Domain.ECS.Events;
 using PokeNET.Domain.Input;
 using PokeNET.Domain.Input.Commands;
-using System.Numerics;
 
 namespace PokeNET.Domain.ECS.Systems;
 
@@ -14,8 +16,9 @@ namespace PokeNET.Domain.ECS.Systems;
 /// Supports keyboard, mouse, and gamepad input with rebindable controls.
 /// Priority: -100 (executes before other systems).
 /// </summary>
-public class InputSystem : SystemBase
+public partial class InputSystem : BaseSystem<World, float>
 {
+    private readonly ILogger _logger;
     private readonly CommandQueue _commandQueue;
     private readonly CommandHistory _commandHistory;
     private readonly IEventBus _eventBus;
@@ -31,9 +34,6 @@ public class InputSystem : SystemBase
 
     // Player entity tracking
     private Entity? _playerEntity;
-
-    /// <inheritdoc/>
-    public override int Priority => -100; // Execute first
 
     /// <summary>
     /// Gets whether input is currently enabled.
@@ -53,39 +53,41 @@ public class InputSystem : SystemBase
     /// <summary>
     /// Initializes a new input system.
     /// </summary>
+    /// <param name="world">ECS world instance.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="commandQueue">Command queue for processing inputs.</param>
     /// <param name="commandHistory">Command history for undo/redo.</param>
     /// <param name="eventBus">Event bus for publishing input events.</param>
     /// <param name="config">Input configuration.</param>
     public InputSystem(
+        World world,
         ILogger<InputSystem> logger,
         CommandQueue commandQueue,
         CommandHistory commandHistory,
         IEventBus eventBus,
-        InputConfig? config = null)
-        : base(logger)
+        InputConfig? config = null
+    )
+        : base(world)
     {
+        _logger = logger;
         _commandQueue = commandQueue;
         _commandHistory = commandHistory;
         _eventBus = eventBus;
         _config = config ?? InputConfig.CreateDefault();
-    }
 
-    /// <inheritdoc/>
-    protected override void OnInitialize()
-    {
-        Logger.LogInformation("InputSystem initialized with {KeyBindings} key bindings",
-            _config.KeyboardBindings.Count);
-
-        // Initialize input states
+        // Initialize input states immediately
         _currentKeyboardState = Keyboard.GetState();
         _currentGamePadState = GamePad.GetState(0);
         _currentMouseState = Mouse.GetState();
+
+        _logger.LogInformation(
+            "InputSystem initialized with {KeyBindings} key bindings",
+            _config.KeyboardBindings.Count
+        );
     }
 
     /// <inheritdoc/>
-    protected override void OnUpdate(float deltaTime)
+    public override void Update(in float deltaTime)
     {
         if (!InputEnabled)
             return;
@@ -109,7 +111,7 @@ public class InputSystem : SystemBase
 
         if (executedCount > 0)
         {
-            Logger.LogTrace("Executed {Count} commands this frame", executedCount);
+            _logger.LogTrace("Executed {Count} commands this frame", executedCount);
         }
     }
 
@@ -234,11 +236,7 @@ public class InputSystem : SystemBase
     /// </summary>
     private void PublishInputEvent(ICommand command)
     {
-        _eventBus.Publish(new InputCommandEvent
-        {
-            Command = command,
-            Timestamp = DateTime.UtcNow
-        });
+        _eventBus.Publish(new InputCommandEvent { Command = command, Timestamp = DateTime.UtcNow });
     }
 
     /// <summary>
@@ -254,9 +252,9 @@ public class InputSystem : SystemBase
     /// </summary>
     private bool WasKeyJustPressed(Keys? key)
     {
-        return key.HasValue &&
-               _currentKeyboardState.IsKeyDown(key.Value) &&
-               _previousKeyboardState.IsKeyUp(key.Value);
+        return key.HasValue
+            && _currentKeyboardState.IsKeyDown(key.Value)
+            && _previousKeyboardState.IsKeyUp(key.Value);
     }
 
     /// <summary>
@@ -264,9 +262,9 @@ public class InputSystem : SystemBase
     /// </summary>
     private bool WasButtonJustPressed(Buttons? button)
     {
-        return button.HasValue &&
-               _currentGamePadState.IsButtonDown(button.Value) &&
-               _previousGamePadState.IsButtonUp(button.Value);
+        return button.HasValue
+            && _currentGamePadState.IsButtonDown(button.Value)
+            && _previousGamePadState.IsButtonUp(button.Value);
     }
 
     /// <summary>
@@ -275,7 +273,7 @@ public class InputSystem : SystemBase
     public void SetPlayerEntity(Entity entity)
     {
         _playerEntity = entity;
-        Logger.LogInformation("Player entity set for InputSystem");
+        _logger.LogInformation("Player entity set for InputSystem");
     }
 
     /// <summary>
@@ -284,7 +282,7 @@ public class InputSystem : SystemBase
     public void LoadConfig(string filePath)
     {
         _config = InputConfig.LoadFromFile(filePath);
-        Logger.LogInformation("Loaded input configuration from {FilePath}", filePath);
+        _logger.LogInformation("Loaded input configuration from {FilePath}", filePath);
     }
 
     /// <summary>
@@ -293,7 +291,7 @@ public class InputSystem : SystemBase
     public void SaveConfig(string filePath)
     {
         _config.SaveToFile(filePath);
-        Logger.LogInformation("Saved input configuration to {FilePath}", filePath);
+        _logger.LogInformation("Saved input configuration to {FilePath}", filePath);
     }
 
     /// <summary>
@@ -307,14 +305,15 @@ public class InputSystem : SystemBase
     public void SetConfig(InputConfig config)
     {
         _config = config;
-        Logger.LogInformation("Input configuration updated");
+        _logger.LogInformation("Input configuration updated");
     }
 
     /// <inheritdoc/>
-    protected override void OnDispose()
+    public override void Dispose()
     {
         _commandQueue.Clear();
         _commandHistory.Clear();
-        Logger.LogInformation("InputSystem disposed");
+        _logger.LogInformation("InputSystem disposed");
+        base.Dispose();
     }
 }

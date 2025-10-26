@@ -57,11 +57,14 @@ public class ComponentData
     /// <returns>JSON string representation.</returns>
     public string ToJson()
     {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        return JsonSerializer.Serialize(
+            this,
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            }
+        );
     }
 
     /// <summary>
@@ -72,10 +75,10 @@ public class ComponentData
     /// <exception cref="JsonException">Thrown when JSON is invalid.</exception>
     public static ComponentData FromJson(string json)
     {
-        var result = JsonSerializer.Deserialize<ComponentData>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize<ComponentData>(
+            json,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+        );
 
         return result ?? throw new JsonException("Failed to deserialize ComponentData.");
     }
@@ -85,9 +88,11 @@ public class ComponentData
     /// </summary>
     /// <typeparam name="T">The target type.</typeparam>
     /// <returns>The typed data, or default if conversion fails.</returns>
-    public T? GetData<T>() where T : class
+    public T? GetData<T>()
+        where T : class
     {
-        if (Data == null) return null;
+        if (Data == null)
+            return null;
 
         if (Data is T typed)
             return typed;

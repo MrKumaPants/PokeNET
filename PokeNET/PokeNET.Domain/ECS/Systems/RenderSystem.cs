@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Arch.Core;
 using Arch.Core.Extensions;
+using Arch.System;
+using Arch.System.SourceGenerator;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,8 +16,9 @@ namespace PokeNET.Domain.ECS.Systems;
 /// System responsible for rendering sprites with support for layering, batching, culling, and camera transformations.
 /// Follows Single Responsibility Principle - only handles rendering logic.
 /// </summary>
-public class RenderSystem : SystemBase
+public partial class RenderSystem : BaseSystem<World, float>
 {
+    private readonly ILogger _logger;
     private readonly GraphicsDevice _graphicsDevice;
     private readonly Dictionary<string, Texture2D> _textureCache;
     private SpriteBatch? _spriteBatch;
@@ -28,22 +31,32 @@ public class RenderSystem : SystemBase
     private int _entitiesCulled;
     private int _drawCalls;
 
-    /// <summary>
-    /// Render system executes late in the update cycle.
-    /// </summary>
-    public override int Priority => 1000;
+    // Rendering state for source-generated queries
+    private float _deltaTime;
+    private List<RenderableEntity> _renderables;
+    private Rectangle? _cameraBounds;
 
     /// <summary>
     /// Initializes a new render system.
     /// </summary>
+    /// <param name="world">ECS world instance.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="graphicsDevice">MonoGame graphics device for rendering.</param>
-    public RenderSystem(ILogger<RenderSystem> logger, GraphicsDevice graphicsDevice)
-        : base(logger)
+    public RenderSystem(World world, ILogger<RenderSystem> logger, GraphicsDevice graphicsDevice)
+        : base(world)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         _textureCache = new Dictionary<string, Texture2D>();
         _debugRenderingEnabled = false;
+        _renderables = new List<RenderableEntity>();
+
+        // Initialize immediately
+        _spriteBatch = new SpriteBatch(_graphicsDevice);
+        _debugTexture = new Texture2D(_graphicsDevice, 1, 1);
+        _debugTexture.SetData(new[] { Color.White });
+
+        _logger.LogInformation("RenderSystem initialized with graphics device");
     }
 
     /// <summary>
@@ -70,43 +83,35 @@ public class RenderSystem : SystemBase
     /// </summary>
     public int DrawCalls => _drawCalls;
 
-    protected override void OnInitialize()
-    {
-        _spriteBatch = new SpriteBatch(_graphicsDevice);
-
-        // Create 1x1 white texture for debug rendering
-        _debugTexture = new Texture2D(_graphicsDevice, 1, 1);
-        _debugTexture.SetData(new[] { Color.White });
-
-        Logger.LogInformation("RenderSystem initialized with graphics device");
-    }
-
-    protected override void OnUpdate(float deltaTime)
+    public override void Update(in float deltaTime)
     {
         if (_spriteBatch == null)
         {
-            Logger.LogWarning("SpriteBatch not initialized, skipping render");
+            _logger.LogWarning("SpriteBatch not initialized, skipping render");
             return;
         }
 
-        // Reset performance metrics
+        // Store state for source-generated queries
+        _deltaTime = deltaTime;
         _entitiesRendered = 0;
         _entitiesCulled = 0;
         _drawCalls = 0;
+        _renderables.Clear();
 
         // Find active camera
         _activeCamera = FindActiveCamera();
+        _cameraBounds = _activeCamera?.GetBounds();
 
-        // Collect and sort renderable entities
-        var renderables = CollectRenderables();
+        // Collect renderable entities using source-generated query
+        CollectRenderableQuery(World);
 
-        if (renderables.Count == 0)
+        if (_renderables.Count == 0)
         {
             return;
         }
 
         // Sort by Z-order (Position.Z) for proper layering
-        renderables.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
+        _renderables.Sort((a, b) => a.Position.Z.CompareTo(b.Position.Z));
 
         // Begin sprite batch with camera transform
         var transformMatrix = _activeCamera?.GetTransformMatrix() ?? Matrix.Identity;
@@ -124,7 +129,7 @@ public class RenderSystem : SystemBase
         _drawCalls++;
 
         // Render each entity
-        foreach (var renderable in renderables)
+        foreach (var renderable in _renderables)
         {
             RenderEntity(renderable);
         }
@@ -134,7 +139,7 @@ public class RenderSystem : SystemBase
         // Log performance metrics periodically
         if (_debugRenderingEnabled)
         {
-            Logger.LogDebug(
+            _logger.LogDebug(
                 "Rendered {Rendered} entities, culled {Culled}, draw calls: {DrawCalls}",
                 _entitiesRendered,
                 _entitiesCulled,
@@ -143,62 +148,68 @@ public class RenderSystem : SystemBase
         }
     }
 
+    // Store active camera for query
+    private Camera? _foundCamera;
+
+    /// <summary>
+    /// Source-generated query for finding active camera.
+    /// Generated method: FindActiveCameraQuery(World world)
+    /// </summary>
+    [Query]
+    [All<Camera>]
+    private void CheckActiveCamera(ref Camera camera)
+    {
+        if (camera.IsActive && _foundCamera == null)
+        {
+            _foundCamera = camera;
+        }
+    }
+
     /// <summary>
     /// Finds the active camera in the world.
     /// </summary>
     private Camera? FindActiveCamera()
     {
-        var query = new QueryDescription().WithAll<Camera>();
-
-        Camera? activeCamera = null;
-        World.Query(in query, (ref Camera camera) =>
-        {
-            if (camera.IsActive)
-            {
-                activeCamera = camera;
-            }
-        });
-
-        return activeCamera;
+        _foundCamera = null;
+        CheckActiveCameraQuery(World);
+        return _foundCamera;
     }
 
     /// <summary>
-    /// Collects all renderable entities with required components.
+    /// Source-generated query for collecting renderable entities.
+    /// Generated method: CollectRenderableQuery(World world)
     /// </summary>
-    private List<RenderableEntity> CollectRenderables()
+    [Query]
+    [All<Position, Sprite, Renderable>]
+    private void CollectRenderable(
+        in Entity entity,
+        ref Position position,
+        ref Sprite sprite,
+        ref Renderable renderable
+    )
     {
-        var renderables = new List<RenderableEntity>();
-        var cameraBounds = _activeCamera?.GetBounds();
-
-        // Query entities with Position, Sprite, and Renderable components
-        var query = new QueryDescription()
-            .WithAll<Position, Sprite, Renderable>();
-
-        World.Query(in query, (Entity entity, ref Position position, ref Sprite sprite, ref Renderable renderable) =>
+        // Skip if not visible
+        if (!renderable.IsVisible || !sprite.IsVisible)
         {
-            // Skip if not visible
-            if (!renderable.IsVisible || !sprite.IsVisible)
-            {
-                return;
-            }
+            return;
+        }
 
-            // Frustum culling - skip if outside camera view
-            if (cameraBounds.HasValue && !IsInCameraBounds(position, sprite, cameraBounds.Value))
-            {
-                _entitiesCulled++;
-                return;
-            }
+        // Frustum culling - skip if outside camera view
+        if (_cameraBounds.HasValue && !IsInCameraBounds(position, sprite, _cameraBounds.Value))
+        {
+            _entitiesCulled++;
+            return;
+        }
 
-            renderables.Add(new RenderableEntity
+        _renderables.Add(
+            new RenderableEntity
             {
                 Entity = entity,
                 Position = position,
                 Sprite = sprite,
-                Renderable = renderable
-            });
-        });
-
-        return renderables;
+                Renderable = renderable,
+            }
+        );
     }
 
     /// <summary>
@@ -251,7 +262,11 @@ public class RenderSystem : SystemBase
         {
             var direction = World.Get<Direction>(renderable.Entity);
             // Flip sprite horizontally when facing west/southwest/northwest
-            if (direction == Direction.West || direction == Direction.SouthWest || direction == Direction.NorthWest)
+            if (
+                direction == Direction.West
+                || direction == Direction.SouthWest
+                || direction == Direction.NorthWest
+            )
             {
                 effects = SpriteEffects.FlipHorizontally;
             }
@@ -315,13 +330,29 @@ public class RenderSystem : SystemBase
         var debugColor = Color.Red * 0.5f;
 
         // Top
-        _spriteBatch.Draw(_debugTexture, new Rectangle(bounds.Left, bounds.Top, bounds.Width, thickness), debugColor);
+        _spriteBatch.Draw(
+            _debugTexture,
+            new Rectangle(bounds.Left, bounds.Top, bounds.Width, thickness),
+            debugColor
+        );
         // Bottom
-        _spriteBatch.Draw(_debugTexture, new Rectangle(bounds.Left, bounds.Bottom - thickness, bounds.Width, thickness), debugColor);
+        _spriteBatch.Draw(
+            _debugTexture,
+            new Rectangle(bounds.Left, bounds.Bottom - thickness, bounds.Width, thickness),
+            debugColor
+        );
         // Left
-        _spriteBatch.Draw(_debugTexture, new Rectangle(bounds.Left, bounds.Top, thickness, bounds.Height), debugColor);
+        _spriteBatch.Draw(
+            _debugTexture,
+            new Rectangle(bounds.Left, bounds.Top, thickness, bounds.Height),
+            debugColor
+        );
         // Right
-        _spriteBatch.Draw(_debugTexture, new Rectangle(bounds.Right - thickness, bounds.Top, thickness, bounds.Height), debugColor);
+        _spriteBatch.Draw(
+            _debugTexture,
+            new Rectangle(bounds.Right - thickness, bounds.Top, thickness, bounds.Height),
+            debugColor
+        );
     }
 
     /// <summary>
@@ -341,7 +372,7 @@ public class RenderSystem : SystemBase
 
         // In a real implementation, this would use ContentManager to load textures
         // For now, we return null and let the system use debug texture as fallback
-        Logger.LogWarning("Texture not found in cache: {TexturePath}", texturePath);
+        _logger.LogWarning("Texture not found in cache: {TexturePath}", texturePath);
         return null;
     }
 
@@ -352,7 +383,10 @@ public class RenderSystem : SystemBase
     {
         if (string.IsNullOrEmpty(texturePath))
         {
-            throw new ArgumentException("Texture path cannot be null or empty", nameof(texturePath));
+            throw new ArgumentException(
+                "Texture path cannot be null or empty",
+                nameof(texturePath)
+            );
         }
 
         if (texture == null)
@@ -361,7 +395,7 @@ public class RenderSystem : SystemBase
         }
 
         _textureCache[texturePath] = texture;
-        Logger.LogInformation("Registered texture: {TexturePath}", texturePath);
+        _logger.LogInformation("Registered texture: {TexturePath}", texturePath);
     }
 
     /// <summary>
@@ -370,16 +404,17 @@ public class RenderSystem : SystemBase
     public void ClearTextureCache()
     {
         _textureCache.Clear();
-        Logger.LogInformation("Texture cache cleared");
+        _logger.LogInformation("Texture cache cleared");
     }
 
-    protected override void OnDispose()
+    public override void Dispose()
     {
         _spriteBatch?.Dispose();
         _debugTexture?.Dispose();
         _textureCache.Clear();
 
-        Logger.LogInformation("RenderSystem disposed");
+        _logger.LogInformation("RenderSystem disposed");
+        base.Dispose();
     }
 
     /// <summary>

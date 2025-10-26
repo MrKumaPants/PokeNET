@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class BattleEndReaction : BaseAudioReaction
 {
-    public BattleEndReaction(ILogger<BattleEndReaction> logger) : base(logger)
-    {
-    }
+    public BattleEndReaction(ILogger<BattleEndReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 8;
 
@@ -20,7 +19,11 @@ public class BattleEndReaction : BaseAudioReaction
         return gameEvent is BattleEndEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;

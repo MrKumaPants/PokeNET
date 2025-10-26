@@ -53,7 +53,8 @@ public sealed class AudioStateManager : IAudioStateManager
     public AudioStateManager(
         ILogger<AudioStateManager> logger,
         IMusicPlayer musicPlayer,
-        ISoundEffectPlayer sfxPlayer)
+        ISoundEffectPlayer sfxPlayer
+    )
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _musicPlayer = musicPlayer ?? throw new ArgumentNullException(nameof(musicPlayer));
@@ -100,11 +101,15 @@ public sealed class AudioStateManager : IAudioStateManager
         var args = new AudioStateChangedEventArgs
         {
             PreviousState = previousState,
-            NewState = newState
+            NewState = newState,
         };
 
         StateChanged?.Invoke(this, args);
-        _logger.LogInformation("Audio state changed: {PreviousState} -> {NewState}", previousState, newState);
+        _logger.LogInformation(
+            "Audio state changed: {PreviousState} -> {NewState}",
+            previousState,
+            newState
+        );
     }
 
     /// <summary>
@@ -114,11 +119,7 @@ public sealed class AudioStateManager : IAudioStateManager
     /// <param name="exception">Optional exception.</param>
     public void RaiseError(string message, Exception? exception = null)
     {
-        var args = new AudioErrorEventArgs
-        {
-            Message = message,
-            Exception = exception
-        };
+        var args = new AudioErrorEventArgs { Message = message, Exception = exception };
 
         ErrorOccurred?.Invoke(this, args);
         _logger.LogError(exception, "Audio error occurred: {Message}", message);

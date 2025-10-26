@@ -208,7 +208,7 @@ public sealed class ScriptMetadata : IScriptMetadata
                 Description = _description,
                 Dependencies = _dependencies.AsReadOnly(),
                 RequiredPermissions = _permissions.AsReadOnly(),
-                IsEnabled = _isEnabled
+                IsEnabled = _isEnabled,
             };
         }
     }

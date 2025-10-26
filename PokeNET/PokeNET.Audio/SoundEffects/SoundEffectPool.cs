@@ -1,7 +1,7 @@
-using Microsoft.Xna.Framework.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Audio;
 
 namespace PokeNET.Audio.SoundEffects
 {
@@ -201,7 +201,8 @@ namespace PokeNET.Audio.SoundEffects
                 ActiveInstances = _activeInstances.Count,
                 PooledInstances = _pools.Values.Sum(p => p.Count),
                 UniqueEffects = _pools.Count,
-                ReuseRate = _totalCreated > 0 ? (float)_totalReused / (_totalCreated + _totalReused) : 0.0f
+                ReuseRate =
+                    _totalCreated > 0 ? (float)_totalReused / (_totalCreated + _totalReused) : 0.0f,
             };
         }
 
@@ -230,9 +231,9 @@ namespace PokeNET.Audio.SoundEffects
 
         public override string ToString()
         {
-            return $"Pool [{Category}]: Created={TotalCreated}, Reused={TotalReused}, " +
-                   $"Active={ActiveInstances}, Pooled={PooledInstances}, " +
-                   $"Unique={UniqueEffects}, ReuseRate={ReuseRate:P1}";
+            return $"Pool [{Category}]: Created={TotalCreated}, Reused={TotalReused}, "
+                + $"Active={ActiveInstances}, Pooled={PooledInstances}, "
+                + $"Unique={UniqueEffects}, ReuseRate={ReuseRate:P1}";
         }
     }
 }

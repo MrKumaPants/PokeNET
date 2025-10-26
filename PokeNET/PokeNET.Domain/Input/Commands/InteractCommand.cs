@@ -1,3 +1,4 @@
+using System;
 using Arch.Core;
 using Arch.Core.Extensions;
 using PokeNET.Domain.ECS.Events;
@@ -39,11 +40,7 @@ public class InteractCommand : CommandBase
     public override void Execute(World world)
     {
         // Publish interaction event if event bus is available
-        _eventBus?.Publish(new InteractionEvent
-        {
-            Entity = _entity,
-            Timestamp = DateTime.UtcNow
-        });
+        _eventBus?.Publish(new InteractionEvent { Entity = _entity, Timestamp = DateTime.UtcNow });
 
         // TODO: Implement interaction logic
         // - Raycast or proximity check for nearby interactable entities

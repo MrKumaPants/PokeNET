@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PokeNET.Domain.Modding;
@@ -41,7 +44,8 @@ public sealed class ModContext : IModContext
         string modDirectory,
         IServiceProvider services,
         ILoggerFactory loggerFactory,
-        ModLoader modLoader)
+        ModLoader modLoader
+    )
     {
         Manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
         ModDirectory = modDirectory ?? throw new ArgumentNullException(nameof(modDirectory));
@@ -66,12 +70,14 @@ public sealed class ModContext : IModContext
         _modRegistry = new Lazy<IModRegistry>(() => new ModRegistry(modLoader));
     }
 
-    public T GetService<T>() where T : notnull
+    public T GetService<T>()
+        where T : notnull
     {
         return _services.GetRequiredService<T>();
     }
 
-    public bool TryGetService<T>(out T? service) where T : class
+    public bool TryGetService<T>(out T? service)
+        where T : class
     {
         service = _services.GetService<T>();
         return service != null;
@@ -81,54 +87,90 @@ public sealed class ModContext : IModContext
 
     private class AssetApiStub : IAssetApi
     {
-        public Task<T> LoadDataAsync<T>(string assetPath, CancellationToken cancellationToken = default)
+        public Task<T> LoadDataAsync<T>(
+            string assetPath,
+            CancellationToken cancellationToken = default
+        )
         {
             throw new NotImplementedException("Asset API will be implemented in a future phase");
         }
 
-        public Task<ITexture> LoadTextureAsync(string assetPath, CancellationToken cancellationToken = default)
+        public Task<ITexture> LoadTextureAsync(
+            string assetPath,
+            CancellationToken cancellationToken = default
+        )
         {
             throw new NotImplementedException("Asset API will be implemented in a future phase");
         }
 
-        public Task<IAudioClip> LoadAudioAsync(string assetPath, CancellationToken cancellationToken = default)
+        public Task<IAudioClip> LoadAudioAsync(
+            string assetPath,
+            CancellationToken cancellationToken = default
+        )
         {
             throw new NotImplementedException("Asset API will be implemented in a future phase");
         }
 
         public bool AssetExists(string assetPath) => false;
+
         public string? ResolveAssetPath(string assetPath) => null;
+
         public void InvalidateCache(string assetPath) { }
-        public void RegisterLoader<T>(string extension, Func<string, CancellationToken, Task<T>> loader) { }
+
+        public void RegisterLoader<T>(
+            string extension,
+            Func<string, CancellationToken, Task<T>> loader
+        ) { }
     }
 
     private class EntityApiStub : IEntityApi
     {
-        public Entity CreateEntity(params object[] components) => throw new NotImplementedException();
+        public Entity CreateEntity(params object[] components) =>
+            throw new NotImplementedException();
+
         public void DestroyEntity(Entity entity) { }
+
         public bool EntityExists(Entity entity) => false;
+
         public void AddComponent<T>(Entity entity, T component) { }
+
         public void RemoveComponent<T>(Entity entity) { }
+
         public bool HasComponent<T>(Entity entity) => false;
+
         public ref T GetComponent<T>(Entity entity) => throw new NotImplementedException();
-        public bool TryGetComponent<T>(Entity entity, out T component) { component = default!; return false; }
+
+        public bool TryGetComponent<T>(Entity entity, out T component)
+        {
+            component = default!;
+            return false;
+        }
+
         public void SetComponent<T>(Entity entity, T component) { }
+
         public IEntityQuery<T1> Query<T1>() => throw new NotImplementedException();
+
         public IEntityQuery<T1, T2> Query<T1, T2>() => throw new NotImplementedException();
+
         public IEntityQuery<T1, T2, T3> Query<T1, T2, T3>() => throw new NotImplementedException();
+
         public int EntityCount => 0;
+
         public IEnumerable<Entity> GetAllEntities() => Array.Empty<Entity>();
     }
 
     private class GameplayEventsStub : IGameplayEvents
-        {
-            public event EventHandler<GameUpdateEventArgs>? OnUpdate;
-            public event EventHandler<NewGameEventArgs>? OnNewGameStarted;
-            public event EventHandler<LocationChangedEventArgs>? OnLocationChanged;
-            public event EventHandler<ItemPickedUpEventArgs>? OnItemPickedUp;
-            public event EventHandler<ItemUsedEventArgs>? OnItemUsed;
-        }
+    {
+#pragma warning disable CS0067 // Event is never used - intentional for modding API stubs
+        public event EventHandler<GameUpdateEventArgs>? OnUpdate;
+        public event EventHandler<NewGameEventArgs>? OnNewGameStarted;
+        public event EventHandler<LocationChangedEventArgs>? OnLocationChanged;
+        public event EventHandler<ItemPickedUpEventArgs>? OnItemPickedUp;
+        public event EventHandler<ItemUsedEventArgs>? OnItemUsed;
+#pragma warning restore CS0067
+    }
 
+#pragma warning disable CS0067 // Event is never used - intentional for modding API stubs
     private class BattleEventsStub : IBattleEvents
     {
         public event EventHandler<BattleStartEventArgs>? OnBattleStart;
@@ -139,14 +181,18 @@ public sealed class ModContext : IModContext
         public event EventHandler<CreatureFaintedEventArgs>? OnCreatureFainted;
         public event EventHandler<CreatureCaughtEventArgs>? OnCreatureCaught;
     }
+#pragma warning restore CS0067
 
     private class UIEventsStub : IUIEvents
-        {
-            public event EventHandler<MenuOpenedEventArgs>? OnMenuOpened;
-            public event EventHandler<MenuClosedEventArgs>? OnMenuClosed;
-            public event EventHandler<DialogShownEventArgs>? OnDialogShown;
-        }
+    {
+#pragma warning disable CS0067 // Event is never used - intentional for modding API stubs
+        public event EventHandler<MenuOpenedEventArgs>? OnMenuOpened;
+        public event EventHandler<MenuClosedEventArgs>? OnMenuClosed;
+        public event EventHandler<DialogShownEventArgs>? OnDialogShown;
+#pragma warning restore CS0067
+    }
 
+#pragma warning disable CS0067 // Event is never used - intentional for modding API stubs
     private class SaveEventsStub : ISaveEvents
     {
         public event EventHandler<SavingEventArgs>? OnSaving;
@@ -154,12 +200,15 @@ public sealed class ModContext : IModContext
         public event EventHandler<LoadingEventArgs>? OnLoading;
         public event EventHandler<LoadedEventArgs>? OnLoaded;
     }
+#pragma warning restore CS0067
 
+#pragma warning disable CS0067 // Event is never used - intentional for modding API stubs
     private class ModEventsStub : IModEvents
     {
         public event EventHandler<AllModsLoadedEventArgs>? OnAllModsLoaded;
         public event EventHandler<ModUnloadedEventArgs>? OnModUnloaded;
     }
+#pragma warning restore CS0067
 
     private class ConfigurationApiStub : IConfigurationApi
     {
@@ -171,11 +220,23 @@ public sealed class ModContext : IModContext
         }
 
         public T Get<T>(string key, T defaultValue) => defaultValue;
-        public T Get<T>(string key) => throw new KeyNotFoundException($"Configuration key not found: {key}");
-        public bool TryGet<T>(string key, out T? value) { value = default; return false; }
+
+        public T Get<T>(string key) =>
+            throw new KeyNotFoundException($"Configuration key not found: {key}");
+
+        public bool TryGet<T>(string key, out T? value)
+        {
+            value = default;
+            return false;
+        }
+
         public bool HasKey(string key) => false;
+
         public IReadOnlyList<string> GetAllKeys() => Array.Empty<string>();
-        public T Bind<T>(string section = "") where T : new() => new T();
+
+        public T Bind<T>(string section = "")
+            where T : new() => new T();
+
         public void Reload() { }
     }
 }

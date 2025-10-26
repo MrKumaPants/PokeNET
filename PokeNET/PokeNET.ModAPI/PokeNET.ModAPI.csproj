@@ -1,28 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-
-        <!-- NuGet Package Configuration -->
-        <PackageId>PokeNET.ModAPI</PackageId>
-        <Version>0.1.0-alpha</Version>
-        <Authors>PokeNET Team</Authors>
-        <Description>Stable modding API for PokeNET - Entity, Asset, Event, and World management for game modifications</Description>
-        <PackageTags>pokenet;modding;api;gamedev;ecs</PackageTags>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageProjectUrl>https://github.com/pokenet/pokenet</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/pokenet/pokenet</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
-
-    <!-- NuGet README -->
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
-    </ItemGroup>
-
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- NuGet Package Configuration -->
+    <PackageId>PokeNET.ModAPI</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <Authors>PokeNET Team</Authors>
+    <Description>Stable modding API for PokeNET - Entity, Asset, Event, and World management for game modifications</Description>
+    <PackageTags>pokenet;modding;api;gamedev;ecs</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/pokenet/pokenet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pokenet/pokenet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <!-- NuGet README -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

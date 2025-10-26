@@ -9,10 +9,10 @@
 // API Access: IScriptApi via global 'Api' variable
 // ================================================================
 
+using System;
 using PokeNET.ModApi;
 using PokeNET.ModApi.Battle;
 using PokeNET.ModApi.Events;
-using System;
 
 /// <summary>
 /// Custom move effect: "Thunder Strike"
@@ -33,8 +33,8 @@ public class ThunderStrikeEffect
     private readonly IScriptApi _api;
 
     // Constants for move behavior
-    private const float PARALYZE_CHANCE = 0.30f;     // 30% chance
-    private const float CRIT_BONUS = 0.10f;          // +10% crit rate
+    private const float PARALYZE_CHANCE = 0.30f; // 30% chance
+    private const float CRIT_BONUS = 0.10f; // +10% crit rate
     private const int BASE_POWER = 80;
 
     public ThunderStrikeEffect(IScriptApi api)
@@ -51,7 +51,8 @@ public class ThunderStrikeEffect
         var result = new MoveResult();
 
         _api.Logger.LogDebug(
-            $"Executing Thunder Strike: {context.User.Name} -> {context.Target.Name}");
+            $"Executing Thunder Strike: {context.User.Name} -> {context.Target.Name}"
+        );
 
         // Step 1: Check if move hits
         if (!CheckAccuracy(context))
@@ -80,8 +81,9 @@ public class ThunderStrikeEffect
         PublishBattleMessage(context, result);
 
         _api.Logger.LogInformation(
-            $"Thunder Strike result: {damage} damage, Critical={isCritical}, " +
-            $"Paralyzed={result.StatusInflicted != null}");
+            $"Thunder Strike result: {damage} damage, Critical={isCritical}, "
+                + $"Paralyzed={result.StatusInflicted != null}"
+        );
 
         return result;
     }
@@ -99,8 +101,7 @@ public class ThunderStrikeEffect
         ref var targetStats = ref context.Target.Get<BattleStats>();
 
         // Calculate final accuracy (simplified formula)
-        float accuracy = BASE_ACCURACY *
-            (userStats.AccuracyStage / targetStats.EvasionStage);
+        float accuracy = BASE_ACCURACY * (userStats.AccuracyStage / targetStats.EvasionStage);
 
         return _api.Utilities.RandomChance(accuracy);
     }
@@ -121,8 +122,14 @@ public class ThunderStrikeEffect
         // Damage = ((2 * Level / 5 + 2) * Power * Attack / Defense / 50 + 2) * Modifiers
         var userLevel = context.User.Get<Level>().Current;
 
-        int baseDamage = ((2 * userLevel / 5 + 2) * BASE_POWER *
-                         attackerStats.SpecialAttack / defenderStats.SpecialDefense / 50) + 2;
+        int baseDamage =
+            (
+                (2 * userLevel / 5 + 2)
+                * BASE_POWER
+                * attackerStats.SpecialAttack
+                / defenderStats.SpecialDefense
+                / 50
+            ) + 2;
 
         // Apply critical hit multiplier
         if (isCritical)
@@ -133,7 +140,8 @@ public class ThunderStrikeEffect
         // Apply type effectiveness
         float effectiveness = _api.Utilities.GetTypeEffectiveness(
             "Electric",
-            context.Target.Get<CreatureType>());
+            context.Target.Get<CreatureType>()
+        );
 
         baseDamage = (int)(baseDamage * effectiveness);
 
@@ -181,17 +189,14 @@ public class ThunderStrikeEffect
         int oldHP = health.Current;
         health.Current = Math.Max(0, health.Current - damage);
 
-        _api.Logger.LogDebug(
-            $"{target.Name} HP: {oldHP} -> {health.Current} (-{damage})");
+        _api.Logger.LogDebug($"{target.Name} HP: {oldHP} -> {health.Current} (-{damage})");
 
         // Check if target fainted
         if (health.Current == 0)
         {
-            _api.Events.Publish(new CreatureFaintedEvent
-            {
-                Victim = target,
-                Timestamp = DateTime.UtcNow
-            });
+            _api.Events.Publish(
+                new CreatureFaintedEvent { Victim = target, Timestamp = DateTime.UtcNow }
+            );
         }
     }
 
@@ -215,11 +220,7 @@ public class ThunderStrikeEffect
         }
 
         // Apply paralysis
-        target.Add(new StatusCondition
-        {
-            Type = StatusType.Paralyzed,
-            TurnCount = 0
-        });
+        target.Add(new StatusCondition { Type = StatusType.Paralyzed, TurnCount = 0 });
 
         // Reduce speed by 50%
         ref var stats = ref target.Get<CreatureStats>();
@@ -234,8 +235,7 @@ public class ThunderStrikeEffect
     private bool HasType(Entity creature, string typeName)
     {
         ref var types = ref creature.Get<CreatureType>();
-        return types.PrimaryType == typeName ||
-               types.SecondaryType == typeName;
+        return types.PrimaryType == typeName || types.SecondaryType == typeName;
     }
 
     /// <summary>
@@ -255,11 +255,9 @@ public class ThunderStrikeEffect
             message += $" {context.Target.Name} was paralyzed!";
         }
 
-        _api.Events.Publish(new BattleMessageEvent
-        {
-            Message = message,
-            Priority = MessagePriority.MoveEffect
-        });
+        _api.Events.Publish(
+            new BattleMessageEvent { Message = message, Priority = MessagePriority.MoveEffect }
+        );
     }
 
     /// <summary>
@@ -267,11 +265,13 @@ public class ThunderStrikeEffect
     /// </summary>
     private void PublishMissMessage(MoveContext context)
     {
-        _api.Events.Publish(new BattleMessageEvent
-        {
-            Message = $"{context.User.Name}'s attack missed!",
-            Priority = MessagePriority.MoveEffect
-        });
+        _api.Events.Publish(
+            new BattleMessageEvent
+            {
+                Message = $"{context.User.Name}'s attack missed!",
+                Priority = MessagePriority.MoveEffect,
+            }
+        );
 
         _api.Logger.LogDebug("Thunder Strike missed");
     }

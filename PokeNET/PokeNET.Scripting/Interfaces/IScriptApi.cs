@@ -69,7 +69,8 @@ public interface IScriptApi
     /// });
     /// </code>
     /// </example>
-    void PublishEvent<T>(T gameEvent) where T : IGameEvent;
+    void PublishEvent<T>(T gameEvent)
+        where T : IGameEvent;
 
     /// <summary>
     /// Subscribes to game events of a specific type.
@@ -78,14 +79,16 @@ public interface IScriptApi
     /// <param name="handler">The handler to invoke when events are published.</param>
     /// <exception cref="ArgumentNullException">Handler is null.</exception>
     /// <exception cref="InvalidOperationException">Script lacks permission to subscribe to events.</exception>
-    void SubscribeToEvent<T>(Action<T> handler) where T : IGameEvent;
+    void SubscribeToEvent<T>(Action<T> handler)
+        where T : IGameEvent;
 
     /// <summary>
     /// Unsubscribes from game events of a specific type.
     /// </summary>
     /// <typeparam name="T">The event type to unsubscribe from.</typeparam>
     /// <param name="handler">The handler to remove.</param>
-    void UnsubscribeFromEvent<T>(Action<T> handler) where T : IGameEvent;
+    void UnsubscribeFromEvent<T>(Action<T> handler)
+        where T : IGameEvent;
 
     /// <summary>
     /// Logs a message at the specified log level.
@@ -120,10 +123,13 @@ public enum LogLevel
 {
     /// <summary>Debug information.</summary>
     Debug = 0,
+
     /// <summary>Informational messages.</summary>
     Information = 1,
+
     /// <summary>Warning messages.</summary>
     Warning = 2,
+
     /// <summary>Error messages.</summary>
-    Error = 3
+    Error = 3,
 }

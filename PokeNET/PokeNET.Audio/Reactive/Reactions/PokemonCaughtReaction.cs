@@ -9,9 +9,8 @@ namespace PokeNET.Audio.Reactive.Reactions;
 /// </summary>
 public class PokemonCaughtReaction : BaseAudioReaction
 {
-    public PokemonCaughtReaction(ILogger<PokemonCaughtReaction> logger) : base(logger)
-    {
-    }
+    public PokemonCaughtReaction(ILogger<PokemonCaughtReaction> logger)
+        : base(logger) { }
 
     public override int Priority => 5;
 
@@ -20,13 +19,21 @@ public class PokemonCaughtReaction : BaseAudioReaction
         return gameEvent is PokemonCaughtEvent;
     }
 
-    public override async Task ReactAsync(IGameEvent gameEvent, IAudioManager audioManager, CancellationToken cancellationToken = default)
+    public override async Task ReactAsync(
+        IGameEvent gameEvent,
+        IAudioManager audioManager,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ShouldReact(gameEvent))
             return;
 
         var evt = (PokemonCaughtEvent)gameEvent;
         Logger.LogInformation("Pokemon caught: {PokemonName}", evt.PokemonName);
-        await audioManager.PlaySoundEffectAsync("audio/sfx/pokemon_catch.wav", 1.0f, cancellationToken);
+        await audioManager.PlaySoundEffectAsync(
+            "audio/sfx/pokemon_catch.wav",
+            1.0f,
+            cancellationToken
+        );
     }
 }

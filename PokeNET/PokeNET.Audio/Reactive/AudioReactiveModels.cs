@@ -107,7 +107,7 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Elite Four or Champion battle.
         /// </summary>
-        EliteFour
+        EliteFour,
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Special or story location.
         /// </summary>
-        Special
+        Special,
     }
 
     /// <summary>
@@ -184,6 +184,6 @@ namespace PokeNET.Audio.Reactive
         /// <summary>
         /// Night (sunset to sunrise).
         /// </summary>
-        Night
+        Night,
     }
 }

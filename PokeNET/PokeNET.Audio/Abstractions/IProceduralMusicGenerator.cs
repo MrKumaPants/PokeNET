@@ -1,8 +1,8 @@
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.MusicTheory;
 using PokeNET.Audio.Models;
-using MidiTimeSignature = Melanchall.DryWetMidi.Interaction.TimeSignature;
 using MidiNoteName = Melanchall.DryWetMidi.MusicTheory.NoteName;
+using MidiTimeSignature = Melanchall.DryWetMidi.Interaction.TimeSignature;
 
 namespace PokeNET.Audio.Abstractions;
 
@@ -39,7 +39,10 @@ public interface IProceduralMusicGenerator
     /// <param name="parameters">Generation parameters defining mood, style, etc.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A generated audio track ready for playback.</returns>
-    Task<AudioTrack> GenerateAsync(ProceduralMusicParameters parameters, CancellationToken cancellationToken = default);
+    Task<AudioTrack> GenerateAsync(
+        ProceduralMusicParameters parameters,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Generates a MIDI file from procedural parameters.
@@ -47,7 +50,10 @@ public interface IProceduralMusicGenerator
     /// <param name="parameters">Generation parameters.</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A MIDI file object.</returns>
-    Task<MidiFile> GenerateMidiAsync(ProceduralMusicParameters parameters, CancellationToken cancellationToken = default);
+    Task<MidiFile> GenerateMidiAsync(
+        ProceduralMusicParameters parameters,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Sets the music scale for generation.
@@ -78,7 +84,10 @@ public interface IProceduralMusicGenerator
     /// This enables dynamic music that responds to gameplay changes, such as
     /// increasing intensity during combat or calming during exploration.
     /// </remarks>
-    Task AdaptCurrentTrackAsync(MusicAdaptationParameters adaptationParams, CancellationToken cancellationToken = default);
+    Task AdaptCurrentTrackAsync(
+        MusicAdaptationParameters adaptationParams,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Generates a music variation of an existing track.
@@ -87,7 +96,11 @@ public interface IProceduralMusicGenerator
     /// <param name="variationIntensity">How much to vary from the original (0.0 to 1.0).</param>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A new track that is a variation of the source.</returns>
-    Task<AudioTrack> GenerateVariationAsync(AudioTrack sourceTrack, float variationIntensity, CancellationToken cancellationToken = default);
+    Task<AudioTrack> GenerateVariationAsync(
+        AudioTrack sourceTrack,
+        float variationIntensity,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Event raised when procedural generation completes.
@@ -187,7 +200,7 @@ public enum AdaptationStyle
     NextPhrase,
 
     /// <summary>Transition at the next measure boundary.</summary>
-    NextMeasure
+    NextMeasure,
 }
 
 /// <summary>

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using PokeNET.Domain.Modding;
@@ -75,7 +77,8 @@ public sealed class ModManifest : IModManifest
     public IReadOnlyList<string> LoadBefore { get; init; } = Array.Empty<string>();
 
     [JsonPropertyName("incompatibleWith")]
-    public IReadOnlyList<ModIncompatibility> IncompatibleWith { get; init; } = Array.Empty<ModIncompatibility>();
+    public IReadOnlyList<ModIncompatibility> IncompatibleWith { get; init; } =
+        Array.Empty<ModIncompatibility>();
 
     // ============================================================================
     // ICodeMod: Code Execution
@@ -145,7 +148,11 @@ public sealed class ModManifest : IModManifest
 /// </summary>
 internal sealed class ModVersionJsonConverter : JsonConverter<ModVersion>
 {
-    public override ModVersion Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override ModVersion Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         var versionString = reader.GetString();
         if (string.IsNullOrEmpty(versionString))
@@ -154,7 +161,11 @@ internal sealed class ModVersionJsonConverter : JsonConverter<ModVersion>
         return ModVersion.Parse(versionString);
     }
 
-    public override void Write(Utf8JsonWriter writer, ModVersion value, JsonSerializerOptions options)
+    public override void Write(
+        Utf8JsonWriter writer,
+        ModVersion value,
+        JsonSerializerOptions options
+    )
     {
         writer.WriteStringValue(value.ToString());
     }

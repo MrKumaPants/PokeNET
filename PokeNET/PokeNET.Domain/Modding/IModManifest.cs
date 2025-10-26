@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
@@ -33,7 +36,13 @@ namespace PokeNET.Domain.Modding;
 /// void LoadCodeMod(IModManifestCore core, ICodeMod codeMod) { ... }
 /// </code>
 /// </example>
-public interface IModManifest : IModManifestCore, IModMetadata, IModDependencies, ICodeMod, IContentMod, IModSecurity
+public interface IModManifest
+    : IModManifestCore,
+        IModMetadata,
+        IModDependencies,
+        ICodeMod,
+        IContentMod,
+        IModSecurity
 {
     /// <summary>
     /// Directory path where the mod is located.
@@ -141,7 +150,7 @@ public record ModVersion
             Minor = int.Parse(versionParts[1]),
             Patch = int.Parse(versionParts[2]),
             PreRelease = parts.Length > 1 ? parts[1] : null,
-            BuildMetadata = parts.Length > 2 ? parts[2] : null
+            BuildMetadata = parts.Length > 2 ? parts[2] : null,
         };
     }
 }
@@ -206,7 +215,7 @@ public enum ModType
     /// <summary>
     /// Mod contains a combination of data, content, and code.
     /// </summary>
-    Hybrid
+    Hybrid,
 }
 
 /// <summary>
@@ -227,7 +236,7 @@ public enum ModTrustLevel
     /// <summary>
     /// Code mod from unknown source (requires user consent).
     /// </summary>
-    Untrusted
+    Untrusted,
 }
 
 /// <summary>
@@ -248,5 +257,5 @@ public enum ContentRating
     /// <summary>
     /// Suitable for ages 17+.
     /// </summary>
-    Mature
+    Mature,
 }

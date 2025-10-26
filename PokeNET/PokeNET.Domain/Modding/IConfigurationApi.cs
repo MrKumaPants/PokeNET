@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PokeNET.Domain.Modding;
 
 /// <summary>
@@ -100,7 +102,8 @@ public interface IConfigurationApi
     /// logger.LogInfo($"Difficulty: {settings.Difficulty}");
     /// </code>
     /// </example>
-    T Bind<T>(string section = "") where T : new();
+    T Bind<T>(string section = "")
+        where T : new();
 
     /// <summary>
     /// Reloads configuration from disk (for hot reload during development).

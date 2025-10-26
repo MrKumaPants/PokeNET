@@ -1,6 +1,6 @@
+using System;
 using HarmonyLib;
 using PokeNET.Core.Battle;
-using System;
 
 namespace SimpleCodeMod.Patches
 {

@@ -76,7 +76,10 @@ namespace PokeNET.Audio.Mixing
         {
             if (string.IsNullOrEmpty(channelId))
             {
-                throw new ArgumentException("Channel ID cannot be null or empty", nameof(channelId));
+                throw new ArgumentException(
+                    "Channel ID cannot be null or empty",
+                    nameof(channelId)
+                );
             }
 
             float processedVolume = inputVolume;
@@ -274,7 +277,7 @@ namespace PokeNET.Audio.Mixing
                 AverageLevel = GetAverageLevel(channelId),
                 RMSLevel = GetRMSLevel(channelId),
                 DynamicRange = CalculateDynamicRange(channelId),
-                RecommendedGain = CalculateOptimalGain(channelId)
+                RecommendedGain = CalculateOptimalGain(channelId),
             };
         }
 
@@ -305,7 +308,7 @@ namespace PokeNET.Audio.Mixing
                 CompressionThreshold = CompressionThreshold,
                 CompressionRatio = CompressionRatio,
                 AttackTime = AttackTime,
-                ReleaseTime = ReleaseTime
+                ReleaseTime = ReleaseTime,
             };
         }
 

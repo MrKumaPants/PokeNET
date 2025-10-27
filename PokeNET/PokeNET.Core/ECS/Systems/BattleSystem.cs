@@ -6,6 +6,7 @@ using Arch.Core.Extensions;
 using Arch.System;
 using Arch.System.SourceGenerator;
 using Microsoft.Extensions.Logging;
+using PokeNET.Core.Battle;
 using PokeNET.Core.ECS.Commands;
 using PokeNET.Core.ECS.Components;
 using PokeNET.Core.ECS.Events;
@@ -445,38 +446,38 @@ public partial class BattleSystem : BaseSystem<World, float>
         float spDefenseMod = GetNatureModifier(data.Nature, StatType.SpDefense);
         float speedMod = GetNatureModifier(data.Nature, StatType.Speed);
 
-        // Calculate stats using official formula
-        stats.MaxHP = stats.CalculateHP(baseHP, data.Level);
+        // Calculate stats using official formula via StatCalculator
+        stats.MaxHP = StatCalculator.CalculateHP(baseHP, stats.IV_HP, stats.EV_HP, data.Level);
         stats.HP = stats.MaxHP; // Heal on level up
-        stats.Attack = stats.CalculateStat(
+        stats.Attack = StatCalculator.CalculateStat(
             baseAttack,
             stats.IV_Attack,
             stats.EV_Attack,
             data.Level,
             attackMod
         );
-        stats.Defense = stats.CalculateStat(
+        stats.Defense = StatCalculator.CalculateStat(
             baseDefense,
             stats.IV_Defense,
             stats.EV_Defense,
             data.Level,
             defenseMod
         );
-        stats.SpAttack = stats.CalculateStat(
+        stats.SpAttack = StatCalculator.CalculateStat(
             baseSpAttack,
             stats.IV_SpAttack,
             stats.EV_SpAttack,
             data.Level,
             spAttackMod
         );
-        stats.SpDefense = stats.CalculateStat(
+        stats.SpDefense = StatCalculator.CalculateStat(
             baseSpDefense,
             stats.IV_SpDefense,
             stats.EV_SpDefense,
             data.Level,
             spDefenseMod
         );
-        stats.Speed = stats.CalculateStat(
+        stats.Speed = StatCalculator.CalculateStat(
             baseSpeed,
             stats.IV_Speed,
             stats.EV_Speed,

@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Platforms>AnyCPU</Platforms>
-    <!-- Suppress nullable warnings from Arch source generator -->
-    <NoWarn>$(NoWarn);CS8602</NoWarn>
+    <!-- Suppress nullable warnings from Arch source generator and obsolete API warnings -->
+    <NoWarn>$(NoWarn);CS8602;CS0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- Project References -->

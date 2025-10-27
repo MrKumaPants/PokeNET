@@ -98,6 +98,42 @@ public interface IDataApi
     /// <returns>Read-only list of all encounter tables.</returns>
     Task<IReadOnlyList<EncounterTable>> GetAllEncountersAsync();
 
+    // ==================== Type Effectiveness ====================
+
+    /// <summary>
+    /// Retrieves type information for a given type name.
+    /// </summary>
+    /// <param name="typeName">Name of the type (e.g., "Fire", "Water").</param>
+    /// <returns>Type information, or null if not found.</returns>
+    Task<TypeData?> GetTypeAsync(string typeName);
+
+    /// <summary>
+    /// Retrieves all loaded types.
+    /// </summary>
+    /// <returns>Read-only list of all type information.</returns>
+    Task<IReadOnlyList<TypeData>> GetAllTypesAsync();
+
+    /// <summary>
+    /// Retrieves type effectiveness multiplier for a single-type matchup.
+    /// </summary>
+    /// <param name="attackType">Name of the attacking move's type.</param>
+    /// <param name="defenseType">Name of the defending Pokemon's type.</param>
+    /// <returns>Effectiveness multiplier (0, 0.5, 1, 2).</returns>
+    Task<double> GetTypeEffectivenessAsync(string attackType, string defenseType);
+
+    /// <summary>
+    /// Retrieves type effectiveness multiplier for dual-type Pokemon.
+    /// Multiplies both type matchups together (e.g., 2.0 × 2.0 = 4.0).
+    /// </summary>
+    /// <param name="attackType">Name of the attacking move's type.</param>
+    /// <param name="defenseType1">Name of the defending Pokemon's first type.</param>
+    /// <param name="defenseType2">Name of the defending Pokemon's second type (null if single-type).</param>
+    /// <returns>Combined effectiveness multiplier (0, 0.25, 0.5, 1, 2, 4).</returns>
+    Task<double> GetDualTypeEffectivenessAsync(
+        string attackType,
+        string defenseType1,
+        string? defenseType2);
+
     // ==================== Cache Management ====================
 
     /// <summary>

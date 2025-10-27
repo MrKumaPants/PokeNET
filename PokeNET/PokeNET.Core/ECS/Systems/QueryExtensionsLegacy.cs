@@ -66,11 +66,11 @@ public static class QueryExtensions
     >();
 
     /// <summary>
-    /// Query for battle participants: Stats + BattleState.
+    /// Query for battle participants: PokemonStats + BattleState.
     /// Used by BattleSystem to manage combat.
     /// </summary>
     public static readonly QueryDescription BattleQuery = new QueryDescription().WithAll<
-        Stats,
+        PokemonStats,
         BattleState
     >();
 
@@ -112,8 +112,8 @@ public static class QueryExtensions
     >();
 
     /// <summary>
-    /// Query for entities with health: Stats.
+    /// Query for entities with health: Health component.
     /// Used for health-based systems like damage and healing.
     /// </summary>
-    public static readonly QueryDescription HealthQuery = new QueryDescription().WithAll<Stats>();
+    public static readonly QueryDescription HealthQuery = new QueryDescription().WithAll<Health>();
 }

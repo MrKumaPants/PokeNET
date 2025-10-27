@@ -100,8 +100,7 @@ public class DataManagerTests : IDisposable
                 Category = ItemCategory.Medicine,
                 BuyPrice = 200,
                 SellPrice = 100,
-                Consumable = true,
-                Effect = new ItemEffect { EffectType = "Heal", HealAmount = 20 }
+                Consumable = true
             },
             new()
             {
@@ -110,8 +109,7 @@ public class DataManagerTests : IDisposable
                 Category = ItemCategory.Pokeball,
                 BuyPrice = 200,
                 SellPrice = 100,
-                Consumable = true,
-                Effect = new ItemEffect { EffectType = "CatchRate", CatchRateMultiplier = 1.0f }
+                Consumable = true
             }
         };
 
@@ -151,10 +149,62 @@ public class DataManagerTests : IDisposable
             Path.Combine(_testDataPath, "encounters.json"),
             JsonSerializer.Serialize(encounters, options)
         );
+
+        // Create test type data
+        var types = new List<TypeData>
+        {
+            new()
+            {
+                Name = "Fire",
+                Color = "#F08030",
+                Description = "Fire type Pokemon",
+                Matchups = new Dictionary<string, double>
+                {
+                    { "Fire", 0.5 },
+                    { "Water", 0.5 },
+                    { "Grass", 2.0 },
+                    { "Ice", 2.0 },
+                    { "Steel", 2.0 }
+                }
+            },
+            new()
+            {
+                Name = "Water",
+                Color = "#6890F0",
+                Description = "Water type Pokemon",
+                Matchups = new Dictionary<string, double>
+                {
+                    { "Fire", 2.0 },
+                    { "Water", 0.5 },
+                    { "Grass", 0.5 },
+                    { "Ground", 2.0 },
+                    { "Rock", 2.0 }
+                }
+            },
+            new()
+            {
+                Name = "Grass",
+                Color = "#78C850",
+                Description = "Grass type Pokemon",
+                Matchups = new Dictionary<string, double>
+                {
+                    { "Fire", 0.5 },
+                    { "Water", 2.0 },
+                    { "Grass", 0.5 },
+                    { "Ground", 2.0 },
+                    { "Rock", 2.0 }
+                }
+            }
+        };
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "types.json"),
+            JsonSerializer.Serialize(types, options)
+        );
     }
 
     [Fact]
-    public async Task GetSpeciesAsync_ReturnsSpeciesByI<br/>()
+    public async Task GetSpeciesAsync_ReturnsSpeciesById()
     {
         // Act
         var species = await _dataManager.GetSpeciesAsync(1);
@@ -338,6 +388,151 @@ public class DataManagerTests : IDisposable
             Assert.NotNull(result);
             Assert.Equal("Bulbasaur", result.Name);
         }
+    }
+
+    // ==================== Type Data Tests ====================
+
+    [Fact]
+    public async Task GetTypeAsync_ReturnsTypeByName()
+    {
+        // Act
+        var fireType = await _dataManager.GetTypeAsync("Fire");
+
+        // Assert
+        Assert.NotNull(fireType);
+        Assert.Equal("Fire", fireType.Name);
+        Assert.Equal("#F08030", fireType.Color);
+        Assert.Equal("Fire type Pokemon", fireType.Description);
+        Assert.Equal(5, fireType.Matchups.Count);
+    }
+
+    [Fact]
+    public async Task GetTypeAsync_IsCaseInsensitive()
+    {
+        // Act
+        var waterType = await _dataManager.GetTypeAsync("WATER");
+
+        // Assert
+        Assert.NotNull(waterType);
+        Assert.Equal("Water", waterType.Name);
+    }
+
+    [Fact]
+    public async Task GetTypeAsync_ReturnsNullForInvalidType()
+    {
+        // Act
+        var invalidType = await _dataManager.GetTypeAsync("InvalidType");
+
+        // Assert
+        Assert.Null(invalidType);
+    }
+
+    [Fact]
+    public async Task GetAllTypesAsync_ReturnsAllTypes()
+    {
+        // Act
+        var allTypes = await _dataManager.GetAllTypesAsync();
+
+        // Assert
+        Assert.Equal(3, allTypes.Count);
+        Assert.Contains(allTypes, t => t.Name == "Fire");
+        Assert.Contains(allTypes, t => t.Name == "Water");
+        Assert.Contains(allTypes, t => t.Name == "Grass");
+    }
+
+    [Fact]
+    public async Task GetTypeEffectivenessAsync_SuperEffective_Returns2x()
+    {
+        // Act - Fire vs Grass
+        var effectiveness = await _dataManager.GetTypeEffectivenessAsync("Fire", "Grass");
+
+        // Assert
+        Assert.Equal(2.0, effectiveness);
+    }
+
+    [Fact]
+    public async Task GetTypeEffectivenessAsync_NotVeryEffective_Returns05x()
+    {
+        // Act - Fire vs Water
+        var effectiveness = await _dataManager.GetTypeEffectivenessAsync("Fire", "Water");
+
+        // Assert
+        Assert.Equal(0.5, effectiveness);
+    }
+
+    [Fact]
+    public async Task GetTypeEffectivenessAsync_Neutral_Returns1x()
+    {
+        // Act - Fire vs type not in matchups (defaults to 1.0)
+        var effectiveness = await _dataManager.GetTypeEffectivenessAsync("Fire", "Electric");
+
+        // Assert
+        Assert.Equal(1.0, effectiveness);
+    }
+
+    [Fact]
+    public async Task GetTypeEffectivenessAsync_IsCaseInsensitive()
+    {
+        // Act
+        var effectiveness = await _dataManager.GetTypeEffectivenessAsync("FIRE", "grass");
+
+        // Assert
+        Assert.Equal(2.0, effectiveness);
+    }
+
+    [Fact]
+    public async Task GetDualTypeEffectivenessAsync_SingleType_CalculatesCorrectly()
+    {
+        // Act - Fire vs Grass (single type)
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("Fire", "Grass", null);
+
+        // Assert
+        Assert.Equal(2.0, effectiveness);
+    }
+
+    [Fact]
+    public async Task GetDualTypeEffectivenessAsync_DualType_MultipliesEffectiveness()
+    {
+        // Act - Water vs Fire/Ground (2.0 × 2.0 = 4.0)
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("Water", "Fire", "Ground");
+
+        // Assert
+        Assert.Equal(4.0, effectiveness); // Super effective against both
+    }
+
+    [Fact]
+    public async Task GetDualTypeEffectivenessAsync_DualType_Resistance()
+    {
+        // Act - Fire vs Water/Grass (0.5 × 2.0 = 1.0)
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("Fire", "Water", "Grass");
+
+        // Assert
+        Assert.Equal(1.0, effectiveness); // Resisted by Water, super effective on Grass
+    }
+
+    [Fact]
+    public async Task GetDualTypeEffectivenessAsync_InvalidAttackType_ReturnsNeutral()
+    {
+        // Act
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("InvalidType", "Fire", "Water");
+
+        // Assert
+        Assert.Equal(1.0, effectiveness);
+    }
+
+    [Fact]
+    public async Task TypeData_LoadsMatchupsCorrectly()
+    {
+        // Act
+        var fireType = await _dataManager.GetTypeAsync("Fire");
+
+        // Assert
+        Assert.NotNull(fireType);
+        Assert.Equal(0.5, fireType.Matchups["Fire"]);
+        Assert.Equal(0.5, fireType.Matchups["Water"]);
+        Assert.Equal(2.0, fireType.Matchups["Grass"]);
+        Assert.Equal(2.0, fireType.Matchups["Ice"]);
+        Assert.Equal(2.0, fireType.Matchups["Steel"]);
     }
 
     public void Dispose()

@@ -107,36 +107,15 @@ public struct PokemonStats
     public int EV_Speed { get; set; }
 
     /// <summary>
-    /// Calculates HP stat using the official Pokemon formula.
-    /// HP Formula: ((2 * BaseStat + IV + (EV / 4)) * Level / 100) + Level + 10
-    /// </summary>
-    /// <param name="baseHP">Species base HP stat</param>
-    /// <param name="level">Pokemon level (1-100)</param>
-    /// <returns>Calculated maximum HP</returns>
-    public int CalculateHP(int baseHP, int level)
-    {
-        return ((2 * baseHP + IV_HP + (EV_HP / 4)) * level / 100) + level + 10;
-    }
-
-    /// <summary>
-    /// Calculates a stat (Attack, Defense, SpAttack, SpDefense, Speed) using the official Pokemon formula.
-    /// Stat Formula: (((2 * BaseStat + IV + (EV / 4)) * Level / 100) + 5) * NatureModifier
-    /// </summary>
-    /// <param name="baseStat">Species base stat value</param>
-    /// <param name="iv">Individual value for this stat (0-31)</param>
-    /// <param name="ev">Effort value for this stat (0-252)</param>
-    /// <param name="level">Pokemon level (1-100)</param>
-    /// <param name="natureModifier">Nature modifier (0.9 for hindered, 1.0 for neutral, 1.1 for boosted)</param>
-    /// <returns>Calculated stat value</returns>
-    public int CalculateStat(int baseStat, int iv, int ev, int level, float natureModifier)
-    {
-        return (int)((((2 * baseStat + iv + (ev / 4)) * level / 100) + 5) * natureModifier);
-    }
-
-    /// <summary>
     /// Creates a new Pokemon stats instance with default IVs and EVs.
     /// IVs default to 0, EVs default to 0.
     /// </summary>
+    /// <remarks>
+    /// For stat calculations, use Battle.StatCalculator methods:
+    /// - StatCalculator.CalculateHP() for HP calculation
+    /// - StatCalculator.CalculateStat() for other stats
+    /// - StatCalculator.RecalculateAllStats() for full recalculation
+    /// </remarks>
     public PokemonStats()
     {
         HP = 1;

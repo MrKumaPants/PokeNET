@@ -23,7 +23,7 @@ public static class ComponentBuilders
         // These physics components are inappropriate for Pokemon-style tile-based movement
         factory.RegisterBuilder<Sprite>(BuildSprite);
         factory.RegisterBuilder<Health>(BuildHealth);
-        factory.RegisterBuilder<Stats>(BuildStats);
+        factory.RegisterBuilder<PokemonStats>(BuildPokemonStats);
         factory.RegisterBuilder<Camera>(BuildCamera);
         factory.RegisterBuilder<Renderable>(BuildRenderable);
     }
@@ -131,27 +131,62 @@ public static class ComponentBuilders
     }
 
     /// <summary>
-    /// Builds a Stats component from a definition.
+    /// Builds a PokemonStats component from a definition.
     /// </summary>
     /// <remarks>
     /// Expected properties:
-    /// - Level (int): Entity level (default: 1)
+    /// - HP (int): Current HP (default: MaxHP)
+    /// - MaxHP (int): Maximum HP (default: 100)
     /// - Attack (int): Attack stat (default: 10)
     /// - Defense (int): Defense stat (default: 10)
-    /// - SpecialAttack (int): Special attack stat (default: 10)
-    /// - SpecialDefense (int): Special defense stat (default: 10)
+    /// - SpAttack (int): Special Attack stat (default: 10)
+    /// - SpDefense (int): Special Defense stat (default: 10)
     /// - Speed (int): Speed stat (default: 10)
+    /// - IV_HP (int): HP Individual Value 0-31 (default: 0)
+    /// - IV_Attack (int): Attack IV 0-31 (default: 0)
+    /// - IV_Defense (int): Defense IV 0-31 (default: 0)
+    /// - IV_SpAttack (int): SpAttack IV 0-31 (default: 0)
+    /// - IV_SpDefense (int): SpDefense IV 0-31 (default: 0)
+    /// - IV_Speed (int): Speed IV 0-31 (default: 0)
+    /// - EV_HP (int): HP Effort Value 0-252 (default: 0)
+    /// - EV_Attack (int): Attack EV 0-252 (default: 0)
+    /// - EV_Defense (int): Defense EV 0-252 (default: 0)
+    /// - EV_SpAttack (int): SpAttack EV 0-252 (default: 0)
+    /// - EV_SpDefense (int): SpDefense EV 0-252 (default: 0)
+    /// - EV_Speed (int): Speed EV 0-252 (default: 0)
     /// </remarks>
-    public static Stats BuildStats(ComponentDefinition definition)
+    public static PokemonStats BuildPokemonStats(ComponentDefinition definition)
     {
-        return new Stats
+        var maxHP = definition.GetInt("MaxHP", 100);
+
+        return new PokemonStats
         {
-            Level = definition.GetInt("Level", 1),
+            // Current and max HP
+            HP = definition.GetInt("HP", maxHP),
+            MaxHP = maxHP,
+
+            // Base stats
             Attack = definition.GetInt("Attack", 10),
             Defense = definition.GetInt("Defense", 10),
-            SpecialAttack = definition.GetInt("SpecialAttack", 10),
-            SpecialDefense = definition.GetInt("SpecialDefense", 10),
+            SpAttack = definition.GetInt("SpAttack", 10),
+            SpDefense = definition.GetInt("SpDefense", 10),
             Speed = definition.GetInt("Speed", 10),
+
+            // Individual Values (IVs)
+            IV_HP = definition.GetInt("IV_HP", 0),
+            IV_Attack = definition.GetInt("IV_Attack", 0),
+            IV_Defense = definition.GetInt("IV_Defense", 0),
+            IV_SpAttack = definition.GetInt("IV_SpAttack", 0),
+            IV_SpDefense = definition.GetInt("IV_SpDefense", 0),
+            IV_Speed = definition.GetInt("IV_Speed", 0),
+
+            // Effort Values (EVs)
+            EV_HP = definition.GetInt("EV_HP", 0),
+            EV_Attack = definition.GetInt("EV_Attack", 0),
+            EV_Defense = definition.GetInt("EV_Defense", 0),
+            EV_SpAttack = definition.GetInt("EV_SpAttack", 0),
+            EV_SpDefense = definition.GetInt("EV_SpDefense", 0),
+            EV_Speed = definition.GetInt("EV_Speed", 0),
         };
     }
 

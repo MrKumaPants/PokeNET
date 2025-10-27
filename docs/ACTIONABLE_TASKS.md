@@ -2,7 +2,8 @@
 
 > **Single Source of Truth for All Outstanding Work**
 > 
-> **Last Updated:** October 26, 2025
+> **Last Updated:** October 27, 2025
+> **Target Mechanics:** Generation VI+ (Gen 6+) Pokemon mechanics
 > 
 > This document consolidates all TODOs, implementation gaps, and refactoring tasks from across the codebase documentation. All other implementation summary documents have been archived.
 
@@ -20,15 +21,24 @@
 
 | Priority | Count | Est. Time | Description |
 |----------|-------|-----------|-------------|
-| **🔴 CRITICAL** | 10 | 2-3 weeks | Blockers for MVP and architectural violations |
-| **🟠 HIGH** | 18 | 2-3 weeks | Core functionality gaps |
-| **🟡 MEDIUM** | 15 | 2-3 weeks | Quality and polish |
+| **🔴 CRITICAL** | 6 | 1-2 weeks | Blockers for MVP and architectural violations |
+| **🟠 HIGH** | 20 | 3-4 weeks | Core functionality gaps (includes script creation) |
+| **🟡 MEDIUM** | 16 | 2-3 weeks | Quality and polish (includes EventBus migration) |
 | **🔵 LOW** | 12 | 1-2 weeks | Nice-to-haves and optimizations |
-| **TOTAL** | **55** | **7-11 weeks** | Full implementation |
+| **TOTAL** | **54** | **7-10 weeks** | Full implementation (4 tasks complete) |
 
 ---
 
 ## 🔴 CRITICAL PRIORITY (Blockers & Architecture)
+
+### Eventing Standard
+
+**All event communication must use `Arch.EventBus`** (from Arch ECS ecosystem):
+- **Package**: Already installed (`Arch.EventBus` v1.0.2)
+- **Migration**: Replace custom `EventBus` implementation with `Arch.EventBus`
+- **Usage**: `World.SendEvent<T>()` and `World.Subscribe<T>()` for event communication
+- **Benefits**: Tight integration with ECS systems, optimized performance, event replay, buffering, and filtering
+- **Priority**: MEDIUM - Custom EventBus works but Arch integration preferred
 
 ### Architecture Violations
 
@@ -53,49 +63,57 @@
 - **Action:** Update remaining code examples and system base classes
 - **Est:** 2 hours
 
-### Data Infrastructure (Phase 1: Week 1)
+### Data Infrastructure (Phase 1: Week 1) ✅ **COMPLETE**
 
-#### C-4. Implement IDataApi + DataManager
-- **Status:** Not implemented
-- **Impact:** Cannot load Pokemon data (species, moves, items, encounters)
-- **Required For:** All game mechanics
-- **Tasks:**
-  - Create `IDataApi` interface in Domain
-  - Implement `DataManager` in Core
-  - Support JSON data loading
-  - Register in DI container
-- **Est:** 8 hours
+#### ✅ C-4. Implement IDataApi + DataManager [COMPLETED 2025-10-27]
+- **Status:** COMPLETE
+- **Delivered:**
+  - `IDataApi` interface in `PokeNET.Core/Data/IDataApi.cs`
+  - `DataManager` implementation with full caching and mod support
+  - JSON data loading for all game data types
+  - Registered in DI container via `AddDataServices()`
+- **Files Created:** `IDataApi.cs`, `DataManager.cs`
+- **Tests:** 127 passing (DataManagerTests, TypeDataTests, TypeEffectivenessTests)
+- **Completed:** 2025-10-27
 
-#### C-5. Create JSON Loaders for Game Data
-- **Status:** No implementations
-- **Required Loaders:**
-  - `SpeciesDataLoader` - Pokemon species stats, types, evolutions
+#### ✅ C-5. Create JSON Loaders for Game Data [COMPLETED 2025-10-27]
+- **Status:** COMPLETE
+- **Delivered Loaders:**
+  - `SpeciesDataLoader` - Pokemon species with stats, types, evolutions
   - `MoveDataLoader` - Move database with power, accuracy, PP, effects
   - `ItemDataLoader` - Item database with effects
   - `EncounterDataLoader` - Wild encounter tables by route/area
-- **Format:** JSON schemas following Pokemon standard
-- **Est:** 12 hours
+  - `TypeDataLoader` - Type data with matchups (Gen 6+ including Fairy)
+- **Files Created:** `BaseDataLoader.cs`, `JsonDataLoader.cs`, `SpeciesDataLoader.cs`, `MoveDataLoader.cs`, `ItemDataLoader.cs`, `EncounterDataLoader.cs`
+- **Sample Data:** species.json, moves.json, items.json, encounters.json, types.json
+- **Completed:** 2025-10-27
 
-#### C-6. Implement TypeChart System
-- **Status:** Not implemented
-- **Details:** 18×18 effectiveness matrix for type matchups
-- **Requirements:**
+#### ✅ C-6. Implement TypeChart System [COMPLETED 2025-10-27]
+- **Status:** COMPLETE - Refactored to data-driven approach
+- **Delivered:**
+  - String-based type system (no hardcoded `PokemonType` enum)
+  - `TypeData` model for individual types with matchups
+  - `types.json` with all 18 types including Fairy (Gen 6+)
   - Type effectiveness calculations (0x, 0.25x, 0.5x, 1x, 2x, 4x)
-  - Support for dual-type Pokemon
-  - Configurable via JSON for mods
-- **Est:** 6 hours
+  - Dual-type Pokemon support
+  - Fully moddable via JSON
+- **Files Created:** `TypeData.cs`, `types.json`
+- **Files Deleted:** `PokemonType.cs` (enum), `TypeChart.cs` (hardcoded)
+- **Tests:** 27 passing (TypeDataTests + TypeEffectivenessTests)
+- **Completed:** 2025-10-27
 
-#### C-7. Consolidate Battle Stats Models
-- **Issue:** Multiple overlapping models violate DRY
-- **Problem Files:**
-  - `PokeNET.Domain/ECS/Components/Stats.cs` (generic)
-  - References to `PokemonStats` in documentation
-- **Action:** 
-  - Create single `PokemonStats` component
-  - Include HP, Attack, Defense, SpAttack, SpDefense, Speed
-  - Add IV/EV support
-  - Remove generic `Stats` component
-- **Est:** 4 hours
+#### ✅ C-7. Consolidate Battle Stats Models [COMPLETED 2025-10-27]
+- **Status:** COMPLETE
+- **Delivered:**
+  - Single canonical `PokemonStats` component with HP, Attack, Defense, SpAttack, SpDefense, Speed
+  - Full IV/EV support (0-31 IVs, 0-252 EVs)
+  - `StatCalculator` utility for Gen 3+ formulas
+  - Removed deprecated `Stats` component
+  - Removed deprecated methods from `PokemonStats`
+- **Files Deleted:** `Stats.cs`
+- **Files Modified:** `PokemonStats.cs`, `ComponentBuilders.cs`, `QueryExtensionsLegacy.cs`, `BattleSystem.cs`
+- **Tests:** 23 passing (StatCalculatorTests)
+- **Completed:** 2025-10-27
 
 ### Critical Missing Systems
 
@@ -141,10 +159,27 @@
 - **Action:**
   - Consolidate into `PokeNET.ModAPI` project (create if missing)
   - Single source of truth for mod-facing APIs
+  - Replace custom `IEventApi` with `Arch.EventBus` wrappers
   - Version all interfaces
 - **Est:** 6 hours
 
-#### C-12. Pin Package Versions Consistently
+#### C-12. Migrate to Arch.EventBus
+- **Status:** `Arch.EventBus` v1.0.2 already installed
+- **Issue:** Custom `EventBus` implementation exists alongside Arch.EventBus
+- **Files:**
+  - `PokeNET/PokeNET.Core/ECS/EventBus.cs` (custom implementation)
+  - `PokeNET/PokeNET.Core/ECS/Events/IEventBus.cs` (custom interface)
+- **Action:**
+  - Migrate all event subscriptions to use `Arch.EventBus`
+  - Update `World` to use `world.SendEvent<T>()` and `world.Subscribe<T>()`
+  - Deprecate custom `EventBus` and `IEventBus`
+  - Update audio reactions to subscribe via Arch.EventBus
+  - Update command system to publish via Arch.EventBus
+- **Benefits:** Zero-allocation dispatch, event buffering, tight ECS integration
+- **Priority:** MEDIUM
+- **Est:** 8 hours
+
+#### C-13. Pin Package Versions Consistently
 - **Issue:** Mismatched package versions across projects
 - **Examples:**
   - `DryWetMidi` - some projects use v7, some v8
@@ -184,9 +219,9 @@
 #### H-3. Complete Battle Damage Calculations
 - **Status:** Partial (formulas defined, not fully implemented)
 - **Required:**
-  - Gen 3-5 damage formula
+  - Gen 6+ damage formula
   - Type effectiveness (requires C-6)
-  - Critical hit calculation
+  - Critical hit calculation (Gen 6+ rates: 1/16 base, 1/8 high crit)
   - STAB (Same Type Attack Bonus)
   - Random damage variance (0.85-1.0)
 - **Est:** 8 hours
@@ -198,7 +233,7 @@
   - Encounter rate calculation
   - Species selection from tables (requires C-5)
   - Level variance
-  - Shiny Pokemon (1/8192 chance)
+  - Shiny Pokemon (1/4096 chance in Gen 6+)
 - **Est:** 10 hours
 
 ### Pokemon Mechanics (Phase 4: Week 4)
@@ -214,13 +249,14 @@
 
 #### H-6. Implement Status Effect System
 - **Status:** Models defined, logic not implemented
-- **Required:**
-  - Burn (halve Attack, 1/16 HP damage per turn)
+- **Required (Gen 6+ mechanics):**
+  - Burn (halve Attack for Physical moves only, 1/16 HP damage per turn)
   - Poison (1/8 HP damage per turn)
+  - Badly Poisoned (1/16 HP damage, increases each turn)
   - Paralysis (25% chance to not move, Speed quartered)
-  - Sleep (2-4 turns, cannot move)
-  - Freeze (cannot move until thawed)
-  - Confusion (1-4 turns, 50% chance to hit self)
+  - Sleep (1-3 turns in Gen 6+, cannot move)
+  - Freeze (20% thaw chance per turn, thaws immediately if hit by Fire move)
+  - Confusion (1-4 turns, 33% chance to hit self in Gen 6+)
 - **Est:** 10 hours
 
 #### H-7. Implement Evolution System
@@ -281,8 +317,9 @@
 - **Status:** TODO for registration
 - **Required:**
   - Register all audio reaction handlers
-  - Wire to event bus
+  - Wire to Arch.EventBus (subscribe to game events)
   - Test battle music transitions
+  - Migrate from custom EventBus to Arch.EventBus
 - **Est:** 4 hours
 
 #### H-13. Implement Track Queue in MusicPlayer
@@ -294,9 +331,41 @@
   - Automatic transition to next track
 - **Est:** 6 hours
 
+### Scripting & Effects
+
+#### H-14. Create Effect Scripts
+- **Status:** JSON references scripts that don't exist
+- **Issue:** Items and moves reference `.csx` scripts that aren't implemented
+- **Required Scripts:**
+  - **Item Effects:**
+    - `scripts/items/heal.csx` - HP restoration (Potion family)
+    - `scripts/items/status-heal.csx` - Cure status conditions
+    - `scripts/items/catch.csx` - Pokeball catch logic
+    - `scripts/items/stat-boost.csx` - X Attack, X Defense, etc.
+  - **Move Effects:**
+    - `scripts/moves/damage.csx` - Basic damage (most moves)
+    - `scripts/moves/status-inflict.csx` - Burn, Poison, Paralyze
+    - `scripts/moves/stat-change.csx` - Growl, Swords Dance, etc.
+    - `scripts/moves/priority.csx` - Quick Attack, etc.
+- **Location:** `Content/scripts/` directory
+- **Examples:** See `docs/examples/effect-scripts/` for templates
+- **Est:** 16 hours (20+ scripts)
+
+#### H-15. Implement Script Loading in Battle/Item Systems
+- **Status:** Scripts defined, but not loaded/executed
+- **Issue:** Need to integrate script execution into battle and item use
+- **Required:**
+  - Load and compile scripts via `IScriptEngine`
+  - Cache compiled scripts for performance
+  - Execute item effects when items are used
+  - Execute move effects during battle
+  - Handle script errors gracefully
+- **Dependencies:** H-14 (scripts must exist)
+- **Est:** 12 hours
+
 ### Asset Loading
 
-#### H-14. Implement Asset Loaders
+#### H-16. Implement Asset Loaders
 - **Status:** `IAssetLoader<T>` interface exists, no implementations
 - **Required:**
   - `TextureLoader` - PNG sprites
@@ -305,7 +374,7 @@
   - `FontLoader` - Text rendering
 - **Est:** 12 hours
 
-#### H-15. Create MonoGame Content Pipeline Integration
+#### H-17. Create MonoGame Content Pipeline Integration
 - **Status:** No `.mgcb` files
 - **Required:**
   - `Content.mgcb` file
@@ -315,7 +384,7 @@
 
 ### System Registration
 
-#### H-16. Register ECS Systems
+#### H-18. Register ECS Systems
 - **File:** `PokeNET/PokeNET.DesktopGL/Program.cs` lines 131-134
 - **Status:** TODO comments
 - **Required:**
@@ -326,7 +395,7 @@
   - Register `AISystem`
 - **Est:** 3 hours
 
-#### H-17. Register Asset Loaders
+#### H-19. Register Asset Loaders
 - **File:** `PokeNET/PokeNET.DesktopGL/Program.cs` lines 150-160
 - **Status:** TODO comments
 - **Required:**
@@ -336,7 +405,7 @@
   - Register `FontLoader`
 - **Est:** 2 hours
 
-#### H-18. Implement ECS Serialization
+#### H-20. Implement ECS Serialization
 - **Status:** Save system exists but can't save entities
 - **Impact:** Cannot save game state
 - **Required:**
@@ -385,6 +454,7 @@
 - **Issue:** Hard-coded event subscriptions violate Open/Closed Principle
 - **File:** `PokeNET.Audio/Reactive/ReactiveAudioEngine.cs` lines 73-81
 - **Action:**
+  - Migrate to `Arch.EventBus` for event subscriptions
   - Implement strategy pattern with `IAudioReaction`
   - Load reactions from JSON configuration
   - Support mod-provided reactions
@@ -672,19 +742,24 @@ public class CriticalHitBoostPatch
 
 ## Implementation Phases
 
-### Phase 1: Data Infrastructure (Week 1)
-**Time:** 32 hours
-- C-4, C-5, C-6, C-7
+### Phase 1: Data Infrastructure (Week 1) ✅ **COMPLETE**
+**Time:** 32 hours (COMPLETED)
+- ~~C-4~~ ✅ IDataApi + DataManager (2025-10-27)
+- ~~C-5~~ ✅ JSON Loaders (2025-10-27)
+- ~~C-6~~ ✅ TypeChart/TypeData System (2025-10-27)
+- ~~C-7~~ ✅ Stats Consolidation (2025-10-27)
+- **Status:** All deliverables complete, 127 tests passing
+- **See:** `docs/PHASE1_COMPLETION_REPORT.md`
 
 ### Phase 2: Fix Architecture (Week 2)
-**Time:** 16 hours
+**Time:** 24 hours
 - ~~C-1~~ ✅ Complete (Domain merged)
 - ~~C-2~~ ✅ Complete (Domain merged)
-- C-3, C-8, C-9, C-10, C-11, C-12
+- C-3, C-8, C-9, C-10, C-11, C-12, C-13
 
 ### Phase 3: Core Gameplay (Weeks 3-4)
-**Time:** 58 hours
-- H-1, H-2, H-3, H-4, H-16, H-17, H-18
+**Time:** 86 hours
+- H-1, H-2, H-3, H-4, H-14, H-15, H-16, H-17, H-18, H-19, H-20
 
 ### Phase 4: Pokemon Mechanics (Week 5)
 **Time:** 38 hours
@@ -711,11 +786,11 @@ public class CriticalHitBoostPatch
 ## Success Criteria
 
 ### Minimum Viable Product (MVP)
-- ✅ All CRITICAL tasks complete
-- ✅ All HIGH tasks complete
-- ✅ 50%+ of MEDIUM tasks complete
-- ✅ Example content created
-- ✅ One complete battle playable
+- 🔄 All CRITICAL tasks complete (6 of 10 done - 60%)
+- ⏳ All HIGH tasks complete (0 of 18 done)
+- ⏳ 50%+ of MEDIUM tasks complete (0 of 16 done)
+- ⏳ Example content created
+- ⏳ One complete battle playable
 
 ### Production Ready
 - ✅ All CRITICAL, HIGH, MEDIUM tasks complete
@@ -741,14 +816,17 @@ Use this document as the single source of truth for all implementation work. As 
 
 ## Notes
 
-- **Total Estimated Effort:** 369 hours (~7-11 weeks for 1 developer)
+- **Total Estimated Effort:** 373 hours (~7-10 weeks for 1 developer) - 32 hours completed
 - **Project Structure:** 7 projects (PokeNET.Domain merged into PokeNET.Core on 2025-10-26)
+- **Target Mechanics:** Generation VI+ (Gen 6+) - see PROJECT_STATUS.md for details
 - **Critical Path:** Phases 1-3 must be completed in order
 - **Parallelizable:** Audio, asset loading, and testing can overlap
-- **MVP Target:** End of Phase 4 (5 weeks)
-- **Production Target:** End of Phase 7 (8 weeks)
-- **Full Feature Set:** End of Phase 8 (11 weeks)
-- **Recent Completions:** C-1, C-2 resolved via Domain/Core merge (CS0436 conflicts eliminated)
+- **MVP Target:** End of Phase 4 (4 weeks remaining)
+- **Production Target:** End of Phase 7 (7 weeks remaining)
+- **Full Feature Set:** End of Phase 8 (10 weeks remaining)
+- **Recent Completions:** 
+  - ✅ Phase 1 (C-4, C-5, C-6, C-7) - Data Infrastructure complete (2025-10-27)
+  - ✅ C-1, C-2 - Domain/Core merge (2025-10-26)
 
-**Last Updated:** October 26, 2025
+**Last Updated:** October 27, 2025
 

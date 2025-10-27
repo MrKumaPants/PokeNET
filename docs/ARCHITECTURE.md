@@ -6,6 +6,8 @@
 
 PokeNET is a Pokemon-inspired game engine built with modern C# architecture principles. The system uses an Entity Component System (ECS) for game object management, dependency injection for services, and a modular plugin architecture for extensibility.
 
+**Target Mechanics**: Generation VI+ (Gen 6+) Pokemon mechanics. See [`PROJECT_STATUS.md`](PROJECT_STATUS.md#pokemon-mechanics-standards) for detailed standards.
+
 **Key Technologies:**
 - **ECS Framework:** Arch v2.1.0 (archetype-based ECS) + Arch.System v1.1.0 (source generators)
 - **Rendering:** MonoGame 3.8 (cross-platform game framework)

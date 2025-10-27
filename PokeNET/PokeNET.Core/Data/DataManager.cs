@@ -29,6 +29,7 @@ public class DataManager : IDataApi
     private Dictionary<int, ItemData> _itemsById = new();
     private Dictionary<string, ItemData> _itemsByName = new();
     private Dictionary<string, EncounterTable> _encountersById = new();
+    private Dictionary<string, TypeData> _typesByName = new();
 
     private bool _isLoaded;
     private bool _disposed;
@@ -252,17 +253,19 @@ public class DataManager : IDataApi
             LoadMoveDataAsync(),
             LoadItemDataAsync(),
             LoadEncounterDataAsync(),
+            LoadTypesAsync(),
         };
 
         await Task.WhenAll(tasks);
 
         _isLoaded = true;
         _logger.LogInformation(
-            "Data loaded: {SpeciesCount} species, {MoveCount} moves, {ItemCount} items, {EncounterCount} encounters",
+            "Data loaded: {SpeciesCount} species, {MoveCount} moves, {ItemCount} items, {EncounterCount} encounters, {TypeCount} types",
             _speciesById.Count,
             _movesByName.Count,
             _itemsById.Count,
-            _encountersById.Count
+            _encountersById.Count,
+            _typesByName.Count
         );
     }
 
@@ -336,6 +339,105 @@ public class DataManager : IDataApi
         _logger.LogDebug("Loaded {Count} encounter tables", encounters.Count);
     }
 
+    private async Task LoadTypesAsync()
+    {
+        var types = await LoadJsonArrayAsync<TypeData>("types.json");
+
+        var byName = new Dictionary<string, TypeData>();
+
+        foreach (var t in types)
+        {
+            byName[t.Name.ToLowerInvariant()] = t;
+        }
+
+        _typesByName = byName;
+
+        if (types.Count == 0)
+        {
+            _logger.LogWarning(
+                "types.json not found or empty. Type effectiveness will be neutral (1.0) for all matchups. " +
+                "This will result in incorrect battle calculations!"
+            );
+        }
+
+        _logger.LogDebug("Loaded {Count} types with matchups", types.Count);
+    }
+
+    // ==================== Type Effectiveness Methods ====================
+
+    /// <inheritdoc/>
+    public async Task<TypeData?> GetTypeAsync(string typeName)
+    {
+        await EnsureDataLoadedAsync();
+
+        var normalizedName = typeName?.Trim().ToLowerInvariant();
+        return normalizedName != null && _typesByName.TryGetValue(normalizedName, out var typeInfo)
+            ? typeInfo
+            : null;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<TypeData>> GetAllTypesAsync()
+    {
+        await EnsureDataLoadedAsync();
+
+        return _typesByName.Values.ToList().AsReadOnly();
+    }
+
+    /// <inheritdoc/>
+    public async Task<double> GetTypeEffectivenessAsync(string attackType, string defenseType)
+    {
+        await EnsureDataLoadedAsync();
+
+        var attackTypeName = attackType?.Trim().ToLowerInvariant();
+        var defenseTypeName = defenseType?.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(attackTypeName) || string.IsNullOrEmpty(defenseTypeName))
+        {
+            return 1.0; // Neutral if invalid input
+        }
+
+        if (!_typesByName.TryGetValue(attackTypeName, out var attackTypeInfo))
+        {
+            _logger.LogWarning("Attack type '{AttackType}' not found in type data", attackType);
+            return 1.0; // Neutral if type not found
+        }
+
+        // Try lowercase first
+        if (attackTypeInfo.Matchups.TryGetValue(defenseTypeName, out var effectiveness))
+        {
+            return effectiveness;
+        }
+
+        // Try with original casing (case-insensitive fallback)
+        var matchup = attackTypeInfo.Matchups.FirstOrDefault(m => 
+            m.Key.Equals(defenseType, StringComparison.OrdinalIgnoreCase));
+        
+        if (matchup.Key != null)
+        {
+            return matchup.Value;
+        }
+
+        return 1.0; // Neutral by default
+    }
+
+    /// <inheritdoc/>
+    public async Task<double> GetDualTypeEffectivenessAsync(
+        string attackType,
+        string defenseType1,
+        string? defenseType2)
+    {
+        await EnsureDataLoadedAsync();
+
+        var effectiveness1 = await GetTypeEffectivenessAsync(attackType, defenseType1);
+
+        if (string.IsNullOrEmpty(defenseType2))
+            return effectiveness1;
+
+        var effectiveness2 = await GetTypeEffectivenessAsync(attackType, defenseType2);
+        return effectiveness1 * effectiveness2;
+    }
+
     private async Task<List<T>> LoadJsonArrayAsync<T>(string fileName)
     {
         var path = ResolveDataPath(fileName);
@@ -394,6 +496,7 @@ public class DataManager : IDataApi
         _itemsById.Clear();
         _itemsByName.Clear();
         _encountersById.Clear();
+        _typesByName.Clear();
     }
 
     public void Dispose()

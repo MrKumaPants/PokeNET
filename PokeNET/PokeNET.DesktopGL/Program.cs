@@ -13,6 +13,7 @@ using PokeNET.Audio.Reactive;
 using PokeNET.Core;
 using PokeNET.Core.Assets;
 using PokeNET.Core.Assets.Loaders;
+using PokeNET.Core.Data;
 using PokeNET.Core.DependencyInjection;
 using PokeNET.Core.ECS;
 using PokeNET.Core.ECS.Events;
@@ -142,6 +143,10 @@ internal class Program
 
         // Configuration can be injected as IConfiguration
         services.AddSingleton(configuration);
+
+        // Data services (Phase 1: Data Infrastructure)
+        var dataPath = configuration["Data:Path"] ?? Path.Combine("Content", "Data");
+        services.AddDataServices(dataPath);
 
         // GraphicsDevice - provided by PokeNETGame after initialization (Day 9)
         // Will be set up via a factory that gets it from the Game instance

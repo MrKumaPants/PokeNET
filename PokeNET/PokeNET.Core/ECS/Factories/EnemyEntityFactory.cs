@@ -109,13 +109,23 @@ public sealed class EnemyEntityFactory : EntityFactory
                 new Health(150),
                 new Sprite("sprites/enemy_elite.png", 48, 48, 0.4f),
                 new Renderable(true),
-                new Stats(
-                    attack: 20,
-                    defense: 15,
-                    speed: 18,
-                    specialAttack: 12,
-                    specialDefense: 10
-                ),
+                new PokemonStats
+                {
+                    Attack = 20,
+                    Defense = 15,
+                    Speed = 18,
+                    SpAttack = 12,
+                    SpDefense = 10,
+                    HP = 150,
+                    MaxHP = 150,
+                    // Default IVs and EVs (can be randomized later)
+                    IV_Attack = 15,
+                    IV_Defense = 15,
+                    IV_Speed = 15,
+                    IV_SpAttack = 15,
+                    IV_SpDefense = 15,
+                    IV_HP = 15
+                },
             },
             new Dictionary<string, object>
             {
@@ -153,13 +163,23 @@ public sealed class EnemyEntityFactory : EntityFactory
                 new Health(500),
                 new Sprite($"sprites/boss_{bossName.ToLower()}.png", 64, 64, 0.4f),
                 new Renderable(true),
-                new Stats(
-                    attack: 35,
-                    defense: 30,
-                    speed: 10,
-                    specialAttack: 40,
-                    specialDefense: 35
-                ),
+                new PokemonStats
+                {
+                    Attack = 35,
+                    Defense = 30,
+                    Speed = 10,
+                    SpAttack = 40,
+                    SpDefense = 35,
+                    HP = 500,
+                    MaxHP = 500,
+                    // Boss-level IVs
+                    IV_Attack = 31,
+                    IV_Defense = 31,
+                    IV_Speed = 31,
+                    IV_SpAttack = 31,
+                    IV_SpDefense = 31,
+                    IV_HP = 31
+                },
             },
             new Dictionary<string, object>
             {

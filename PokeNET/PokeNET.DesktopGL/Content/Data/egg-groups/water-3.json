@@ -1,0 +1,11 @@
+{
+  "id": "water-3",
+  "name": "Water 3",
+  "description": "Pokemon in this group are invertebrate aquatic creatures.",
+  "compatibleWith": ["water-3", "water-1"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

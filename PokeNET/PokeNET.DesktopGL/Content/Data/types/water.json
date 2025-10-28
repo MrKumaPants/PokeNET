@@ -1,0 +1,15 @@
+{
+  "id": "water",
+  "name": "Water",
+  "color": "#6890F0",
+  "description": "Water type Pokemon",
+  "matchups": {
+    "Fire": 2.0,
+    "Water": 0.5,
+    "Grass": 0.5,
+    "Ground": 2.0,
+    "Rock": 2.0,
+    "Dragon": 0.5
+  }
+}
+

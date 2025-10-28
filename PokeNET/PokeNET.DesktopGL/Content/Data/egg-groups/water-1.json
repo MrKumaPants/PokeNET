@@ -1,0 +1,11 @@
+{
+  "id": "water-1",
+  "name": "Water 1",
+  "description": "Pokemon in this group are aquatic or amphibious creatures.",
+  "compatibleWith": ["water-1", "water-2", "water-3", "monster", "dragon", "field"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

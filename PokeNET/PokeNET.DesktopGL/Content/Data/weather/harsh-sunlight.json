@@ -1,0 +1,15 @@
+{
+  "id": "harsh-sunlight",
+  "name": "Harsh Sunlight",
+  "description": "The sunlight is extremely harsh. Fire-type moves are greatly powered up, and Water-type moves fail completely.",
+  "effectScript": "scripts/weather/harsh_sunlight.csx",
+  "effectParameters": {
+    "fireMultiplier": 2.0,
+    "waterMovesFail": true,
+    "enablesSolarBeam": true,
+    "activatesAbilities": ["Chlorophyll", "Solar Power", "Dry Skin", "Flower Gift"]
+  },
+  "duration": -1,
+  "iconPath": "sprites/weather/harsh_sunlight.png"
+}
+

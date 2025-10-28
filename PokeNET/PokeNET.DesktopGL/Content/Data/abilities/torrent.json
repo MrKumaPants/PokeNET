@@ -1,0 +1,12 @@
+{
+  "id": "torrent",
+  "name": "Torrent",
+  "description": "Powers up Water-type moves when the Pokemon's HP is low.",
+  "effectScript": "scripts/abilities/torrent.csx",
+  "effectParameters": {
+    "triggerHPPercent": 33,
+    "boostMultiplier": 1.5,
+    "affectedTypes": ["Water"]
+  }
+}
+

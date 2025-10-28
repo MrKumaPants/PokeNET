@@ -1,0 +1,11 @@
+{
+  "id": "monster",
+  "name": "Monster",
+  "description": "Pokemon in this group are generally bipedal and have a dinosaur or kaiju-like appearance.",
+  "compatibleWith": ["monster", "dragon", "water-1", "field", "grass"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

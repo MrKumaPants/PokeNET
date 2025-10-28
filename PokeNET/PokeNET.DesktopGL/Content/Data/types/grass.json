@@ -1,0 +1,19 @@
+{
+  "id": "grass",
+  "name": "Grass",
+  "color": "#78C850",
+  "description": "Grass type Pokemon",
+  "matchups": {
+    "Fire": 0.5,
+    "Water": 2.0,
+    "Grass": 0.5,
+    "Poison": 0.5,
+    "Ground": 2.0,
+    "Flying": 0.5,
+    "Bug": 0.5,
+    "Rock": 2.0,
+    "Dragon": 0.5,
+    "Steel": 0.5
+  }
+}
+

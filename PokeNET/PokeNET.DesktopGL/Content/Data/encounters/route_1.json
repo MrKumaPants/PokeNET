@@ -1,0 +1,29 @@
+{
+  "locationId": "route_1",
+  "locationName": "Route 1",
+  "grassEncounters": [
+    {
+      "speciesId": "pidgey",
+      "minLevel": 2,
+      "maxLevel": 5,
+      "rate": 50,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "rattata",
+      "minLevel": 2,
+      "maxLevel": 4,
+      "rate": 50,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "waterEncounters": [],
+  "oldRodEncounters": [],
+  "goodRodEncounters": [],
+  "superRodEncounters": [],
+  "caveEncounters": [],
+  "specialEncounters": []
+}
+

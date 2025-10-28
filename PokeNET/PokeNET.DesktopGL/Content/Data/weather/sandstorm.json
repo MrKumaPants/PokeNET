@@ -1,0 +1,15 @@
+{
+  "id": "sandstorm",
+  "name": "Sandstorm",
+  "description": "A sandstorm is raging. Rock-type Pokemon's Special Defense is boosted. All other types take damage each turn.",
+  "effectScript": "scripts/weather/sandstorm.csx",
+  "effectParameters": {
+    "rockSpDefMultiplier": 1.5,
+    "damagePercent": 6.25,
+    "immuneTypes": ["Rock", "Ground", "Steel"],
+    "activatesAbilities": ["Sand Veil", "Sand Rush", "Sand Force"]
+  },
+  "duration": 5,
+  "iconPath": "sprites/weather/sandstorm.png"
+}
+

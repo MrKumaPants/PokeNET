@@ -1,0 +1,17 @@
+{
+  "id": "ice",
+  "name": "Ice",
+  "color": "#98D8D8",
+  "description": "Ice type Pokemon",
+  "matchups": {
+    "Fire": 0.5,
+    "Water": 0.5,
+    "Grass": 2.0,
+    "Ice": 0.5,
+    "Ground": 2.0,
+    "Flying": 2.0,
+    "Dragon": 2.0,
+    "Steel": 0.5
+  }
+}
+

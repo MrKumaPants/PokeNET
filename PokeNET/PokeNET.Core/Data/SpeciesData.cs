@@ -9,9 +9,14 @@ namespace PokeNET.Core.Data;
 public class SpeciesData
 {
     /// <summary>
+    /// Unique species identifier.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
     /// National Pokedex number (1-1025+).
     /// </summary>
-    public int Id { get; set; }
+    public int NationalDexNumber { get; set; }
 
     /// <summary>
     /// Species name (e.g., "Bulbasaur").
@@ -142,9 +147,9 @@ public class LevelMove
 public class Evolution
 {
     /// <summary>
-    /// Target species ID.
+    /// Target species ID (string identifier).
     /// </summary>
-    public int TargetSpeciesId { get; set; }
+    public string TargetSpeciesId { get; set; } = string.Empty;
 
     /// <summary>
     /// Method (Level, Stone, Trade, Friendship, etc.).

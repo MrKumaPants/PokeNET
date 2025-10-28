@@ -1,0 +1,9 @@
+{
+  "id": "sassy",
+  "name": "Sassy",
+  "increasedStat": "SpecialDefense",
+  "decreasedStat": "Speed",
+  "statModifier": 1.1,
+  "description": "Boosts Special Defense but lowers Speed."
+}
+

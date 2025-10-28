@@ -1,0 +1,18 @@
+{
+    "id": "super-potion",
+    "name": "Super Potion",
+    "category": "Medicine",
+    "buyPrice": 700,
+    "sellPrice": 350,
+    "description": "A spray-type medicine for treating wounds. It restores the HP of one Pokemon by 50 points.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/heal.csx",
+    "effectParameters": {
+        "healAmount": 50
+    },
+    "spritePath": "sprites/items/super_potion.png"
+}
+

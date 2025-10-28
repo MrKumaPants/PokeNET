@@ -1,0 +1,9 @@
+{
+  "id": "modest",
+  "name": "Modest",
+  "increasedStat": "SpecialAttack",
+  "decreasedStat": "Attack",
+  "statModifier": 1.1,
+  "description": "Boosts Special Attack but lowers Attack."
+}
+

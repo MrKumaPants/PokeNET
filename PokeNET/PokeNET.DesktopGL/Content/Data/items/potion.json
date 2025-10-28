@@ -1,0 +1,18 @@
+{
+    "id": "potion",
+    "name": "Potion",
+    "category": "Medicine",
+    "buyPrice": 300,
+    "sellPrice": 150,
+    "description": "A spray-type medicine for treating wounds. It restores the HP of one Pokemon by 20 points.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/heal.csx",
+    "effectParameters": {
+        "healAmount": 20
+    },
+    "spritePath": "sprites/items/potion.png"
+}
+

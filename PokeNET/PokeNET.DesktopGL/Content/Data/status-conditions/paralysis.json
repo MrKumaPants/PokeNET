@@ -1,0 +1,16 @@
+{
+  "id": "paralysis",
+  "name": "Paralysis",
+  "type": "Major",
+  "description": "The Pokemon is paralyzed and may be unable to move. Its Speed stat is reduced.",
+  "effectScript": "scripts/status/paralysis.csx",
+  "effectParameters": {
+    "speedMultiplier": 0.5,
+    "immobilizeChance": 25
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Paralyze Heal", "Lum Berry", "Rest"],
+  "preventedBy": ["Electric"],
+  "iconPath": "sprites/status/paralysis.png"
+}
+

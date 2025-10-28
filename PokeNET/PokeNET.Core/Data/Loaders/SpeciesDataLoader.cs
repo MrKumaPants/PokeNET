@@ -35,7 +35,7 @@ public class SpeciesDataLoader : JsonArrayLoader<SpeciesData>
     private bool ValidateItem(SpeciesData item)
     {
         // Validate required fields
-        if (!ValidateRange(item.Id, nameof(item.Id), 1, 1025))
+        if (!ValidateString(item.Id, nameof(item.Id)))
             return false;
 
         if (!ValidateString(item.Name, nameof(item.Name)))
@@ -140,7 +140,7 @@ public class SpeciesDataLoader : JsonArrayLoader<SpeciesData>
 
     private bool ValidateEvolution(Evolution evolution, string speciesName)
     {
-        if (!ValidateRange(evolution.TargetSpeciesId, nameof(evolution.TargetSpeciesId), 1, 1025))
+        if (!ValidateString(evolution.TargetSpeciesId, nameof(evolution.TargetSpeciesId)))
             return false;
 
         if (!ValidateString(evolution.Method, nameof(evolution.Method)))

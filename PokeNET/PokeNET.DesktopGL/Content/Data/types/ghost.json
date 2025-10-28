@@ -1,0 +1,13 @@
+{
+  "id": "ghost",
+  "name": "Ghost",
+  "color": "#705898",
+  "description": "Ghost type Pokemon",
+  "matchups": {
+    "Normal": 0.0,
+    "Psychic": 2.0,
+    "Ghost": 2.0,
+    "Dark": 0.5
+  }
+}
+

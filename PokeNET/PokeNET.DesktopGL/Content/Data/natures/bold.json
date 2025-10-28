@@ -1,0 +1,9 @@
+{
+  "id": "bold",
+  "name": "Bold",
+  "increasedStat": "Defense",
+  "decreasedStat": "Attack",
+  "statModifier": 1.1,
+  "description": "Boosts Defense but lowers Attack."
+}
+

@@ -1,0 +1,50 @@
+{
+  "id": "squirtle",
+  "nationalDexNumber": 7,
+  "name": "Squirtle",
+  "types": ["Water"],
+  "baseStats": {
+    "hp": 44,
+    "attack": 48,
+    "defense": 65,
+    "specialAttack": 50,
+    "specialDefense": 64,
+    "speed": 43
+  },
+  "abilities": ["Torrent"],
+  "hiddenAbility": "Rain Dish",
+  "growthRate": "Medium Slow",
+  "baseExperience": 63,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Water 1"],
+  "hatchSteps": 5120,
+  "height": 5,
+  "weight": 90,
+  "description": "After birth, its back swells and hardens into a shell. Powerfully sprays foam from its mouth.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Tail Whip" },
+    { "level": 7, "moveName": "Water Gun" },
+    { "level": 10, "moveName": "Withdraw" },
+    { "level": 13, "moveName": "Bubble" },
+    { "level": 16, "moveName": "Bite" },
+    { "level": 19, "moveName": "Rapid Spin" },
+    { "level": 22, "moveName": "Protect" },
+    { "level": 25, "moveName": "Water Pulse" },
+    { "level": 28, "moveName": "Aqua Tail" },
+    { "level": 31, "moveName": "Skull Bash" },
+    { "level": 34, "moveName": "Hydro Pump" }
+  ],
+  "tmMoves": ["Toxic", "Body Slam", "Surf", "Ice Beam", "Blizzard", "Rest", "Substitute"],
+  "eggMoves": ["Mirror Coat", "Aqua Jet", "Aura Sphere", "Dragon Pulse"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "wartortle",
+      "method": "Level",
+      "requiredLevel": 16
+    }
+  ]
+}
+

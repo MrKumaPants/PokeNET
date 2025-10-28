@@ -1,0 +1,15 @@
+{
+  "id": "vine-whip",
+  "name": "Vine Whip",
+  "type": "Grass",
+  "category": "Physical",
+  "power": 45,
+  "accuracy": 100,
+  "pp": 25,
+  "priority": 0,
+  "target": "SingleTarget",
+  "effectChance": 0,
+  "description": "The target is struck with slender, whiplike vines to inflict damage.",
+  "flags": ["Contact", "Protect", "Mirror"]
+}
+

@@ -1,0 +1,9 @@
+{
+  "id": "brave",
+  "name": "Brave",
+  "increasedStat": "Attack",
+  "decreasedStat": "Speed",
+  "statModifier": 1.1,
+  "description": "Boosts Attack but lowers Speed."
+}
+

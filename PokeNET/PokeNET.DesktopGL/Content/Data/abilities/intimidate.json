@@ -1,0 +1,12 @@
+{
+  "id": "intimidate",
+  "name": "Intimidate",
+  "description": "The Pokemon intimidates opposing Pokemon upon entering battle, lowering their Attack stat.",
+  "effectScript": "scripts/abilities/intimidate.csx",
+  "effectParameters": {
+    "statToLower": "Attack",
+    "stages": 1,
+    "triggersOn": "SwitchIn"
+  }
+}
+

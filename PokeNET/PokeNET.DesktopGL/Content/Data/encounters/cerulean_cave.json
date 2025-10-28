@@ -1,0 +1,139 @@
+{
+  "locationId": "cerulean_cave",
+  "locationName": "Cerulean Cave",
+  "grassEncounters": [],
+  "waterEncounters": [
+    {
+      "speciesId": "psyduck",
+      "minLevel": 50,
+      "maxLevel": 60,
+      "rate": 60,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "golduck",
+      "minLevel": 52,
+      "maxLevel": 60,
+      "rate": 40,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "oldRodEncounters": [
+    {
+      "speciesId": "magikarp",
+      "minLevel": 5,
+      "maxLevel": 15,
+      "rate": 100,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "goodRodEncounters": [
+    {
+      "speciesId": "poliwag",
+      "minLevel": 15,
+      "maxLevel": 35,
+      "rate": 60,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "goldeen",
+      "minLevel": 15,
+      "maxLevel": 35,
+      "rate": 40,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "superRodEncounters": [
+    {
+      "speciesId": "poliwhirl",
+      "minLevel": 30,
+      "maxLevel": 50,
+      "rate": 60,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "seaking",
+      "minLevel": 30,
+      "maxLevel": 50,
+      "rate": 40,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "caveEncounters": [
+    {
+      "speciesId": "golbat",
+      "minLevel": 49,
+      "maxLevel": 55,
+      "rate": 30,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "venomoth",
+      "minLevel": 50,
+      "maxLevel": 60,
+      "rate": 20,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": 82,
+      "minLevel": 50,
+      "maxLevel": 58,
+      "rate": 15,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": 101,
+      "minLevel": 52,
+      "maxLevel": 60,
+      "rate": 15,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "ditto",
+      "minLevel": 50,
+      "maxLevel": 60,
+      "rate": 10,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "clefable",
+      "minLevel": 55,
+      "maxLevel": 60,
+      "rate": 5,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "chansey",
+      "minLevel": 54,
+      "maxLevel": 60,
+      "rate": 5,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "specialEncounters": [
+    {
+      "encounterId": "mewtwo_cerulean_cave",
+      "speciesId": "mewtwo",
+      "level": 70,
+      "oneTime": true,
+      "requiresFlags": ["defeated_elite_four"],
+      "blockedByFlags": ["caught_mewtwo"],
+      "script": "scripts/encounters/mewtwo_event.csx"
+    }
+  ]
+}
+

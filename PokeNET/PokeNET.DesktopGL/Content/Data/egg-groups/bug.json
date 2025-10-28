@@ -1,0 +1,11 @@
+{
+  "id": "bug",
+  "name": "Bug",
+  "description": "Pokemon in this group are arthropods or insectoid creatures.",
+  "compatibleWith": ["bug"],
+  "breedingModifiers": {
+    "baseSteps": 3840,
+    "eggMoveInheritance": true
+  }
+}
+

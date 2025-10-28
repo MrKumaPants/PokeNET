@@ -1,0 +1,12 @@
+{
+  "id": "speed-boost",
+  "name": "Speed Boost",
+  "description": "The Pokemon's Speed stat is gradually boosted each turn.",
+  "effectScript": "scripts/abilities/speed_boost.csx",
+  "effectParameters": {
+    "statToBoost": "Speed",
+    "stages": 1,
+    "triggersOn": "TurnEnd"
+  }
+}
+

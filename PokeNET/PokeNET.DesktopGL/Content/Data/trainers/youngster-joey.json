@@ -1,0 +1,38 @@
+{
+  "id": "youngster-joey",
+  "name": "Youngster Joey",
+  "class": "Youngster",
+  "gender": "Male",
+  "spriteId": "youngster",
+  "team": [
+    {
+      "speciesId": "rattata",
+      "level": 4,
+      "ability": "Guts",
+      "moves": ["Tackle", "Tail Whip"],
+      "nature": "Hardy",
+      "ivs": {
+        "hp": 10,
+        "attack": 10,
+        "defense": 10,
+        "specialAttack": 10,
+        "specialDefense": 10,
+        "speed": 10
+      },
+      "evs": {
+        "hp": 0,
+        "attack": 0,
+        "defense": 0,
+        "specialAttack": 0,
+        "specialDefense": 0,
+        "speed": 0
+      }
+    }
+  ],
+  "moneyReward": 64,
+  "introText": "Hi! I like shorts! They're comfy and easy to wear!",
+  "defeatText": "Wow! You're really strong!",
+  "rematchable": true,
+  "aiLevel": 1
+}
+

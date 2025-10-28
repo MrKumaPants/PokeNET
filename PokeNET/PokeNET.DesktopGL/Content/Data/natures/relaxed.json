@@ -1,0 +1,9 @@
+{
+  "id": "relaxed",
+  "name": "Relaxed",
+  "increasedStat": "Defense",
+  "decreasedStat": "Speed",
+  "statModifier": 1.1,
+  "description": "Boosts Defense but lowers Speed."
+}
+

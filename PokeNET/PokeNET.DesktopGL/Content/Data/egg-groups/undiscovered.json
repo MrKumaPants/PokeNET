@@ -1,0 +1,12 @@
+{
+  "id": "undiscovered",
+  "name": "Undiscovered",
+  "description": "Pokemon in this group cannot breed. This includes baby Pokemon and legendary Pokemon.",
+  "compatibleWith": [],
+  "breedingModifiers": {
+    "baseSteps": 0,
+    "eggMoveInheritance": false,
+    "canBreed": false
+  }
+}
+

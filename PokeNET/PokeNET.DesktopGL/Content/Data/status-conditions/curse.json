@@ -1,0 +1,15 @@
+{
+  "id": "curse",
+  "name": "Curse",
+  "type": "Volatile",
+  "description": "The Pokemon is cursed and loses HP each turn.",
+  "effectScript": "scripts/status/curse.csx",
+  "effectParameters": {
+    "damagePercent": 25
+  },
+  "canBeOverwritten": true,
+  "curableBy": ["Switch Out"],
+  "preventedBy": [],
+  "iconPath": "sprites/status/curse.png"
+}
+

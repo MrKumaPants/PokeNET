@@ -1,0 +1,11 @@
+{
+  "id": "flying",
+  "name": "Flying",
+  "description": "Pokemon in this group are avian or have bird-like characteristics.",
+  "compatibleWith": ["flying", "water-1", "dragon", "field"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

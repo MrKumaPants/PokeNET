@@ -158,26 +158,39 @@
 - [x] C-6: TypeChart refactored to data-driven types.json
 - [x] C-7: Stats consolidated (Stats.cs deleted, PokemonStats canonical)
 
-### **Phase 2: Fix Architecture** (Week 2 - 24h)
-- [x] ~~C-1, C-2~~: ✅ Layering fixes completed (Domain merged into Core 2025-10-26)
-- [ ] C-3: Documentation corrections
-- [ ] C-8, C-9, C-10: DI registration (save, audio, scripting)
-- [ ] C-11: API consolidation
-- [ ] C-12: Migrate to Arch.EventBus (8h)
-- [ ] C-13: Package version pinning
+### **Phase 2: Architecture & DI** (Week 2 - 24h)
+- [x] ~~C-1, C-2~~: ✅ Layering fixes completed (Domain merged 2025-10-26)
+- [ ] C-3, C-8, C-9, C-10, C-11, C-12, C-13: DI registration, API consolidation, EventBus migration
 
-### **Phase 3: Core Gameplay** (Weeks 3-4 - 86h)
-- [ ] H-1, H-2, H-3, H-4: Battle UI, party screen, damage calc, encounters
-- [ ] H-14, H-15: Effect scripts creation & integration (28h)
-- [ ] H-16, H-17, H-18, H-19, H-20: Asset loaders, system registration, ECS serialization
+### **Phase 3: Core Battle Mechanics** (Weeks 3-4 - 58h) 🎯 **NO UI**
+- [ ] H-3: Battle damage calculations (Gen 6+)
+- [ ] H-4: Encounter system
+- [ ] H-5: Trainer AI
+- [ ] H-6: Status effects
+- [ ] H-14, H-15: Effect scripts (28h)
 
-### **Phase 4: Pokemon Mechanics** (Week 5 - 38h)
-- [ ] H-5, H-6, H-7, H-8: AI, status effects, evolution, commands
-- [ ] M-1, M-2, M-3: Pokemon-specific components
+### **Phase 4: Pokemon Systems** (Week 5 - 30h) 🎯 **NO UI**
+- [ ] H-7, H-8: Evolution, command execution
+- [ ] M-1, M-2, M-3: Tile movement, battle components, trainer/party
 
-**Total Estimate**: 148 hours remaining ≈ 5 weeks to playable MVP (32h complete)
+### **Phase 5: System Integration** (Week 6 - 41h)
+- [ ] H-16, H-17, H-18, H-19, H-20: Asset loaders, ECS systems
+- [ ] H-9, H-10: Mouse input, command execution
 
-**Full Production**: 373 hours remaining ≈ 10 weeks (32h complete, 405h total)
+### **Phase 6: Audio System** (Week 7 - 44h)
+- [ ] H-11, H-12, H-13: Audio loading, reactions, track queue
+- [ ] M-4, M-5, M-6: Refactor audio engine, async cleanup, procedural music
+
+### **Phase 7: User Interface** (Weeks 8-9 - 42h) 🎨 **UI IMPLEMENTATION**
+- [ ] H-1: Battle UI (16h)
+- [ ] H-2: Party screen UI (12h)
+- [ ] Menu systems for save/load, inventory, etc. (14h)
+
+**Backend MVP**: 197 hours ≈ 6 weeks (Phases 2-6, no UI, fully testable)
+
+**Playable MVP**: 239 hours ≈ 8 weeks (Through Phase 7, with UI)
+
+**Full Production**: 373 hours ≈ 11 weeks (Through Phase 9, 405h total)
 
 ---
 
@@ -195,26 +208,35 @@
 
 **✅ Phase 1 Complete** - Data infrastructure is production-ready with 127 passing tests!
 
-**🔄 Current Focus: Phase 2 - Architecture Fixes & DI Registration**
+**🔄 Current Focus: Phase 2 - Architecture & DI (Week 2)**
 
-### Immediate Next Steps
-1. **C-3: Documentation corrections** (Arch.System references) - 2h
-2. **C-8: Wire save system to DI** (register services) - 2h  
-3. **C-9: Register audio services in DI** - 2h
-4. **C-10: Register scripting context and API** - 4h
-5. **C-11: Unify duplicate APIs** (consolidate to ModAPI) - 6h
-6. **C-12: Migrate to Arch.EventBus** (replace custom EventBus) - 8h
-7. **C-13: Pin package versions** (standardize across projects) - 2h
+### Immediate Next Steps (Phase 2 - 24h)
+1. **C-3**: Documentation corrections - 2h
+2. **C-8**: Wire save system to DI - 2h  
+3. **C-9**: Register audio services - 2h
+4. **C-10**: Register scripting context - 4h
+5. **C-11**: Unify duplicate APIs - 6h
+6. **C-12**: Migrate to Arch.EventBus - 8h
+7. **C-13**: Pin package versions - 2h
 
-**Phase 2 Total**: 26 hours (1 week) → Then ready for Phase 3 (Core Gameplay)
+### After Phase 2: Backend First, UI Last
 
-### After Phase 2 (Phase 3 Priority)
-1. **H-1: Implement minimal battle UI** (move selection, HP bars)
-2. **H-2: Implement party screen UI** (view/switch Pokemon)
-3. **H-3: Complete battle damage calculations** (Gen 6+ formulas)
-4. **H-4: Implement encounter system** (wild Pokemon spawning)
-5. **H-5: Add trainer AI** (basic decision-making)
-6. **H-6: Implement status effects** (Burn, Poison, Paralysis, etc.)
+**Phase 3-6 (Backend Only, No UI)** - 173 hours (6 weeks)
+- ✅ Battle mechanics fully functional
+- ✅ Pokemon systems complete
+- ✅ Effect scripts working
+- ✅ Save/load operational
+- ⚠️ No UI - console/test only
+
+**Then Phase 7 (UI Layer)** - 42 hours (2 weeks)  
+- Battle UI, Party UI, Menus
+- Makes everything playable
+
+**Why This Order?**
+1. Backend can be fully tested without UI
+2. UI depends on backend being stable
+3. Backend changes won't break UI work
+4. Can parallelize UI with testing/polish
 
 ---
 

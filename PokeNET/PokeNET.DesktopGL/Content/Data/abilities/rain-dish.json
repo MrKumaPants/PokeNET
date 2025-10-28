@@ -1,0 +1,11 @@
+{
+  "id": "rain-dish",
+  "name": "Rain Dish",
+  "description": "The Pokemon gradually regains HP in rain.",
+  "effectScript": "scripts/abilities/rain_dish.csx",
+  "effectParameters": {
+    "requiredWeather": "Rain",
+    "healPercent": 6.25
+  }
+}
+

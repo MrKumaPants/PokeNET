@@ -1,0 +1,9 @@
+{
+  "id": "quiet",
+  "name": "Quiet",
+  "increasedStat": "SpecialAttack",
+  "decreasedStat": "Speed",
+  "statModifier": 1.1,
+  "description": "Boosts Special Attack but lowers Speed."
+}
+

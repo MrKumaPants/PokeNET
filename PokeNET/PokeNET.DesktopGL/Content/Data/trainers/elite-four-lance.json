@@ -1,0 +1,64 @@
+{
+  "id": "elite-four-lance",
+  "name": "Elite Four Lance",
+  "class": "Elite Four",
+  "gender": "Male",
+  "spriteId": "lance",
+  "team": [
+    {
+      "speciesId": "gyarados",
+      "level": 58,
+      "ability": "Intimidate",
+      "moves": ["Hyper Beam", "Dragon Dance", "Hydro Pump", "Ice Beam"],
+      "nature": "Adamant",
+      "ivs": {
+        "hp": 31,
+        "attack": 31,
+        "defense": 31,
+        "specialAttack": 31,
+        "specialDefense": 31,
+        "speed": 31
+      },
+      "evs": {
+        "hp": 252,
+        "attack": 252,
+        "defense": 0,
+        "specialAttack": 0,
+        "specialDefense": 4,
+        "speed": 0
+      },
+      "heldItem": "lum-berry"
+    },
+    {
+      "speciesId": "dragonite",
+      "level": 60,
+      "ability": "Inner Focus",
+      "moves": ["Outrage", "Hyper Beam", "Fire Blast", "Thunder"],
+      "nature": "Adamant",
+      "ivs": {
+        "hp": 31,
+        "attack": 31,
+        "defense": 31,
+        "specialAttack": 31,
+        "specialDefense": 31,
+        "speed": 31
+      },
+      "evs": {
+        "hp": 252,
+        "attack": 252,
+        "defense": 4,
+        "specialAttack": 0,
+        "specialDefense": 0,
+        "speed": 0
+      },
+      "heldItem": "choice-band"
+    }
+  ],
+  "moneyReward": 12000,
+  "introText": "I've been waiting for you. Allow me to test your skill. You will face me, Lance the Dragon Master!",
+  "defeatText": "That's it! I hate to admit it, but you are a Pokemon Master!",
+  "victoryText": "I still can't believe my dragons lost to you!",
+  "rematchable": false,
+  "aiLevel": 10
+}
+

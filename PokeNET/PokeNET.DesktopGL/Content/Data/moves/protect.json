@@ -1,0 +1,16 @@
+{
+  "id": "protect",
+  "name": "Protect",
+  "type": "Normal",
+  "category": "Status",
+  "power": 0,
+  "accuracy": 0,
+  "pp": 10,
+  "priority": 4,
+  "target": "User",
+  "effectChance": 100,
+  "description": "This move enables the user to protect itself from all attacks. Its chance of failing rises if it is used in succession.",
+  "flags": ["Protect"],
+  "effectScript": "scripts/moves/protect.csx"
+}
+

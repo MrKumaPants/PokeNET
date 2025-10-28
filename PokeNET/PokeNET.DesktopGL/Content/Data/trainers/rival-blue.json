@@ -1,0 +1,31 @@
+{
+  "id": "rival-blue-route22",
+  "name": "Rival Blue (Route 22)",
+  "class": "Rival",
+  "gender": "Male",
+  "spriteId": "rival_blue",
+  "team": [
+    {
+      "speciesId": "pidgey",
+      "level": 9,
+      "ability": "Keen Eye",
+      "moves": ["Tackle", "Sand Attack"],
+      "nature": "Hardy"
+    },
+    {
+      "speciesId": "squirtle",
+      "level": 8,
+      "ability": "Torrent",
+      "moves": ["Tackle", "Tail Whip"],
+      "nature": "Modest"
+    }
+  ],
+  "moneyReward": 900,
+  "introText": "Hey! [PLAYER]! You're going to the Pokemon League? Forget it! You probably don't have any Badges!",
+  "defeatText": "Okay! I'll make my Pokemon fight to toughen them up!",
+  "victoryText": "I heard Pokemon League has many tough trainers!",
+  "rematchable": false,
+  "aiLevel": 3,
+  "script": "scripts/trainers/rival_blue.csx"
+}
+

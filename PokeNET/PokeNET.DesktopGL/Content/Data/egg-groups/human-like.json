@@ -1,0 +1,11 @@
+{
+  "id": "human-like",
+  "name": "Human-Like",
+  "description": "Pokemon in this group have humanoid body structures.",
+  "compatibleWith": ["human-like", "field", "fairy"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

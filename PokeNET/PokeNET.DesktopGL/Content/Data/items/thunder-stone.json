@@ -1,0 +1,18 @@
+{
+  "id": "thunder-stone",
+  "name": "Thunder Stone",
+  "category": "EvolutionItem",
+  "buyPrice": 2100,
+  "sellPrice": 1050,
+  "description": "A peculiar stone that can make certain species of Pokemon evolve. It has a thunderbolt pattern.",
+  "consumable": true,
+  "usableInBattle": false,
+  "usableOutsideBattle": true,
+  "holdable": false,
+  "effectScript": "scripts/items/evolution_stone.csx",
+  "effectParameters": {
+    "evolutionType": "ThunderStone"
+  },
+  "spritePath": "sprites/items/thunder_stone.png"
+}
+

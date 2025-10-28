@@ -1,0 +1,12 @@
+{
+  "id": "dragon",
+  "name": "Dragon",
+  "color": "#7038F8",
+  "description": "Dragon type Pokemon",
+  "matchups": {
+    "Dragon": 2.0,
+    "Steel": 0.5,
+    "Fairy": 0.0
+  }
+}
+

@@ -1,0 +1,45 @@
+{
+  "locationId": "route_22",
+  "locationName": "Route 22",
+  "grassEncounters": [
+    {
+      "speciesId": "rattata",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 45,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "mankey",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 45,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "pikachu",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 5,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "pidgey",
+      "minLevel": 3,
+      "maxLevel": 6,
+      "rate": 5,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "waterEncounters": [],
+  "oldRodEncounters": [],
+  "goodRodEncounters": [],
+  "superRodEncounters": [],
+  "caveEncounters": [],
+  "specialEncounters": []
+}
+

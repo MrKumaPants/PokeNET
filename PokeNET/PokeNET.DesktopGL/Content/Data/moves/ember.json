@@ -1,0 +1,19 @@
+{
+  "id": "ember",
+  "name": "Ember",
+  "type": "Fire",
+  "category": "Special",
+  "power": 40,
+  "accuracy": 100,
+  "pp": 25,
+  "priority": 0,
+  "target": "SingleTarget",
+  "effectChance": 10,
+  "description": "The target is attacked with small flames. This may also leave the target with a burn.",
+  "flags": ["Protect", "Mirror"],
+  "effectScript": "scripts/moves/burn.csx",
+  "effectParameters": {
+    "burnChance": 10
+  }
+}
+

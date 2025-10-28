@@ -1,0 +1,11 @@
+{
+  "id": "static",
+  "name": "Static",
+  "description": "The Pokemon may paralyze attackers that make direct contact.",
+  "effectScript": "scripts/abilities/static.csx",
+  "effectParameters": {
+    "paralysisChance": 30,
+    "triggersOn": "Contact"
+  }
+}
+

@@ -1,0 +1,18 @@
+{
+    "id": "great-ball",
+    "name": "Great Ball",
+    "category": "Pokeball",
+    "buyPrice": 600,
+    "sellPrice": 300,
+    "description": "A good, high-performance Poke Ball that provides a higher Pokemon catch rate than a standard Poke Ball.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": false,
+    "holdable": false,
+    "effectScript": "scripts/items/catch.csx",
+    "effectParameters": {
+        "catchRate": 1.5
+    },
+    "spritePath": "sprites/items/great_ball.png"
+}
+

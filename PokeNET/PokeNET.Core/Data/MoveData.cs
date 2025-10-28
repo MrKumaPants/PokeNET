@@ -7,6 +7,11 @@ namespace PokeNET.Core.Data;
 public class MoveData
 {
     /// <summary>
+    /// Unique move identifier.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Unique move identifier/name.
     /// </summary>
     public string Name { get; set; } = string.Empty;

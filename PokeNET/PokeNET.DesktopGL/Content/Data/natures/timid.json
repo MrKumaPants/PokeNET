@@ -1,0 +1,9 @@
+{
+  "id": "timid",
+  "name": "Timid",
+  "increasedStat": "Speed",
+  "decreasedStat": "Attack",
+  "statModifier": 1.1,
+  "description": "Boosts Speed but lowers Attack."
+}
+

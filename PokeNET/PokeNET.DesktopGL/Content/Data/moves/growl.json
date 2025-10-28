@@ -1,0 +1,15 @@
+{
+  "id": "growl",
+  "name": "Growl",
+  "type": "Normal",
+  "category": "Status",
+  "power": 0,
+  "accuracy": 100,
+  "pp": 40,
+  "priority": 0,
+  "target": "AllOpponents",
+  "effectChance": 100,
+  "description": "The user growls in an endearing way, making opposing Pokemon less wary. This lowers their Attack stats.",
+  "flags": ["Sound", "Protect", "Mirror"]
+}
+

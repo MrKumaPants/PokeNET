@@ -1,0 +1,16 @@
+{
+  "id": "burn",
+  "name": "Burn",
+  "type": "Major",
+  "description": "The Pokemon is burned and takes damage each turn. Its Attack stat is reduced.",
+  "effectScript": "scripts/status/burn.csx",
+  "effectParameters": {
+    "damagePercent": 6.25,
+    "attackMultiplier": 0.5
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Burn Heal", "Lum Berry", "Rest"],
+  "preventedBy": ["Fire"],
+  "iconPath": "sprites/status/burn.png"
+}
+

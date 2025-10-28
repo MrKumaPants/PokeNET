@@ -1,0 +1,14 @@
+{
+  "id": "dark",
+  "name": "Dark",
+  "color": "#705848",
+  "description": "Dark type Pokemon",
+  "matchups": {
+    "Fighting": 0.5,
+    "Psychic": 2.0,
+    "Ghost": 2.0,
+    "Dark": 0.5,
+    "Fairy": 0.5
+  }
+}
+

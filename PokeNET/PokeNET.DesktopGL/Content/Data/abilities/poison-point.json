@@ -1,0 +1,11 @@
+{
+  "id": "poison-point",
+  "name": "Poison Point",
+  "description": "The Pokemon may poison attackers that make direct contact.",
+  "effectScript": "scripts/abilities/poison_point.csx",
+  "effectParameters": {
+    "poisonChance": 30,
+    "triggersOn": "Contact"
+  }
+}
+

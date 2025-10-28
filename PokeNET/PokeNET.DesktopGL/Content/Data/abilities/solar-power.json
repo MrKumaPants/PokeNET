@@ -1,0 +1,12 @@
+{
+  "id": "solar-power",
+  "name": "Solar Power",
+  "description": "In harsh sunlight, the Pokemon's Special Attack is boosted but HP decreases each turn.",
+  "effectScript": "scripts/abilities/solar_power.csx",
+  "effectParameters": {
+    "requiredWeather": "Sun",
+    "specialAttackMultiplier": 1.5,
+    "hpLossPercent": 12.5
+  }
+}
+

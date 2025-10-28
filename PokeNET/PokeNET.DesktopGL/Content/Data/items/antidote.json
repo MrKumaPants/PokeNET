@@ -1,0 +1,18 @@
+{
+  "id": "antidote",
+  "name": "Antidote",
+  "category": "Medicine",
+  "buyPrice": 100,
+  "sellPrice": 50,
+  "description": "A spray-type medicine. It lifts the effect of poison from one Pokemon.",
+  "consumable": true,
+  "usableInBattle": true,
+  "usableOutsideBattle": true,
+  "holdable": false,
+  "effectScript": "scripts/items/cure_status.csx",
+  "effectParameters": {
+    "curedStatuses": ["Poison", "BadlyPoisoned"]
+  },
+  "spritePath": "sprites/items/antidote.png"
+}
+

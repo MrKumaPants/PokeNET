@@ -1,0 +1,9 @@
+{
+  "id": "careful",
+  "name": "Careful",
+  "increasedStat": "SpecialDefense",
+  "decreasedStat": "SpecialAttack",
+  "statModifier": 1.1,
+  "description": "Boosts Special Defense but lowers Special Attack."
+}
+

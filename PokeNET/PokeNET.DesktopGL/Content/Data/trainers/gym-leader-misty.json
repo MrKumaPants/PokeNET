@@ -1,0 +1,50 @@
+{
+  "id": "gym-leader-misty",
+  "name": "Misty",
+  "class": "Gym Leader",
+  "gender": "Female",
+  "spriteId": "misty",
+  "team": [
+    {
+      "speciesId": "staryu",
+      "level": 18,
+      "ability": "Illuminate",
+      "moves": ["Tackle", "Water Gun", "Harden", "Rapid Spin"],
+      "nature": "Timid",
+      "ivs": {
+        "hp": 30,
+        "attack": 30,
+        "defense": 30,
+        "specialAttack": 30,
+        "specialDefense": 30,
+        "speed": 30
+      },
+      "heldItem": "oran-berry"
+    },
+    {
+      "speciesId": "starmie",
+      "level": 21,
+      "ability": "Natural Cure",
+      "moves": ["Water Pulse", "Rapid Spin", "Recover", "Bubble Beam"],
+      "nature": "Bold",
+      "ivs": {
+        "hp": 30,
+        "attack": 30,
+        "defense": 30,
+        "specialAttack": 30,
+        "specialDefense": 30,
+        "speed": 30
+      },
+      "heldItem": "sitrus-berry"
+    }
+  ],
+  "moneyReward": 2100,
+  "badge": "Cascade Badge",
+  "introText": "Hi, you're a new face! I'm Misty, the Cerulean Gym Leader!",
+  "defeatText": "Wow! You're too much! All right! You can have the Cascade Badge!",
+  "victoryText": "The Cascade Badge will make all Pokemon up to level 30 obey!",
+  "rematchable": false,
+  "aiLevel": 5,
+  "rewardItems": ["tm03"]
+}
+

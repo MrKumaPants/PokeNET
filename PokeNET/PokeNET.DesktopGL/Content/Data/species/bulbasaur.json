@@ -1,0 +1,50 @@
+{
+  "id": "bulbasaur",
+  "nationalDexNumber": 1,
+  "name": "Bulbasaur",
+  "types": ["Grass", "Poison"],
+  "baseStats": {
+    "hp": 45,
+    "attack": 49,
+    "defense": 49,
+    "specialAttack": 65,
+    "specialDefense": 65,
+    "speed": 45
+  },
+  "abilities": ["Overgrow"],
+  "hiddenAbility": "Chlorophyll",
+  "growthRate": "Medium Slow",
+  "baseExperience": 64,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Grass"],
+  "hatchSteps": 5120,
+  "height": 7,
+  "weight": 69,
+  "description": "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokemon.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Growl" },
+    { "level": 7, "moveName": "Vine Whip" },
+    { "level": 9, "moveName": "Growth" },
+    { "level": 13, "moveName": "Leech Seed" },
+    { "level": 15, "moveName": "Razor Leaf" },
+    { "level": 19, "moveName": "Poison Powder" },
+    { "level": 21, "moveName": "Sleep Powder" },
+    { "level": 25, "moveName": "Take Down" },
+    { "level": 27, "moveName": "Sweet Scent" },
+    { "level": 31, "moveName": "Synthesis" },
+    { "level": 33, "moveName": "Solar Beam" }
+  ],
+  "tmMoves": ["Toxic", "Body Slam", "Double-Edge", "Solar Beam", "Rest", "Substitute"],
+  "eggMoves": ["Skull Bash", "Amnesia", "Curse", "Ingrain"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "ivysaur",
+      "method": "Level",
+      "requiredLevel": 16
+    }
+  ]
+}
+

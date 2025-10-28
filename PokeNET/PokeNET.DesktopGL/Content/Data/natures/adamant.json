@@ -1,0 +1,9 @@
+{
+  "id": "adamant",
+  "name": "Adamant",
+  "increasedStat": "Attack",
+  "decreasedStat": "SpecialAttack",
+  "statModifier": 1.1,
+  "description": "Boosts Attack but lowers Special Attack."
+}
+

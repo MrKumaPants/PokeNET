@@ -1,0 +1,50 @@
+{
+  "id": "charmander",
+  "nationalDexNumber": 4,
+  "name": "Charmander",
+  "types": ["Fire"],
+  "baseStats": {
+    "hp": 39,
+    "attack": 52,
+    "defense": 43,
+    "specialAttack": 60,
+    "specialDefense": 50,
+    "speed": 65
+  },
+  "abilities": ["Blaze"],
+  "hiddenAbility": "Solar Power",
+  "growthRate": "Medium Slow",
+  "baseExperience": 62,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Dragon"],
+  "hatchSteps": 5120,
+  "height": 6,
+  "weight": 85,
+  "description": "Obviously prefers hot places. When it rains, steam is said to spout from the tip of its tail.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Scratch" },
+    { "level": 1, "moveName": "Growl" },
+    { "level": 7, "moveName": "Ember" },
+    { "level": 10, "moveName": "Smokescreen" },
+    { "level": 13, "moveName": "Dragon Rage" },
+    { "level": 16, "moveName": "Scary Face" },
+    { "level": 19, "moveName": "Fire Fang" },
+    { "level": 22, "moveName": "Flame Burst" },
+    { "level": 25, "moveName": "Slash" },
+    { "level": 28, "moveName": "Flamethrower" },
+    { "level": 31, "moveName": "Fire Spin" },
+    { "level": 34, "moveName": "Inferno" }
+  ],
+  "tmMoves": ["Toxic", "Body Slam", "Fire Blast", "Rest", "Substitute", "Flamethrower"],
+  "eggMoves": ["Belly Drum", "Ancient Power", "Dragon Dance", "Outrage"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "charmeleon",
+      "method": "Level",
+      "requiredLevel": 16
+    }
+  ]
+}
+

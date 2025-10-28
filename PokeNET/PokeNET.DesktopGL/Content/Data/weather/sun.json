@@ -1,0 +1,16 @@
+{
+  "id": "sun",
+  "name": "Sun",
+  "description": "The sunlight is harsh. Fire-type moves are powered up, while Water-type moves are weakened.",
+  "effectScript": "scripts/weather/sun.csx",
+  "effectParameters": {
+    "fireMultiplier": 1.5,
+    "waterMultiplier": 0.5,
+    "enablesSolarBeam": true,
+    "weakensThunder": true,
+    "activatesAbilities": ["Chlorophyll", "Solar Power", "Dry Skin", "Flower Gift"]
+  },
+  "duration": 5,
+  "iconPath": "sprites/weather/sun.png"
+}
+

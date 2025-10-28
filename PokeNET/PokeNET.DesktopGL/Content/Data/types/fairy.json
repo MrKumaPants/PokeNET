@@ -1,0 +1,15 @@
+{
+  "id": "fairy",
+  "name": "Fairy",
+  "color": "#EE99AC",
+  "description": "Fairy type Pokemon",
+  "matchups": {
+    "Fire": 0.5,
+    "Fighting": 2.0,
+    "Poison": 0.5,
+    "Dragon": 2.0,
+    "Dark": 2.0,
+    "Steel": 0.5
+  }
+}
+

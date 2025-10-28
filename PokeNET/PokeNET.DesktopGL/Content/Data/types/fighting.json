@@ -1,0 +1,20 @@
+{
+  "id": "fighting",
+  "name": "Fighting",
+  "color": "#C03028",
+  "description": "Fighting type Pokemon",
+  "matchups": {
+    "Normal": 2.0,
+    "Ice": 2.0,
+    "Poison": 0.5,
+    "Flying": 0.5,
+    "Psychic": 0.5,
+    "Bug": 0.5,
+    "Rock": 2.0,
+    "Ghost": 0.0,
+    "Dark": 2.0,
+    "Steel": 2.0,
+    "Fairy": 0.5
+  }
+}
+

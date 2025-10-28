@@ -1,0 +1,29 @@
+{
+  "id": "slow",
+  "name": "Slow",
+  "description": "Levels up slowly, reaching level 100 at 1,250,000 experience.",
+  "levelTable": [
+    { "level": 1, "experience": 0 },
+    { "level": 5, "experience": 156 },
+    { "level": 10, "experience": 1250 },
+    { "level": 15, "experience": 4219 },
+    { "level": 20, "experience": 10000 },
+    { "level": 25, "experience": 19531 },
+    { "level": 30, "experience": 33750 },
+    { "level": 35, "experience": 53594 },
+    { "level": 40, "experience": 80000 },
+    { "level": 45, "experience": 113906 },
+    { "level": 50, "experience": 156250 },
+    { "level": 55, "experience": 207969 },
+    { "level": 60, "experience": 270000 },
+    { "level": 65, "experience": 343281 },
+    { "level": 70, "experience": 428750 },
+    { "level": 75, "experience": 527344 },
+    { "level": 80, "experience": 640000 },
+    { "level": 85, "experience": 767656 },
+    { "level": 90, "experience": 911250 },
+    { "level": 95, "experience": 1071719 },
+    { "level": 100, "experience": 1250000 }
+  ]
+}
+

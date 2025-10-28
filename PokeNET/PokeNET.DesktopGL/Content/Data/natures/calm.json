@@ -1,0 +1,9 @@
+{
+  "id": "calm",
+  "name": "Calm",
+  "increasedStat": "SpecialDefense",
+  "decreasedStat": "Attack",
+  "statModifier": 1.1,
+  "description": "Boosts Special Defense but lowers Attack."
+}
+

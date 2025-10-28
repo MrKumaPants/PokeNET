@@ -1,0 +1,9 @@
+{
+  "id": "hasty",
+  "name": "Hasty",
+  "increasedStat": "Speed",
+  "decreasedStat": "Defense",
+  "statModifier": 1.1,
+  "description": "Boosts Speed but lowers Defense."
+}
+

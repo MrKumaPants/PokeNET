@@ -1,0 +1,234 @@
+{
+  "id": "pewter_gym",
+  "name": "Pewter City Gym",
+  "region": "Kanto",
+  "mapType": "Gym",
+  "width": 16,
+  "height": 14,
+  "tilesetId": "interior_gym_rock",
+  "music": "music/gym_theme.ogg",
+  "ambientSound": null,
+  "weather": null,
+  "canFly": false,
+  "canEscape": false,
+  "isIndoors": true,
+  "lighting": "Indoor",
+  "layers": [
+    {
+      "name": "Floor",
+      "zIndex": 0,
+      "data": "base64_encoded_tile_data"
+    },
+    {
+      "name": "Rocks",
+      "zIndex": 1,
+      "data": "base64_encoded_tile_data"
+    }
+  ],
+  "collisionLayer": {
+    "name": "Collision",
+    "data": "base64_encoded_collision_data"
+  },
+  "warps": [
+    {
+      "id": "exit_door",
+      "x": 8,
+      "y": 13,
+      "targetMapId": "pewter_city",
+      "targetX": 9,
+      "targetY": 15,
+      "warpType": "Door",
+      "direction": "Down",
+      "requiresInteraction": false
+    }
+  ],
+  "npcs": [
+    {
+      "id": "gym_guide",
+      "name": "Gym Guide",
+      "spriteId": "guide",
+      "x": 7,
+      "y": 11,
+      "direction": "Right",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "dialogue": [
+        {
+          "text": "Yo! Champ in making!",
+          "conditions": {
+            "flags": ["!defeated_brock"]
+          }
+        },
+        {
+          "text": "Rock-type Pokemon are weak to Water and Grass moves!",
+          "conditions": {
+            "flags": ["!defeated_brock"]
+          }
+        },
+        {
+          "text": "You defeated Brock! You're really something!",
+          "conditions": {
+            "flags": ["defeated_brock"]
+          }
+        }
+      ],
+      "interactionScript": null
+    },
+    {
+      "id": "camper_liam",
+      "name": "Camper Liam",
+      "spriteId": "camper",
+      "x": 5,
+      "y": 6,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": true,
+      "dialogue": [
+        {
+          "text": "I train here to get stronger!",
+          "conditions": {
+            "flags": ["defeated_camper_liam"]
+          }
+        }
+      ],
+      "interactionScript": null
+    },
+    {
+      "id": "gym_leader_brock",
+      "name": "Brock",
+      "spriteId": "brock",
+      "x": 8,
+      "y": 3,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": true,
+      "dialogue": [
+        {
+          "text": "I'm Brock! I'm Pewter's Gym Leader!",
+          "conditions": {
+            "flags": ["!defeated_brock"]
+          }
+        },
+        {
+          "text": "So, you want to challenge me? Fine! Show me your best!",
+          "conditions": {
+            "flags": ["!defeated_brock"]
+          }
+        },
+        {
+          "text": "I took you for granted. As proof of your victory, I give you the Boulder Badge!",
+          "conditions": {
+            "flags": ["defeated_brock"]
+          }
+        }
+      ],
+      "interactionScript": "scripts/gym_leaders/brock_battle.csx"
+    }
+  ],
+  "trainers": [
+    {
+      "npcId": "camper_liam",
+      "trainerId": 200,
+      "viewRange": 5,
+      "canReChallenge": false,
+      "defeatedFlag": "defeated_camper_liam",
+      "mustDefeatToProgress": false,
+      "battleMusic": "music/trainer_battle.ogg"
+    },
+    {
+      "npcId": "gym_leader_brock",
+      "trainerId": 10,
+      "viewRange": 0,
+      "canReChallenge": true,
+      "defeatedFlag": "defeated_brock",
+      "mustDefeatToProgress": true,
+      "battleMusic": "music/gym_leader_battle.ogg",
+      "victoryScript": "scripts/gym_leaders/brock_victory.csx",
+      "rewardBadge": "Boulder Badge",
+      "rewardTM": "TM39"
+    }
+  ],
+  "items": [],
+  "encountersId": null,
+  "encounterRate": 0,
+  "encounterZones": [],
+  "signs": [
+    {
+      "id": "gym_statue_left",
+      "x": 7,
+      "y": 13,
+      "direction": "Up",
+      "text": [
+        "PEWTER CITY",
+        "POKEMON GYM",
+        "LEADER: BROCK"
+      ]
+    },
+    {
+      "id": "gym_statue_right",
+      "x": 9,
+      "y": 13,
+      "direction": "Up",
+      "text": [
+        "WINNING TRAINERS:",
+        "[BADGE_HOLDERS]"
+      ],
+      "dynamic": true,
+      "script": "scripts/signs/gym_badge_holders.csx"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "brock_approach_trigger",
+      "x": 8,
+      "y": 5,
+      "width": 1,
+      "height": 1,
+      "triggerType": "StepOn",
+      "script": "scripts/gym_leaders/brock_approach.csx",
+      "requiresFlags": ["!defeated_brock", "defeated_camper_liam"],
+      "setsFlags": null,
+      "oneTime": false,
+      "priority": 10
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "main_entrance",
+      "x": 8,
+      "y": 12,
+      "direction": "Up",
+      "isDefault": true
+    }
+  ],
+  "berryTrees": [],
+  "cuttableTrees": [],
+  "smashableRocks": [],
+  "hiddenAbilities": {
+    "allowHiddenAbilities": false
+  },
+  "timeBasedEvents": [],
+  "mapFlags": {
+    "safeZone": true,
+    "preventRunning": false,
+    "preventSaving": false
+  },
+  "gymData": {
+    "gymNumber": 1,
+    "requiredBadges": 0,
+    "gymLeader": "Brock",
+    "gymType": "Rock",
+    "badge": "Boulder Badge"
+  },
+  "puzzleMechanics": {
+    "hasPuzzle": false,
+    "puzzleType": null
+  }
+}
+

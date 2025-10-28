@@ -1,0 +1,9 @@
+{
+  "id": "impish",
+  "name": "Impish",
+  "increasedStat": "Defense",
+  "decreasedStat": "SpecialAttack",
+  "statModifier": 1.1,
+  "description": "Boosts Defense but lowers Special Attack."
+}
+

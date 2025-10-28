@@ -1,0 +1,16 @@
+{
+  "id": "rock",
+  "name": "Rock",
+  "color": "#B8A038",
+  "description": "Rock type Pokemon",
+  "matchups": {
+    "Fire": 2.0,
+    "Ice": 2.0,
+    "Fighting": 0.5,
+    "Ground": 0.5,
+    "Flying": 2.0,
+    "Bug": 2.0,
+    "Steel": 0.5
+  }
+}
+

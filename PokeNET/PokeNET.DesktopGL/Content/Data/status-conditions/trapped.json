@@ -1,0 +1,15 @@
+{
+  "id": "trapped",
+  "name": "Trapped",
+  "type": "Volatile",
+  "description": "The Pokemon is trapped and cannot switch out.",
+  "effectScript": "scripts/status/trapped.csx",
+  "effectParameters": {
+    "preventSwitch": true
+  },
+  "canBeOverwritten": true,
+  "curableBy": [],
+  "preventedBy": [],
+  "iconPath": "sprites/status/trapped.png"
+}
+

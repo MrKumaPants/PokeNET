@@ -1,0 +1,16 @@
+{
+  "id": "infatuation",
+  "name": "Infatuation",
+  "type": "Volatile",
+  "description": "The Pokemon is infatuated and may be unable to attack.",
+  "effectScript": "scripts/status/infatuation.csx",
+  "effectParameters": {
+    "immobilizeChance": 50,
+    "requiresOppositeGender": true
+  },
+  "canBeOverwritten": true,
+  "curableBy": ["Switch Out"],
+  "preventedBy": [],
+  "iconPath": "sprites/status/infatuation.png"
+}
+

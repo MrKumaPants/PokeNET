@@ -1,0 +1,16 @@
+{
+  "id": "rest",
+  "name": "Rest",
+  "type": "Psychic",
+  "category": "Status",
+  "power": 0,
+  "accuracy": 0,
+  "pp": 10,
+  "priority": 0,
+  "target": "User",
+  "effectChance": 100,
+  "description": "The user goes to sleep for two turns. This fully restores the user's HP and heals any status conditions.",
+  "flags": ["Sleep", "Heal"],
+  "effectScript": "scripts/moves/rest.csx"
+}
+

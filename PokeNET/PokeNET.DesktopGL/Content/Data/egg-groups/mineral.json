@@ -1,0 +1,11 @@
+{
+  "id": "mineral",
+  "name": "Mineral",
+  "description": "Pokemon in this group are inorganic or mineral-based.",
+  "compatibleWith": ["mineral"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

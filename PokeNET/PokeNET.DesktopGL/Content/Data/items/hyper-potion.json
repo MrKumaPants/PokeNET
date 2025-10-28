@@ -1,0 +1,18 @@
+{
+    "id": "hyper-potion",
+    "name": "Hyper Potion",
+    "category": "Medicine",
+    "buyPrice": 1200,
+    "sellPrice": 600,
+    "description": "A spray-type medicine for treating wounds. It restores the HP of one Pokemon by 200 points.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": true,
+    "holdable": false,
+    "effectScript": "scripts/items/heal.csx",
+    "effectParameters": {
+        "healAmount": 200
+    },
+    "spritePath": "sprites/items/hyper_potion.png"
+}
+

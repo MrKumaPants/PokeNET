@@ -1,0 +1,8 @@
+{
+  "id": "clear",
+  "name": "Clear",
+  "description": "The weather is clear with no special effects.",
+  "effectScript": null,
+  "iconPath": "sprites/weather/clear.png"
+}
+

@@ -1,0 +1,9 @@
+{
+  "id": "rash",
+  "name": "Rash",
+  "increasedStat": "SpecialAttack",
+  "decreasedStat": "SpecialDefense",
+  "statModifier": 1.1,
+  "description": "Boosts Special Attack but lowers Special Defense."
+}
+

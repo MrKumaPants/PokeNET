@@ -1,0 +1,9 @@
+{
+  "id": "lonely",
+  "name": "Lonely",
+  "increasedStat": "Attack",
+  "decreasedStat": "Defense",
+  "statModifier": 1.1,
+  "description": "Boosts Attack but lowers Defense."
+}
+

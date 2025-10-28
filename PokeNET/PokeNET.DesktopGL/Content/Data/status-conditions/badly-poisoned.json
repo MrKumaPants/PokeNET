@@ -1,0 +1,16 @@
+{
+  "id": "badly-poisoned",
+  "name": "Badly Poisoned",
+  "type": "Major",
+  "description": "The Pokemon is badly poisoned. Damage increases each turn.",
+  "effectScript": "scripts/status/badly_poisoned.csx",
+  "effectParameters": {
+    "baseDamagePercent": 6.25,
+    "incrementPerTurn": 6.25
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Antidote", "Pecha Berry", "Lum Berry", "Rest"],
+  "preventedBy": ["Poison", "Steel"],
+  "iconPath": "sprites/status/badly_poisoned.png"
+}
+

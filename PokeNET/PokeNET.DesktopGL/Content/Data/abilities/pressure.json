@@ -1,0 +1,10 @@
+{
+  "id": "pressure",
+  "name": "Pressure",
+  "description": "By putting pressure on the foe, it raises the opposing Pokemon's PP usage.",
+  "effectScript": "scripts/abilities/pressure.csx",
+  "effectParameters": {
+    "ppCostMultiplier": 2
+  }
+}
+

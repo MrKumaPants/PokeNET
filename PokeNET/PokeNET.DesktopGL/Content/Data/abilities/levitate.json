@@ -1,0 +1,10 @@
+{
+  "id": "levitate",
+  "name": "Levitate",
+  "description": "Gives immunity to Ground-type moves.",
+  "effectScript": "scripts/abilities/levitate.csx",
+  "effectParameters": {
+    "immuneToTypes": ["Ground"]
+  }
+}
+

@@ -1,0 +1,12 @@
+{
+  "id": "overgrow",
+  "name": "Overgrow",
+  "description": "Powers up Grass-type moves when the Pokemon's HP is low.",
+  "effectScript": "scripts/abilities/overgrow.csx",
+  "effectParameters": {
+    "triggerHPPercent": 33,
+    "boostMultiplier": 1.5,
+    "affectedTypes": ["Grass"]
+  }
+}
+

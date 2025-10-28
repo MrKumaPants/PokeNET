@@ -23,12 +23,15 @@ public class DataManager : IDataApi
     private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     // Thread-safe caches
-    private Dictionary<int, SpeciesData> _speciesById = new();
+    private Dictionary<string, SpeciesData> _speciesById = new();
     private Dictionary<string, SpeciesData> _speciesByName = new();
+    private Dictionary<string, MoveData> _movesById = new();
     private Dictionary<string, MoveData> _movesByName = new();
-    private Dictionary<int, ItemData> _itemsById = new();
+    private Dictionary<string, ItemData> _itemsById = new();
     private Dictionary<string, ItemData> _itemsByName = new();
     private Dictionary<string, EncounterTable> _encountersById = new();
+    private Dictionary<string, EncounterTable> _encountersByName = new();
+    private Dictionary<string, TypeData> _typesById = new();
     private Dictionary<string, TypeData> _typesByName = new();
 
     private bool _isLoaded;
@@ -39,6 +42,7 @@ public class DataManager : IDataApi
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase) }
     };
 
     /// <summary>
@@ -79,7 +83,7 @@ public class DataManager : IDataApi
     // ==================== Species Data ====================
 
     /// <inheritdoc/>
-    public async Task<SpeciesData?> GetSpeciesAsync(int speciesId)
+    public async Task<SpeciesData?> GetSpeciesAsync(string speciesId)
     {
         await EnsureDataLoadedAsync();
 
@@ -108,11 +112,19 @@ public class DataManager : IDataApi
     // ==================== Move Data ====================
 
     /// <inheritdoc/>
-    public async Task<MoveData?> GetMoveAsync(string moveName)
+    public async Task<MoveData?> GetMoveAsync(string moveId)
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = moveName?.Trim().ToLowerInvariant();
+        return _movesById.TryGetValue(moveId, out var move) ? move : null;
+    }
+
+    /// <inheritdoc/>
+    public async Task<MoveData?> GetMoveByNameAsync(string name)
+    {
+        await EnsureDataLoadedAsync();
+
+        var normalizedName = name?.Trim().ToLowerInvariant();
         return normalizedName != null && _movesByName.TryGetValue(normalizedName, out var move)
             ? move
             : null;
@@ -123,7 +135,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _movesByName.Values.ToList().AsReadOnly();
+        return _movesById.Values.ToList().AsReadOnly();
     }
 
     /// <inheritdoc/>
@@ -131,7 +143,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _movesByName
+        return _movesById
             .Values.Where(m => m.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
             .ToList()
             .AsReadOnly();
@@ -140,7 +152,7 @@ public class DataManager : IDataApi
     // ==================== Item Data ====================
 
     /// <inheritdoc/>
-    public async Task<ItemData?> GetItemAsync(int itemId)
+    public async Task<ItemData?> GetItemAsync(string itemId)
     {
         await EnsureDataLoadedAsync();
 
@@ -181,8 +193,16 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedId = locationId?.Trim().ToLowerInvariant();
-        return normalizedId != null && _encountersById.TryGetValue(normalizedId, out var table)
+        return _encountersById.TryGetValue(locationId, out var table) ? table : null;
+    }
+
+    /// <inheritdoc/>
+    public async Task<EncounterTable?> GetEncountersByNameAsync(string name)
+    {
+        await EnsureDataLoadedAsync();
+
+        var normalizedName = name?.Trim().ToLowerInvariant();
+        return normalizedName != null && _encountersByName.TryGetValue(normalizedName, out var table)
             ? table
             : null;
     }
@@ -262,18 +282,18 @@ public class DataManager : IDataApi
         _logger.LogInformation(
             "Data loaded: {SpeciesCount} species, {MoveCount} moves, {ItemCount} items, {EncounterCount} encounters, {TypeCount} types",
             _speciesById.Count,
-            _movesByName.Count,
+            _movesById.Count,
             _itemsById.Count,
             _encountersById.Count,
-            _typesByName.Count
+            _typesById.Count
         );
     }
 
     private async Task LoadSpeciesDataAsync()
     {
-        var species = await LoadJsonArrayAsync<SpeciesData>("species.json");
+        var species = await LoadAllJsonFromDirectoryAsync<SpeciesData>("species");
 
-        var byId = new Dictionary<int, SpeciesData>();
+        var byId = new Dictionary<string, SpeciesData>();
         var byName = new Dictionary<string, SpeciesData>();
 
         foreach (var s in species)
@@ -290,15 +310,18 @@ public class DataManager : IDataApi
 
     private async Task LoadMoveDataAsync()
     {
-        var moves = await LoadJsonArrayAsync<MoveData>("moves.json");
+        var moves = await LoadAllJsonFromDirectoryAsync<MoveData>("moves");
 
+        var byId = new Dictionary<string, MoveData>();
         var byName = new Dictionary<string, MoveData>();
 
         foreach (var m in moves)
         {
+            byId[m.Id] = m;
             byName[m.Name.ToLowerInvariant()] = m;
         }
 
+        _movesById = byId;
         _movesByName = byName;
 
         _logger.LogDebug("Loaded {Count} moves", moves.Count);
@@ -306,9 +329,9 @@ public class DataManager : IDataApi
 
     private async Task LoadItemDataAsync()
     {
-        var items = await LoadJsonArrayAsync<ItemData>("items.json");
+        var items = await LoadAllJsonFromDirectoryAsync<ItemData>("items");
 
-        var byId = new Dictionary<int, ItemData>();
+        var byId = new Dictionary<string, ItemData>();
         var byName = new Dictionary<string, ItemData>();
 
         foreach (var i in items)
@@ -325,37 +348,43 @@ public class DataManager : IDataApi
 
     private async Task LoadEncounterDataAsync()
     {
-        var encounters = await LoadJsonArrayAsync<EncounterTable>("encounters.json");
+        var encounters = await LoadAllJsonFromDirectoryAsync<EncounterTable>("encounters");
 
         var byId = new Dictionary<string, EncounterTable>();
+        var byName = new Dictionary<string, EncounterTable>();
 
         foreach (var e in encounters)
         {
-            byId[e.LocationId.ToLowerInvariant()] = e;
+            byId[e.LocationId] = e;
+            byName[e.LocationName.ToLowerInvariant()] = e;
         }
 
         _encountersById = byId;
+        _encountersByName = byName;
 
         _logger.LogDebug("Loaded {Count} encounter tables", encounters.Count);
     }
 
     private async Task LoadTypesAsync()
     {
-        var types = await LoadJsonArrayAsync<TypeData>("types.json");
+        var types = await LoadAllJsonFromDirectoryAsync<TypeData>("types");
 
+        var byId = new Dictionary<string, TypeData>();
         var byName = new Dictionary<string, TypeData>();
 
         foreach (var t in types)
         {
+            byId[t.Id] = t;
             byName[t.Name.ToLowerInvariant()] = t;
         }
 
+        _typesById = byId;
         _typesByName = byName;
 
         if (types.Count == 0)
         {
             _logger.LogWarning(
-                "types.json not found or empty. Type effectiveness will be neutral (1.0) for all matchups. " +
+                "types directory not found or empty. Type effectiveness will be neutral (1.0) for all matchups. " +
                 "This will result in incorrect battle calculations!"
             );
         }
@@ -363,14 +392,22 @@ public class DataManager : IDataApi
         _logger.LogDebug("Loaded {Count} types with matchups", types.Count);
     }
 
-    // ==================== Type Effectiveness Methods ====================
+    // ==================== Type Data Methods ====================
 
     /// <inheritdoc/>
-    public async Task<TypeData?> GetTypeAsync(string typeName)
+    public async Task<TypeData?> GetTypeAsync(string typeId)
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = typeName?.Trim().ToLowerInvariant();
+        return _typesById.TryGetValue(typeId, out var typeInfo) ? typeInfo : null;
+    }
+
+    /// <inheritdoc/>
+    public async Task<TypeData?> GetTypeByNameAsync(string name)
+    {
+        await EnsureDataLoadedAsync();
+
+        var normalizedName = name?.Trim().ToLowerInvariant();
         return normalizedName != null && _typesByName.TryGetValue(normalizedName, out var typeInfo)
             ? typeInfo
             : null;
@@ -381,8 +418,10 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _typesByName.Values.ToList().AsReadOnly();
+        return _typesById.Values.ToList().AsReadOnly();
     }
+
+    // ==================== Type Effectiveness Methods ====================
 
     /// <inheritdoc/>
     public async Task<double> GetTypeEffectivenessAsync(string attackType, string defenseType)
@@ -438,64 +477,107 @@ public class DataManager : IDataApi
         return effectiveness1 * effectiveness2;
     }
 
-    private async Task<List<T>> LoadJsonArrayAsync<T>(string fileName)
+    /// <summary>
+    /// Loads all JSON files from a directory (including mod overrides).
+    /// Each file can contain either a single object or an array of objects.
+    /// </summary>
+    private async Task<List<T>> LoadAllJsonFromDirectoryAsync<T>(string directoryName)
     {
-        var path = ResolveDataPath(fileName);
+        var allData = new List<T>();
+        var loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        if (path == null)
-        {
-            _logger.LogWarning("Data file not found: {FileName}", fileName);
-            return new List<T>();
-        }
-
-        try
-        {
-            _logger.LogDebug("Loading {FileName} from {Path}", fileName, path);
-
-            var json = await File.ReadAllTextAsync(path);
-            var data = JsonSerializer.Deserialize<List<T>>(json, JsonOptions);
-
-            return data ?? new List<T>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load {FileName}", fileName);
-            return new List<T>();
-        }
-    }
-
-    private string? ResolveDataPath(string fileName)
-    {
-        // Check mod paths first (in priority order)
+        // Get all directories to search (mods first, then base)
+        var searchPaths = new List<string>();
         foreach (var modPath in _modDataPaths)
         {
-            var fullPath = Path.Combine(modPath, fileName);
-            if (File.Exists(fullPath))
+            var modDir = Path.Combine(modPath, directoryName);
+            if (Directory.Exists(modDir))
             {
-                _logger.LogTrace("Resolved {FileName} to mod path: {Path}", fileName, fullPath);
-                return fullPath;
+                searchPaths.Add(modDir);
+            }
+        }
+        
+        var baseDir = Path.Combine(_dataPath, directoryName);
+        if (Directory.Exists(baseDir))
+        {
+            searchPaths.Add(baseDir);
+        }
+
+        if (searchPaths.Count == 0)
+        {
+            _logger.LogWarning("No directories found for: {DirectoryName}", directoryName);
+            return allData;
+        }
+
+        // Load files from each path (mods can override base files by name)
+        foreach (var searchPath in searchPaths)
+        {
+            var jsonFiles = Directory.GetFiles(searchPath, "*.json", SearchOption.TopDirectoryOnly);
+            
+            foreach (var filePath in jsonFiles)
+            {
+                var fileName = Path.GetFileName(filePath);
+                
+                // Skip if already loaded (mod override)
+                if (loadedFiles.Contains(fileName))
+                {
+                    _logger.LogTrace("Skipping {FileName} (already loaded from mod)", fileName);
+                    continue;
+                }
+
+                try
+                {
+                    _logger.LogTrace("Loading {FilePath}", filePath);
+                    var json = await File.ReadAllTextAsync(filePath);
+
+                    // Try to deserialize as array first
+                    try
+                    {
+                        var arrayData = JsonSerializer.Deserialize<List<T>>(json, JsonOptions);
+                        if (arrayData != null)
+                        {
+                            allData.AddRange(arrayData);
+                            loadedFiles.Add(fileName);
+                            _logger.LogTrace("Loaded {Count} items from {FileName}", arrayData.Count, fileName);
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        // Not an array, try single object
+                    }
+
+                    // Try to deserialize as single object
+                    var singleData = JsonSerializer.Deserialize<T>(json, JsonOptions);
+                    if (singleData != null)
+                    {
+                        allData.Add(singleData);
+                        loadedFiles.Add(fileName);
+                        _logger.LogTrace("Loaded 1 item from {FileName}", fileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load {FilePath}", filePath);
+                }
             }
         }
 
-        // Fall back to base data path
-        var basePath = Path.Combine(_dataPath, fileName);
-        if (File.Exists(basePath))
-        {
-            _logger.LogTrace("Resolved {FileName} to base path: {Path}", fileName, basePath);
-            return basePath;
-        }
-
-        return null;
+        _logger.LogDebug("Loaded {Count} total items from {DirectoryName}", allData.Count, directoryName);
+        return allData;
     }
 
     private void ClearCaches()
     {
         _speciesById.Clear();
         _speciesByName.Clear();
+        _movesById.Clear();
         _movesByName.Clear();
         _itemsById.Clear();
         _itemsByName.Clear();
         _encountersById.Clear();
+        _encountersByName.Clear();
+        _typesById.Clear();
         _typesByName.Clear();
     }
 

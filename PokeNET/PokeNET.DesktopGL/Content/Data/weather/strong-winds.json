@@ -1,0 +1,13 @@
+{
+  "id": "strong-winds",
+  "name": "Strong Winds",
+  "description": "Mysterious strong winds protect Flying-type Pokemon.",
+  "effectScript": "scripts/weather/strong_winds.csx",
+  "effectParameters": {
+    "protectsFlying": true,
+    "neutralizeSuperEffective": true
+  },
+  "duration": -1,
+  "iconPath": "sprites/weather/strong_winds.png"
+}
+

@@ -1,0 +1,19 @@
+{
+  "id": "thunderbolt",
+  "name": "Thunderbolt",
+  "type": "Electric",
+  "category": "Special",
+  "power": 90,
+  "accuracy": 100,
+  "pp": 15,
+  "priority": 0,
+  "target": "SingleTarget",
+  "effectChance": 10,
+  "description": "A strong electric blast crashes down on the target. This may also leave the target with paralysis.",
+  "flags": ["Protect", "Mirror"],
+  "effectScript": "scripts/moves/paralyze.csx",
+  "effectParameters": {
+    "paralyzeChance": 10
+  }
+}
+

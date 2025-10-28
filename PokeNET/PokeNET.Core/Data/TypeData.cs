@@ -9,6 +9,11 @@ namespace PokeNET.Core.Data;
 public class TypeData
 {
     /// <summary>
+    /// Unique type identifier.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
     /// Type name (e.g., "Fire", "Water").
     /// </summary>
     public string Name { get; set; } = string.Empty;

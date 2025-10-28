@@ -1,0 +1,16 @@
+{
+  "id": "rain",
+  "name": "Rain",
+  "description": "It's raining. Water-type moves are powered up, while Fire-type moves are weakened.",
+  "effectScript": "scripts/weather/rain.csx",
+  "effectParameters": {
+    "waterMultiplier": 1.5,
+    "fireMultiplier": 0.5,
+    "enablesThunder": true,
+    "weakensSolarBeam": true,
+    "activatesAbilities": ["Swift Swim", "Rain Dish", "Dry Skin", "Hydration"]
+  },
+  "duration": 5,
+  "iconPath": "sprites/weather/rain.png"
+}
+

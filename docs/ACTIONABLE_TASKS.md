@@ -751,53 +751,132 @@ public class CriticalHitBoostPatch
 - **Status:** All deliverables complete, 127 tests passing
 - **See:** `docs/PHASE1_COMPLETION_REPORT.md`
 
-### Phase 2: Fix Architecture (Week 2)
+### Phase 2: Architecture & DI (Week 2)
 **Time:** 24 hours
+**Focus:** Fix layering, register services, consolidate APIs
 - ~~C-1~~ ✅ Complete (Domain merged)
 - ~~C-2~~ ✅ Complete (Domain merged)
-- C-3, C-8, C-9, C-10, C-11, C-12, C-13
+- C-3: Documentation corrections (2h)
+- C-8: Wire save system to DI (2h)
+- C-9: Register audio services (2h)
+- C-10: Register scripting context (4h)
+- C-11: Unify duplicate APIs (6h)
+- C-12: Migrate to Arch.EventBus (8h)
+- C-13: Pin package versions (2h)
 
-### Phase 3: Core Gameplay (Weeks 3-4)
-**Time:** 86 hours
-- H-1, H-2, H-3, H-4, H-14, H-15, H-16, H-17, H-18, H-19, H-20
+### Phase 3: Core Battle Mechanics (Weeks 3-4)
+**Time:** 58 hours
+**Focus:** Backend battle logic, no UI
+- H-3: Complete battle damage calculations (8h)
+- H-4: Implement encounter system (10h)
+- H-5: Add trainer AI (12h)
+- H-6: Implement status effect system (10h)
+- H-14: Create effect scripts (16h)
+- H-15: Implement script loading (12h)
 
-### Phase 4: Pokemon Mechanics (Week 5)
-**Time:** 38 hours
-- H-5, H-6, H-7, H-8, M-1, M-2, M-3
+### Phase 4: Pokemon Systems (Week 5)
+**Time:** 30 hours
+**Focus:** Pokemon-specific functionality, no UI
+- H-7: Implement evolution system (12h)
+- H-8: Complete command execution logic (4h)
+- M-1: Replace physics with tile-based movement (12h)
+- M-2: Create Pokemon battle components (6h)
+- M-3: Create trainer/party components (8h)
+- **Note:** M-3 reduced from 8h to 6h (UI portion moved to Phase 7)
 
-### Phase 5: Audio & Input (Week 6)
+### Phase 5: System Integration (Week 6)
+**Time:** 41 hours
+**Focus:** ECS systems, asset loading, serialization
+- H-16: Implement asset loaders (12h)
+- H-17: MonoGame content pipeline (4h)
+- H-18: Register ECS systems (3h)
+- H-19: Register asset loaders (2h)
+- H-20: Implement ECS serialization (16h)
+- H-9: Implement mouse input (6h)
+- H-10: Implement command pattern execution (8h)
+
+### Phase 6: Audio System (Week 7)
 **Time:** 44 hours
-- H-9, H-10, H-11, H-12, H-13, M-4, M-5, M-6
+**Focus:** Audio integration and reactivity
+- H-11: Implement audio file loading (10h)
+- H-12: Register audio reactions (4h)
+- H-13: Implement track queue in MusicPlayer (6h)
+- M-4: Refactor reactive audio engine (14h)
+- M-5: Remove sync-over-async anti-patterns (4h)
+- M-6: Connect procedural music to game state (10h)
 
-### Phase 6: Asset Loading & Testing (Week 7)
+### Phase 7: User Interface (Weeks 8-9)
+**Time:** 42 hours
+**Focus:** All UI implementation
+- H-1: Implement battle UI (16h)
+- H-2: Implement party screen UI (12h)
+- M-3 (UI portion): Party screen integration (2h)
+- UI menus for save/load (6h)
+- Input/command UI integration (6h)
+
+### Phase 8: Testing & Quality (Week 10)
 **Time:** 54 hours
-- H-14, H-15, M-7, M-8, M-9, M-10
+**Focus:** Test coverage and code quality
+- M-7: Create unit test suite (24h)
+- M-8: Implement integration tests (12h)
+- M-9: Enable nullable reference types (8h)
+- M-10: Add architecture tests (4h)
+- M-11: Remove dead code (2h)
+- M-12: Fix exception types (1h)
+- L-7: Add logging infrastructure (6h)
 
-### Phase 7: Polish & Documentation (Week 8)
+### Phase 9: Documentation & Polish (Week 11)
 **Time:** 33 hours
-- M-11, M-12, M-13, M-14, M-15, L-7, L-8
+**Focus:** Documentation and code modernization
+- M-13: Create modding tutorial (8h)
+- M-14: Generate API documentation (6h)
+- M-15: Create developer quick start guide (4h)
+- L-8: Modernize C# syntax (4h)
+- L-1: Finalize benchmark baselines (4h)
+- Performance tuning (7h)
 
-### Phase 8: Optional Features (Weeks 9-12)
+### Phase 10: Optional Features (Weeks 12+)
 **Time:** 94 hours
-- L-1, L-2, L-3, L-4, L-5, L-6, L-9, L-10, L-11, L-12
+**Focus:** Nice-to-have features
+- L-2: Asset cache eviction (6h)
+- L-3: Delta compression for saves (12h)
+- L-4: Hot reload for assets (10h)
+- L-5: Auto-save system (6h)
+- L-6: Weather system (8h)
+- L-9: Network/multiplayer APIs design (8h)
+- L-10: Complete localization system (10h)
+- L-11: Advanced persistence support (12h)
+- L-12: Enforce performance budgets (8h)
+- Additional polish (14h)
 
 ---
 
 ## Success Criteria
 
-### Minimum Viable Product (MVP)
-- 🔄 All CRITICAL tasks complete (6 of 10 done - 60%)
-- ⏳ All HIGH tasks complete (0 of 18 done)
-- ⏳ 50%+ of MEDIUM tasks complete (0 of 16 done)
-- ⏳ Example content created
-- ⏳ One complete battle playable
+### Backend MVP (Phases 1-6)
+- ✅ All CRITICAL tasks complete
+- ✅ All HIGH backend tasks complete (no UI)
+- ✅ Battle mechanics functional (damage, types, status effects)
+- ✅ Pokemon systems working (evolution, stats, moves, items)
+- ✅ Scripts executable (item effects, move effects)
+- ✅ Save/load functional
+- ⚠️ **No UI** - can only be tested via unit tests/console
 
-### Production Ready
-- ✅ All CRITICAL, HIGH, MEDIUM tasks complete
+### Playable MVP (Through Phase 7)
+- ✅ All backend MVP criteria met
+- ✅ Battle UI implemented
+- ✅ Party screen UI implemented
+- ✅ Menu system functional
+- ✅ One complete battle playable end-to-end
+- ✅ Example content created
+
+### Production Ready (Through Phase 9)
+- ✅ All Playable MVP criteria met
 - ✅ 60%+ test coverage
 - ✅ All documentation complete
 - ✅ Performance benchmarks met
 - ✅ Zero high-severity bugs
+- ✅ Modding guide available
 
 ---
 
@@ -819,11 +898,12 @@ Use this document as the single source of truth for all implementation work. As 
 - **Total Estimated Effort:** 373 hours (~7-10 weeks for 1 developer) - 32 hours completed
 - **Project Structure:** 7 projects (PokeNET.Domain merged into PokeNET.Core on 2025-10-26)
 - **Target Mechanics:** Generation VI+ (Gen 6+) - see PROJECT_STATUS.md for details
-- **Critical Path:** Phases 1-3 must be completed in order
-- **Parallelizable:** Audio, asset loading, and testing can overlap
-- **MVP Target:** End of Phase 4 (4 weeks remaining)
-- **Production Target:** End of Phase 7 (7 weeks remaining)
-- **Full Feature Set:** End of Phase 8 (10 weeks remaining)
+- **Critical Path:** Phases 1-6 must be completed before UI (Phase 7)
+- **Parallelizable:** Testing (Phase 8) can start alongside UI work
+- **MVP Target (Backend):** End of Phase 6 (6 weeks remaining) - fully functional, no UI
+- **MVP Target (Playable):** End of Phase 7 (8 weeks remaining) - with UI
+- **Production Ready:** End of Phase 9 (11 weeks remaining)
+- **Full Feature Set:** Phase 10+ (12+ weeks)
 - **Recent Completions:** 
   - ✅ Phase 1 (C-4, C-5, C-6, C-7) - Data Infrastructure complete (2025-10-27)
   - ✅ C-1, C-2 - Domain/Core merge (2025-10-26)

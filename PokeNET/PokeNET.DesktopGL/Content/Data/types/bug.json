@@ -1,0 +1,19 @@
+{
+  "id": "bug",
+  "name": "Bug",
+  "color": "#A8B820",
+  "description": "Bug type Pokemon",
+  "matchups": {
+    "Fire": 0.5,
+    "Grass": 2.0,
+    "Fighting": 0.5,
+    "Poison": 0.5,
+    "Flying": 0.5,
+    "Psychic": 2.0,
+    "Ghost": 0.5,
+    "Dark": 2.0,
+    "Steel": 0.5,
+    "Fairy": 0.5
+  }
+}
+

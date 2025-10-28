@@ -1,0 +1,282 @@
+{
+  "id": "viridian_forest",
+  "name": "Viridian Forest",
+  "region": "Kanto",
+  "mapType": "Forest",
+  "width": 30,
+  "height": 30,
+  "tilesetId": "forest",
+  "music": "music/forest_theme.ogg",
+  "ambientSound": "sounds/forest_ambient.ogg",
+  "weather": "Clear",
+  "canFly": false,
+  "canEscape": true,
+  "isIndoors": false,
+  "lighting": "Forest",
+  "layers": [
+    {
+      "name": "Ground",
+      "zIndex": 0,
+      "data": "base64_encoded_tile_data"
+    },
+    {
+      "name": "Trees",
+      "zIndex": 1,
+      "data": "base64_encoded_tile_data"
+    },
+    {
+      "name": "TreeTops",
+      "zIndex": 2,
+      "data": "base64_encoded_tile_data"
+    }
+  ],
+  "collisionLayer": {
+    "name": "Collision",
+    "data": "base64_encoded_collision_data"
+  },
+  "warps": [
+    {
+      "id": "north_exit",
+      "x": 15,
+      "y": 0,
+      "targetMapId": "route_2_north",
+      "targetX": 8,
+      "targetY": 45,
+      "warpType": "MapEdge",
+      "direction": "Up",
+      "requiresInteraction": false
+    },
+    {
+      "id": "south_entrance",
+      "x": 15,
+      "y": 29,
+      "targetMapId": "route_2_south",
+      "targetX": 8,
+      "targetY": 1,
+      "warpType": "MapEdge",
+      "direction": "Down",
+      "requiresInteraction": false
+    }
+  ],
+  "npcs": [
+    {
+      "id": "bug_catcher_rick",
+      "name": "Bug Catcher Rick",
+      "spriteId": "bugcatcher",
+      "x": 12,
+      "y": 8,
+      "direction": "Left",
+      "movementScript": "scripts/movement/look_around.csx",
+      "movementParameters": {
+        "turnInterval": 2000,
+        "randomDirection": true
+      },
+      "viewRange": 0,
+      "isTrainer": true,
+      "dialogue": [
+        {
+          "text": "I love bug Pokemon!",
+          "conditions": {
+            "flags": ["defeated_bugcatcher_rick"]
+          }
+        }
+      ],
+      "interactionScript": null
+    },
+    {
+      "id": "lass_robin",
+      "name": "Lass Robin",
+      "spriteId": "lass",
+      "x": 8,
+      "y": 15,
+      "direction": "Down",
+      "movementScript": "scripts/movement/patrol.csx",
+      "movementParameters": {
+        "path": [
+          {"x": 8, "y": 15},
+          {"x": 8, "y": 18},
+          {"x": 11, "y": 18},
+          {"x": 11, "y": 15}
+        ],
+        "speed": "Normal",
+        "loop": true
+      },
+      "viewRange": 0,
+      "isTrainer": true,
+      "interactionScript": null
+    },
+    {
+      "id": "helpful_camper",
+      "name": "Camper",
+      "spriteId": "camper",
+      "x": 15,
+      "y": 20,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "dialogue": [
+        {
+          "text": "There are lots of Bug Pokemon here!",
+          "conditions": null
+        },
+        {
+          "text": "Use FIRE moves to deal with them easily!",
+          "conditions": null
+        }
+      ],
+      "interactionScript": null
+    }
+  ],
+  "trainers": [
+    {
+      "npcId": "bug_catcher_rick",
+      "trainerId": 101,
+      "viewRange": 4,
+      "canReChallenge": false,
+      "defeatedFlag": "defeated_bugcatcher_rick",
+      "battleMusic": "music/trainer_battle.ogg"
+    },
+    {
+      "npcId": "lass_robin",
+      "trainerId": 102,
+      "viewRange": 3,
+      "canReChallenge": false,
+      "defeatedFlag": "defeated_lass_robin"
+    }
+  ],
+  "items": [
+    {
+      "id": "antidote_1",
+      "itemId": 7,
+      "x": 10,
+      "y": 5,
+      "itemType": "Overworld",
+      "visible": true,
+      "respawns": false,
+      "obtainedFlag": "viridian_forest_antidote_1"
+    },
+    {
+      "id": "potion_1",
+      "itemId": 1,
+      "x": 20,
+      "y": 12,
+      "itemType": "Overworld",
+      "visible": true,
+      "respawns": false,
+      "obtainedFlag": "viridian_forest_potion_1"
+    },
+    {
+      "id": "pokeball_1",
+      "itemId": 4,
+      "x": 6,
+      "y": 22,
+      "itemType": "Overworld",
+      "visible": true,
+      "respawns": false,
+      "obtainedFlag": "viridian_forest_pokeball_1"
+    },
+    {
+      "id": "hidden_potion",
+      "itemId": 1,
+      "x": 25,
+      "y": 18,
+      "itemType": "Hidden",
+      "visible": false,
+      "respawns": false,
+      "obtainedFlag": "viridian_forest_hidden_potion",
+      "requiresItemfinder": false
+    },
+    {
+      "id": "hidden_great_ball",
+      "itemId": 5,
+      "x": 3,
+      "y": 3,
+      "itemType": "Hidden",
+      "visible": false,
+      "respawns": false,
+      "obtainedFlag": "viridian_forest_hidden_great_ball",
+      "requiresItemfinder": true
+    }
+  ],
+  "encountersId": "viridian_forest",
+  "encounterRate": 25,
+  "encounterZones": [
+    {
+      "type": "Grass",
+      "x": 0,
+      "y": 0,
+      "width": 30,
+      "height": 30
+    }
+  ],
+  "signs": [
+    {
+      "id": "forest_entrance_sign",
+      "x": 15,
+      "y": 28,
+      "direction": "Up",
+      "text": [
+        "VIRIDIAN FOREST",
+        "Beware of bug Pokemon!"
+      ]
+    },
+    {
+      "id": "forest_tip_sign",
+      "x": 12,
+      "y": 15,
+      "direction": "Up",
+      "text": [
+        "TRAINER TIPS",
+        "Weaken Pokemon before",
+        "trying to catch them!"
+      ]
+    }
+  ],
+  "triggers": [],
+  "spawnPoints": [
+    {
+      "id": "south_entrance",
+      "x": 15,
+      "y": 28,
+      "direction": "Up",
+      "isDefault": true
+    },
+    {
+      "id": "north_exit",
+      "x": 15,
+      "y": 1,
+      "direction": "Down",
+      "isDefault": false
+    }
+  ],
+  "berryTrees": [],
+  "cuttableTrees": [
+    {
+      "id": "tree_shortcut_1",
+      "x": 18,
+      "y": 14,
+      "requiresMove": "Cut",
+      "removedFlag": "viridian_forest_tree_1_cut"
+    },
+    {
+      "id": "tree_shortcut_2",
+      "x": 7,
+      "y": 20,
+      "requiresMove": "Cut",
+      "removedFlag": "viridian_forest_tree_2_cut"
+    }
+  ],
+  "smashableRocks": [],
+  "hiddenAbilities": {
+    "allowHiddenAbilities": false
+  },
+  "timeBasedEvents": [],
+  "mapFlags": {
+    "safeZone": false,
+    "preventRunning": false,
+    "preventSaving": false
+  }
+}
+

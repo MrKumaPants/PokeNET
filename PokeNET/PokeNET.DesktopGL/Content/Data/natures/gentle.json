@@ -1,0 +1,9 @@
+{
+  "id": "gentle",
+  "name": "Gentle",
+  "increasedStat": "SpecialDefense",
+  "decreasedStat": "Defense",
+  "statModifier": 1.1,
+  "description": "Boosts Special Defense but lowers Defense."
+}
+

@@ -1,0 +1,16 @@
+{
+  "id": "sleep",
+  "name": "Sleep",
+  "type": "Major",
+  "description": "The Pokemon is asleep and cannot move.",
+  "effectScript": "scripts/status/sleep.csx",
+  "effectParameters": {
+    "minTurns": 1,
+    "maxTurns": 3
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Awakening", "Chesto Berry", "Lum Berry"],
+  "preventedBy": [],
+  "iconPath": "sprites/status/sleep.png"
+}
+

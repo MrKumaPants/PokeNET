@@ -1,0 +1,15 @@
+{
+  "id": "heavy-rain",
+  "name": "Heavy Rain",
+  "description": "It's raining heavily. Water-type moves are greatly powered up, and Fire-type moves fail completely.",
+  "effectScript": "scripts/weather/heavy_rain.csx",
+  "effectParameters": {
+    "waterMultiplier": 2.0,
+    "fireMovesFail": true,
+    "enablesThunder": true,
+    "activatesAbilities": ["Swift Swim", "Rain Dish", "Dry Skin", "Hydration"]
+  },
+  "duration": -1,
+  "iconPath": "sprites/weather/heavy_rain.png"
+}
+

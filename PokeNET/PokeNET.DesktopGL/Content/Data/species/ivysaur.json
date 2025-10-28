@@ -1,0 +1,51 @@
+{
+  "id": "ivysaur",
+  "nationalDexNumber": 2,
+  "name": "Ivysaur",
+  "types": ["Grass", "Poison"],
+  "baseStats": {
+    "hp": 60,
+    "attack": 62,
+    "defense": 63,
+    "specialAttack": 80,
+    "specialDefense": 80,
+    "speed": 60
+  },
+  "abilities": ["Overgrow"],
+  "hiddenAbility": "Chlorophyll",
+  "growthRate": "Medium Slow",
+  "baseExperience": 142,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Grass"],
+  "hatchSteps": 5120,
+  "height": 10,
+  "weight": 130,
+  "description": "When the bulb on its back grows large, it appears to lose the ability to stand on its hind legs.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Growl" },
+    { "level": 1, "moveName": "Vine Whip" },
+    { "level": 7, "moveName": "Vine Whip" },
+    { "level": 9, "moveName": "Growth" },
+    { "level": 13, "moveName": "Leech Seed" },
+    { "level": 15, "moveName": "Razor Leaf" },
+    { "level": 20, "moveName": "Poison Powder" },
+    { "level": 23, "moveName": "Sleep Powder" },
+    { "level": 28, "moveName": "Take Down" },
+    { "level": 31, "moveName": "Sweet Scent" },
+    { "level": 36, "moveName": "Synthesis" },
+    { "level": 39, "moveName": "Solar Beam" }
+  ],
+  "tmMoves": ["Toxic", "Body Slam", "Double-Edge", "Solar Beam", "Rest", "Substitute"],
+  "eggMoves": [],
+  "evolutions": [
+    {
+      "targetSpeciesId": "venusaur",
+      "method": "Level",
+      "requiredLevel": 32
+    }
+  ]
+}
+

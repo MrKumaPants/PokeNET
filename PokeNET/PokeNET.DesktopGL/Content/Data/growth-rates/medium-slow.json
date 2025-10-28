@@ -1,0 +1,29 @@
+{
+  "id": "medium-slow",
+  "name": "Medium Slow",
+  "description": "Slightly slower than standard, reaching level 100 at 1,059,860 experience.",
+  "levelTable": [
+    { "level": 1, "experience": 0 },
+    { "level": 5, "experience": 135 },
+    { "level": 10, "experience": 1059 },
+    { "level": 15, "experience": 3571 },
+    { "level": 20, "experience": 8518 },
+    { "level": 25, "experience": 16151 },
+    { "level": 30, "experience": 27969 },
+    { "level": 35, "experience": 44476 },
+    { "level": 40, "experience": 66505 },
+    { "level": 45, "experience": 94119 },
+    { "level": 50, "experience": 128506 },
+    { "level": 55, "experience": 169968 },
+    { "level": 60, "experience": 218924 },
+    { "level": 65, "experience": 275920 },
+    { "level": 70, "experience": 341620 },
+    { "level": 75, "experience": 416714 },
+    { "level": 80, "experience": 501916 },
+    { "level": 85, "experience": 597964 },
+    { "level": 90, "experience": 705630 },
+    { "level": 95, "experience": 825714 },
+    { "level": 100, "experience": 1059860 }
+  ]
+}
+

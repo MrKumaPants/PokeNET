@@ -1,0 +1,11 @@
+{
+  "id": "dragon",
+  "name": "Dragon",
+  "description": "Pokemon in this group are draconic or dragon-like creatures.",
+  "compatibleWith": ["dragon", "monster", "water-1", "flying", "field", "water-2", "grass"],
+  "breedingModifiers": {
+    "baseSteps": 10240,
+    "eggMoveInheritance": true
+  }
+}
+

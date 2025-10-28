@@ -1,0 +1,18 @@
+{
+  "id": "confusion",
+  "name": "Confusion",
+  "type": "Volatile",
+  "description": "The Pokemon is confused and may hurt itself in its confusion.",
+  "effectScript": "scripts/status/confusion.csx",
+  "effectParameters": {
+    "minTurns": 1,
+    "maxTurns": 4,
+    "selfHitChance": 33,
+    "selfHitPower": 40
+  },
+  "canBeOverwritten": true,
+  "curableBy": ["Full Heal", "Persim Berry", "Lum Berry"],
+  "preventedBy": [],
+  "iconPath": "sprites/status/confusion.png"
+}
+

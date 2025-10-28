@@ -1,0 +1,17 @@
+{
+  "id": "ground",
+  "name": "Ground",
+  "color": "#E0C068",
+  "description": "Ground type Pokemon",
+  "matchups": {
+    "Fire": 2.0,
+    "Electric": 2.0,
+    "Grass": 0.5,
+    "Poison": 2.0,
+    "Flying": 0.0,
+    "Bug": 0.5,
+    "Rock": 2.0,
+    "Steel": 2.0
+  }
+}
+

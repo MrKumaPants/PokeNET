@@ -1,0 +1,14 @@
+{
+  "id": "psychic",
+  "name": "Psychic",
+  "color": "#F85888",
+  "description": "Psychic type Pokemon",
+  "matchups": {
+    "Fighting": 2.0,
+    "Poison": 2.0,
+    "Psychic": 0.5,
+    "Dark": 0.0,
+    "Steel": 0.5
+  }
+}
+

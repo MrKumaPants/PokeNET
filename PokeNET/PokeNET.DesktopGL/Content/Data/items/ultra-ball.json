@@ -1,0 +1,18 @@
+{
+  "id": "ultra-ball",
+  "name": "Ultra Ball",
+  "category": "Pokeball",
+  "buyPrice": 1200,
+  "sellPrice": 600,
+  "description": "An ultra-high-performance Poke Ball that provides a higher success rate for catching Pokemon than a Great Ball.",
+  "consumable": true,
+  "usableInBattle": true,
+  "usableOutsideBattle": false,
+  "holdable": false,
+  "effectScript": "scripts/items/catch.csx",
+  "effectParameters": {
+    "catchRate": 2.0
+  },
+  "spritePath": "sprites/items/ultra_ball.png"
+}
+

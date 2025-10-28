@@ -1,0 +1,45 @@
+{
+  "locationId": "viridian_forest",
+  "locationName": "Viridian Forest",
+  "grassEncounters": [
+    {
+      "speciesId": "caterpie",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 40,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "weedle",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 40,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "pidgey",
+      "minLevel": 5,
+      "maxLevel": 8,
+      "rate": 15,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    },
+    {
+      "speciesId": "pikachu",
+      "minLevel": 3,
+      "maxLevel": 5,
+      "rate": 5,
+      "timeOfDay": "Any",
+      "weather": "Any"
+    }
+  ],
+  "waterEncounters": [],
+  "oldRodEncounters": [],
+  "goodRodEncounters": [],
+  "superRodEncounters": [],
+  "caveEncounters": [],
+  "specialEncounters": []
+}
+

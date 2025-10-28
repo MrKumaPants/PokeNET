@@ -1,0 +1,15 @@
+{
+  "id": "rare-candy",
+  "name": "Rare Candy",
+  "category": "Medicine",
+  "buyPrice": 0,
+  "sellPrice": 2500,
+  "description": "A candy that is packed with energy. It raises the level of a single Pokemon by one.",
+  "consumable": true,
+  "usableInBattle": false,
+  "usableOutsideBattle": true,
+  "holdable": false,
+  "effectScript": "scripts/items/level_up.csx",
+  "spritePath": "sprites/items/rare_candy.png"
+}
+

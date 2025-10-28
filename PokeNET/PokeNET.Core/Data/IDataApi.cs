@@ -13,11 +13,11 @@ public interface IDataApi
     // ==================== Species Data ====================
 
     /// <summary>
-    /// Retrieves species data by Pokedex ID.
+    /// Retrieves species data by identifier.
     /// </summary>
-    /// <param name="speciesId">National Pokedex number (1-1025+).</param>
+    /// <param name="speciesId">Species identifier.</param>
     /// <returns>Species data, or null if not found.</returns>
-    Task<SpeciesData?> GetSpeciesAsync(int speciesId);
+    Task<SpeciesData?> GetSpeciesAsync(string speciesId);
 
     /// <summary>
     /// Retrieves species data by name.
@@ -35,11 +35,18 @@ public interface IDataApi
     // ==================== Move Data ====================
 
     /// <summary>
+    /// Retrieves move data by identifier.
+    /// </summary>
+    /// <param name="moveId">Move identifier.</param>
+    /// <returns>Move data, or null if not found.</returns>
+    Task<MoveData?> GetMoveAsync(string moveId);
+
+    /// <summary>
     /// Retrieves move data by name.
     /// </summary>
-    /// <param name="moveName">Move name (case-insensitive).</param>
+    /// <param name="name">Move name (case-insensitive).</param>
     /// <returns>Move data, or null if not found.</returns>
-    Task<MoveData?> GetMoveAsync(string moveName);
+    Task<MoveData?> GetMoveByNameAsync(string name);
 
     /// <summary>
     /// Retrieves all move data.
@@ -61,7 +68,7 @@ public interface IDataApi
     /// </summary>
     /// <param name="itemId">Item identifier.</param>
     /// <returns>Item data, or null if not found.</returns>
-    Task<ItemData?> GetItemAsync(int itemId);
+    Task<ItemData?> GetItemAsync(string itemId);
 
     /// <summary>
     /// Retrieves item data by name.
@@ -86,11 +93,18 @@ public interface IDataApi
     // ==================== Encounter Data ====================
 
     /// <summary>
-    /// Retrieves encounter table for a location.
+    /// Retrieves encounter table for a location by identifier.
     /// </summary>
     /// <param name="locationId">Location identifier.</param>
     /// <returns>Encounter table, or null if not found.</returns>
     Task<EncounterTable?> GetEncountersAsync(string locationId);
+
+    /// <summary>
+    /// Retrieves encounter table for a location by name.
+    /// </summary>
+    /// <param name="name">Location name (case-insensitive).</param>
+    /// <returns>Encounter table, or null if not found.</returns>
+    Task<EncounterTable?> GetEncountersByNameAsync(string name);
 
     /// <summary>
     /// Retrieves all encounter tables.
@@ -98,20 +112,29 @@ public interface IDataApi
     /// <returns>Read-only list of all encounter tables.</returns>
     Task<IReadOnlyList<EncounterTable>> GetAllEncountersAsync();
 
-    // ==================== Type Effectiveness ====================
+    // ==================== Type Data ====================
 
     /// <summary>
-    /// Retrieves type information for a given type name.
+    /// Retrieves type information by identifier.
     /// </summary>
-    /// <param name="typeName">Name of the type (e.g., "Fire", "Water").</param>
+    /// <param name="typeId">Type identifier (e.g., "fire", "water").</param>
     /// <returns>Type information, or null if not found.</returns>
-    Task<TypeData?> GetTypeAsync(string typeName);
+    Task<TypeData?> GetTypeAsync(string typeId);
+
+    /// <summary>
+    /// Retrieves type information by name.
+    /// </summary>
+    /// <param name="name">Name of the type (e.g., "Fire", "Water") (case-insensitive).</param>
+    /// <returns>Type information, or null if not found.</returns>
+    Task<TypeData?> GetTypeByNameAsync(string name);
 
     /// <summary>
     /// Retrieves all loaded types.
     /// </summary>
     /// <returns>Read-only list of all type information.</returns>
     Task<IReadOnlyList<TypeData>> GetAllTypesAsync();
+
+    // ==================== Type Effectiveness ====================
 
     /// <summary>
     /// Retrieves type effectiveness multiplier for a single-type matchup.

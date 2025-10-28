@@ -1,0 +1,15 @@
+{
+  "id": "flinch",
+  "name": "Flinch",
+  "type": "Volatile",
+  "description": "The Pokemon flinched and cannot move this turn.",
+  "effectScript": "scripts/status/flinch.csx",
+  "effectParameters": {
+    "duration": 1
+  },
+  "canBeOverwritten": true,
+  "curableBy": [],
+  "preventedBy": [],
+  "iconPath": "sprites/status/flinch.png"
+}
+

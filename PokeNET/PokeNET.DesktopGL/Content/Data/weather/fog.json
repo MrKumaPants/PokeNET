@@ -1,0 +1,12 @@
+{
+  "id": "fog",
+  "name": "Fog",
+  "description": "The battlefield is covered in a mysterious fog. Accuracy is lowered.",
+  "effectScript": "scripts/weather/fog.csx",
+  "effectParameters": {
+    "accuracyMultiplier": 0.6
+  },
+  "duration": 5,
+  "iconPath": "sprites/weather/fog.png"
+}
+

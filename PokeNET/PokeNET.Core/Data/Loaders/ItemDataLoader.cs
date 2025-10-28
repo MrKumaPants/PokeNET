@@ -35,7 +35,7 @@ public class ItemDataLoader : JsonArrayLoader<ItemData>
     private bool ValidateItem(ItemData item)
     {
         // Validate required fields
-        if (!ValidateRange(item.Id, nameof(item.Id), 1, 10000))
+        if (!ValidateString(item.Id, nameof(item.Id)))
             return false;
 
         if (!ValidateString(item.Name, nameof(item.Name)))

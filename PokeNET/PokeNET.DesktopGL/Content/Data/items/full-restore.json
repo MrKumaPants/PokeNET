@@ -1,0 +1,15 @@
+{
+  "id": "full-restore",
+  "name": "Full Restore",
+  "category": "Medicine",
+  "buyPrice": 3000,
+  "sellPrice": 1500,
+  "description": "A medicine that fully restores the HP and heals any status conditions of a single Pokemon.",
+  "consumable": true,
+  "usableInBattle": true,
+  "usableOutsideBattle": true,
+  "holdable": false,
+  "effectScript": "scripts/items/full_restore.csx",
+  "spritePath": "sprites/items/full_restore.png"
+}
+

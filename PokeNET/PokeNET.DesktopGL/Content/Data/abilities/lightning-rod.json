@@ -1,0 +1,12 @@
+{
+  "id": "lightning-rod",
+  "name": "Lightning Rod",
+  "description": "Draws in all Electric-type moves. Instead of being hit, it boosts its Special Attack.",
+  "effectScript": "scripts/abilities/lightning_rod.csx",
+  "effectParameters": {
+    "redirectType": "Electric",
+    "statBoost": "SpecialAttack",
+    "boostStages": 1
+  }
+}
+

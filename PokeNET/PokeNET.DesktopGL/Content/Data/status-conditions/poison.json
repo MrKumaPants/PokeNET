@@ -1,0 +1,15 @@
+{
+  "id": "poison",
+  "name": "Poison",
+  "type": "Major",
+  "description": "The Pokemon is poisoned and takes damage each turn.",
+  "effectScript": "scripts/status/poison.csx",
+  "effectParameters": {
+    "damagePercent": 12.5
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Antidote", "Pecha Berry", "Lum Berry", "Rest"],
+  "preventedBy": ["Poison", "Steel"],
+  "iconPath": "sprites/status/poison.png"
+}
+

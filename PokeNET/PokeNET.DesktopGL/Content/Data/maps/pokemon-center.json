@@ -1,0 +1,255 @@
+{
+  "id": "pokemon_center_generic",
+  "name": "Pokemon Center",
+  "region": "Kanto",
+  "mapType": "Interior",
+  "width": 14,
+  "height": 10,
+  "tilesetId": "interior_pokecenter",
+  "music": "music/pokecenter_theme.ogg",
+  "ambientSound": null,
+  "weather": null,
+  "canFly": false,
+  "canEscape": false,
+  "isIndoors": true,
+  "lighting": "Indoor",
+  "layers": [
+    {
+      "name": "Floor",
+      "zIndex": 0,
+      "data": "base64_encoded_tile_data"
+    },
+    {
+      "name": "Walls",
+      "zIndex": 1,
+      "data": "base64_encoded_tile_data"
+    },
+    {
+      "name": "Furniture",
+      "zIndex": 2,
+      "data": "base64_encoded_tile_data"
+    }
+  ],
+  "collisionLayer": {
+    "name": "Collision",
+    "data": "base64_encoded_collision_data"
+  },
+  "warps": [
+    {
+      "id": "exit_door",
+      "x": 7,
+      "y": 9,
+      "targetMapId": "previous_map",
+      "targetX": 0,
+      "targetY": 0,
+      "warpType": "Door",
+      "direction": "Down",
+      "requiresInteraction": false,
+      "useDynamicTarget": true,
+      "animation": "door_open"
+    },
+    {
+      "id": "second_floor_stairs",
+      "x": 13,
+      "y": 2,
+      "targetMapId": "pokemon_center_2f",
+      "targetX": 1,
+      "targetY": 8,
+      "warpType": "Stairs",
+      "direction": "Right",
+      "requiresInteraction": false
+    }
+  ],
+  "npcs": [
+    {
+      "id": "nurse_joy",
+      "name": "Nurse Joy",
+      "spriteId": "nurse_joy",
+      "x": 7,
+      "y": 3,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "npcType": "Healer",
+      "dialogue": [
+        {
+          "text": "Welcome to our Pokemon Center!",
+          "conditions": null
+        },
+        {
+          "text": "Would you like to heal your Pokemon?",
+          "conditions": null,
+          "choices": [
+            {
+              "text": "Yes",
+              "script": "scripts/npcs/nurse_joy_heal.csx"
+            },
+            {
+              "text": "No",
+              "script": null
+            }
+          ]
+        }
+      ],
+      "interactionScript": "scripts/npcs/nurse_joy.csx",
+      "interactDistance": 2
+    },
+    {
+      "id": "pc_attendant",
+      "name": "PC",
+      "spriteId": "pc_machine",
+      "x": 2,
+      "y": 3,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "npcType": "PC",
+      "dialogue": [],
+      "interactionScript": "scripts/systems/pc_access.csx",
+      "isObject": true
+    },
+    {
+      "id": "mart_attendant",
+      "name": "Clerk",
+      "spriteId": "clerk",
+      "x": 11,
+      "y": 3,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "npcType": "Shop",
+      "shopInventory": [
+        {"itemId": 4, "stock": -1},
+        {"itemId": 1, "stock": -1},
+        {"itemId": 2, "stock": -1},
+        {"itemId": 7, "stock": -1}
+      ],
+      "dialogue": [
+        {
+          "text": "Welcome to the Poke Mart!",
+          "conditions": null
+        },
+        {
+          "text": "What can I get for you?",
+          "conditions": null
+        }
+      ],
+      "interactionScript": "scripts/npcs/shop_clerk.csx"
+    },
+    {
+      "id": "resting_trainer",
+      "name": "Youngster",
+      "spriteId": "youngster",
+      "x": 3,
+      "y": 7,
+      "direction": "Right",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "npcType": null,
+      "dialogue": [
+        {
+          "text": "Pokemon Centers are free to use! How convenient!",
+          "conditions": null
+        }
+      ],
+      "interactionScript": null
+    },
+    {
+      "id": "link_cable_trader",
+      "name": "Cable Club Receptionist",
+      "spriteId": "receptionist",
+      "x": 10,
+      "y": 7,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "npcType": "Trade",
+      "dialogue": [
+        {
+          "text": "Would you like to trade Pokemon?",
+          "conditions": null
+        }
+      ],
+      "interactionScript": "scripts/npcs/trade_receptionist.csx"
+    }
+  ],
+  "trainers": [],
+  "items": [],
+  "encountersId": null,
+  "encounterRate": 0,
+  "encounterZones": [],
+  "signs": [],
+  "triggers": [
+    {
+      "id": "auto_heal_trigger",
+      "x": 7,
+      "y": 5,
+      "width": 1,
+      "height": 1,
+      "triggerType": "StepOn",
+      "script": "scripts/events/auto_heal_prompt.csx",
+      "requiresFlags": null,
+      "setsFlags": null,
+      "oneTime": false,
+      "priority": 5
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "main_entrance",
+      "x": 7,
+      "y": 8,
+      "direction": "Up",
+      "isDefault": true
+    },
+    {
+      "id": "from_2f",
+      "x": 13,
+      "y": 3,
+      "direction": "Left",
+      "isDefault": false
+    }
+  ],
+  "berryTrees": [],
+  "cuttableTrees": [],
+  "smashableRocks": [],
+  "hiddenAbilities": {
+    "allowHiddenAbilities": false
+  },
+  "timeBasedEvents": [],
+  "mapFlags": {
+    "safeZone": true,
+    "preventRunning": false,
+    "preventSaving": false
+  },
+  "interactableObjects": [
+    {
+      "id": "pc_machine",
+      "x": 2,
+      "y": 3,
+      "objectType": "PC",
+      "script": "scripts/systems/pc_access.csx",
+      "sprite": "sprites/objects/pc.png"
+    },
+    {
+      "id": "healing_machine",
+      "x": 6,
+      "y": 2,
+      "objectType": "HealingMachine",
+      "script": null,
+      "sprite": "sprites/objects/healing_machine.png",
+      "isDecoration": true
+    }
+  ]
+}
+

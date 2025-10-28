@@ -1,0 +1,9 @@
+{
+  "id": "naughty",
+  "name": "Naughty",
+  "increasedStat": "Attack",
+  "decreasedStat": "SpecialDefense",
+  "statModifier": 1.1,
+  "description": "Boosts Attack but lowers Special Defense."
+}
+

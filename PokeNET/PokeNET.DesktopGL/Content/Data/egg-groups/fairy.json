@@ -1,0 +1,11 @@
+{
+  "id": "fairy",
+  "name": "Fairy",
+  "description": "Pokemon in this group are cute, magical, or fairytale-like creatures.",
+  "compatibleWith": ["fairy", "field", "human-like", "grass"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

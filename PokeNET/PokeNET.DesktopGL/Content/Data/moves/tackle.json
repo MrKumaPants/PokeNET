@@ -1,0 +1,15 @@
+{
+  "id": "tackle",
+  "name": "Tackle",
+  "type": "Normal",
+  "category": "Physical",
+  "power": 40,
+  "accuracy": 100,
+  "pp": 35,
+  "priority": 0,
+  "target": "SingleTarget",
+  "effectChance": 0,
+  "description": "A physical attack in which the user charges and slams into the target with its whole body.",
+  "flags": ["Contact", "Protect", "Mirror"]
+}
+

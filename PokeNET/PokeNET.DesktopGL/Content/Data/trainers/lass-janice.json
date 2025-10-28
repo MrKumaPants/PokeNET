@@ -1,0 +1,37 @@
+{
+  "id": "lass-janice",
+  "name": "Lass Janice",
+  "class": "Lass",
+  "gender": "Female",
+  "spriteId": "lass",
+  "team": [
+    {
+      "speciesId": "pidgey",
+      "level": 9,
+      "ability": "Keen Eye",
+      "moves": ["Tackle", "Sand Attack"],
+      "nature": "Docile",
+      "ivs": {
+        "hp": 10,
+        "attack": 10,
+        "defense": 10,
+        "specialAttack": 10,
+        "specialDefense": 10,
+        "speed": 10
+      }
+    },
+    {
+      "speciesId": "pidgey",
+      "level": 9,
+      "ability": "Tangled Feet",
+      "moves": ["Tackle", "Gust"],
+      "nature": "Bashful"
+    }
+  ],
+  "moneyReward": 144,
+  "introText": "You looked at me, didn't you?",
+  "defeatText": "I was just too busy!",
+  "rematchable": true,
+  "aiLevel": 1
+}
+

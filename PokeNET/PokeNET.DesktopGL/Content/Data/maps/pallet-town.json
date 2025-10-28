@@ -1,0 +1,272 @@
+{
+  "id": "pallet_town",
+  "name": "Pallet Town",
+  "region": "Kanto",
+  "mapType": "Town",
+  "width": 20,
+  "height": 18,
+  "tilesetId": "kanto_overworld",
+  "music": "music/town_theme.ogg",
+  "ambientSound": null,
+  "weather": "Clear",
+  "canFly": true,
+  "canEscape": false,
+  "isIndoors": false,
+  "lighting": "Day",
+  "layers": [
+    {
+      "name": "Ground",
+      "zIndex": 0,
+      "tiles": [
+        "# 2D array of tile IDs (width x height)",
+        "# Each number references a tile in the tileset",
+        "# -1 or 0 = empty/passable, other numbers = tile graphics"
+      ],
+      "data": "base64_encoded_tile_data_or_csv"
+    },
+    {
+      "name": "Decoration",
+      "zIndex": 1,
+      "tiles": [],
+      "data": "base64_encoded_tile_data_or_csv"
+    }
+  ],
+  "collisionLayer": {
+    "name": "Collision",
+    "tiles": [
+      "# 0 = passable, 1 = blocked, 2 = water, 3 = tall grass, 4 = ledge"
+    ],
+    "data": "base64_encoded_collision_data"
+  },
+  "warps": [
+    {
+      "id": "player_house_door",
+      "x": 5,
+      "y": 11,
+      "targetMapId": "player_house_interior",
+      "targetX": 7,
+      "targetY": 8,
+      "warpType": "Door",
+      "direction": "Up",
+      "requiresInteraction": false,
+      "animation": "door_open"
+    },
+    {
+      "id": "rival_house_door",
+      "x": 13,
+      "y": 11,
+      "targetMapId": "rival_house_interior",
+      "targetX": 3,
+      "targetY": 8,
+      "warpType": "Door",
+      "direction": "Up",
+      "requiresInteraction": false
+    },
+    {
+      "id": "oak_lab_door",
+      "x": 9,
+      "y": 16,
+      "targetMapId": "oak_lab_interior",
+      "targetX": 5,
+      "targetY": 11,
+      "warpType": "Door",
+      "direction": "Up",
+      "requiresInteraction": false
+    },
+    {
+      "id": "route_1_connection",
+      "x": 9,
+      "y": 0,
+      "targetMapId": "route_1",
+      "targetX": 9,
+      "targetY": 57,
+      "warpType": "MapEdge",
+      "direction": "Up",
+      "requiresInteraction": false
+    }
+  ],
+  "npcs": [
+    {
+      "id": "oak_town_greeter",
+      "name": "Old Man",
+      "spriteId": "oldman",
+      "x": 8,
+      "y": 7,
+      "direction": "Down",
+      "movementScript": null,
+      "movementParameters": null,
+      "viewRange": 0,
+      "isTrainer": false,
+      "dialogue": [
+        {
+          "text": "Welcome to Pallet Town!",
+          "conditions": null
+        },
+        {
+          "text": "Professor Oak's lab is just south of here.",
+          "conditions": null
+        }
+      ],
+      "interactionScript": null
+    },
+    {
+      "id": "mom_outside",
+      "name": "Mom",
+      "spriteId": "mom",
+      "x": 4,
+      "y": 10,
+      "direction": "Right",
+      "movementScript": "scripts/movement/wander.csx",
+      "movementParameters": {
+        "areaX": 3,
+        "areaY": 9,
+        "areaWidth": 3,
+        "areaHeight": 3,
+        "moveInterval": 3000
+      },
+      "viewRange": 0,
+      "isTrainer": false,
+      "dialogue": [
+        {
+          "text": "Hi [PLAYER]! Be careful out there!",
+          "conditions": {
+            "flags": ["got_starter"]
+          }
+        },
+        {
+          "text": "Professor Oak wanted to see you, dear.",
+          "conditions": null
+        }
+      ],
+      "interactionScript": "scripts/npcs/mom_pallet_town.csx"
+    }
+  ],
+  "trainers": [
+    {
+      "npcId": "suspicious_trainer",
+      "trainerId": 50,
+      "viewRange": 3,
+      "canReChallenge": false,
+      "defeatedFlag": "defeated_pallet_town_trainer_1"
+    }
+  ],
+  "items": [
+    {
+      "id": "potion_by_lab",
+      "itemId": 1,
+      "x": 7,
+      "y": 15,
+      "itemType": "Overworld",
+      "visible": true,
+      "respawns": false,
+      "obtainedFlag": "pallet_town_potion_obtained",
+      "sprite": "sprites/items/pokeball_item.png"
+    },
+    {
+      "id": "hidden_potion",
+      "itemId": 1,
+      "x": 15,
+      "y": 8,
+      "itemType": "Hidden",
+      "visible": false,
+      "respawns": false,
+      "obtainedFlag": "pallet_town_hidden_potion",
+      "requiresItemfinder": false
+    }
+  ],
+  "wildEncounters": null,
+  "signs": [
+    {
+      "id": "pallet_town_sign",
+      "x": 8,
+      "y": 9,
+      "direction": "Up",
+      "text": [
+        "PALLET TOWN",
+        "Shades of your journey await!"
+      ]
+    },
+    {
+      "id": "player_house_sign",
+      "x": 4,
+      "y": 11,
+      "direction": "Up",
+      "text": [
+        "[PLAYER]'S HOUSE"
+      ]
+    },
+    {
+      "id": "oak_lab_sign",
+      "x": 8,
+      "y": 16,
+      "direction": "Up",
+      "text": [
+        "OAK POKEMON RESEARCH LAB"
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "id": "oak_intro_trigger",
+      "x": 9,
+      "y": 5,
+      "width": 1,
+      "height": 1,
+      "triggerType": "StepOn",
+      "script": "scripts/events/oak_intro.csx",
+      "requiresFlags": null,
+      "setsFlags": ["oak_intro_seen"],
+      "oneTime": true,
+      "priority": 10
+    },
+    {
+      "id": "rival_challenge_trigger",
+      "x": 9,
+      "y": 1,
+      "width": 2,
+      "height": 1,
+      "triggerType": "StepOn",
+      "script": "scripts/events/rival_first_battle.csx",
+      "requiresFlags": ["got_starter"],
+      "setsFlags": ["rival_first_battle_triggered"],
+      "oneTime": true,
+      "priority": 10
+    }
+  ],
+  "spawnPoints": [
+    {
+      "id": "default_spawn",
+      "x": 9,
+      "y": 10,
+      "direction": "Down",
+      "isDefault": true
+    },
+    {
+      "id": "from_route_1",
+      "x": 9,
+      "y": 1,
+      "direction": "Down",
+      "isDefault": false
+    }
+  ],
+  "berryTrees": [],
+  "cuttableTrees": [],
+  "smashableRocks": [],
+  "hiddenAbilities": {
+    "allowHiddenAbilities": false
+  },
+  "timeBasedEvents": [
+    {
+      "id": "morning_mom_greeting",
+      "timeOfDay": "Morning",
+      "script": "scripts/events/morning_mom.csx",
+      "requiresFlags": ["got_starter"]
+    }
+  ],
+  "mapFlags": {
+    "safeZone": true,
+    "preventRunning": false,
+    "preventSaving": false
+  }
+}
+

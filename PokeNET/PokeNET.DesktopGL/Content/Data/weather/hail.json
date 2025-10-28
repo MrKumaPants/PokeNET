@@ -1,0 +1,15 @@
+{
+  "id": "hail",
+  "name": "Hail",
+  "description": "It's hailing. All Pokemon except Ice-type take damage each turn.",
+  "effectScript": "scripts/weather/hail.csx",
+  "effectParameters": {
+    "damagePercent": 6.25,
+    "immuneTypes": ["Ice"],
+    "enablesBlizzard": true,
+    "activatesAbilities": ["Ice Body", "Snow Cloak", "Slush Rush"]
+  },
+  "duration": 5,
+  "iconPath": "sprites/weather/hail.png"
+}
+

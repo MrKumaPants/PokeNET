@@ -1,0 +1,11 @@
+{
+  "id": "grass",
+  "name": "Grass",
+  "description": "Pokemon in this group are plant-based or have plant-like characteristics.",
+  "compatibleWith": ["grass", "monster", "field", "fairy", "dragon"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

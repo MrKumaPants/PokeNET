@@ -1,0 +1,16 @@
+{
+  "id": "freeze",
+  "name": "Freeze",
+  "type": "Major",
+  "description": "The Pokemon is frozen solid and cannot move.",
+  "effectScript": "scripts/status/freeze.csx",
+  "effectParameters": {
+    "thawChance": 20,
+    "thawOnFireMove": true
+  },
+  "canBeOverwritten": false,
+  "curableBy": ["Full Heal", "Ice Heal", "Lum Berry", "Rest"],
+  "preventedBy": ["Ice"],
+  "iconPath": "sprites/status/freeze.png"
+}
+

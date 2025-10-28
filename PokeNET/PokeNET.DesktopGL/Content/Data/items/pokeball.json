@@ -1,0 +1,18 @@
+{
+    "id": "pokeball",
+    "name": "Pokeball",
+    "category": "Pokeball",
+    "buyPrice": 200,
+    "sellPrice": 100,
+    "description": "A device for catching wild Pokemon. It is thrown like a ball at the target. It is designed as a capsule system.",
+    "consumable": true,
+    "usableInBattle": true,
+    "usableOutsideBattle": false,
+    "holdable": false,
+    "effectScript": "scripts/items/catch.csx",
+    "effectParameters": {
+        "catchRate": 1.0
+    },
+    "spritePath": "sprites/items/pokeball.png"
+}
+

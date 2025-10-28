@@ -1,0 +1,12 @@
+{
+  "id": "ditto",
+  "name": "Ditto",
+  "description": "Only contains Ditto, which can breed with any breedable Pokemon except those in the Undiscovered group.",
+  "compatibleWith": ["monster", "water-1", "bug", "flying", "field", "fairy", "grass", "human-like", "water-3", "mineral", "amorphous", "water-2", "dragon"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": false,
+    "alwaysProducesOtherSpecies": true
+  }
+}
+

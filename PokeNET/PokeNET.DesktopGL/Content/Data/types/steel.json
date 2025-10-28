@@ -1,0 +1,16 @@
+{
+  "id": "steel",
+  "name": "Steel",
+  "color": "#B8B8D0",
+  "description": "Steel type Pokemon",
+  "matchups": {
+    "Fire": 0.5,
+    "Water": 0.5,
+    "Electric": 0.5,
+    "Ice": 2.0,
+    "Rock": 2.0,
+    "Steel": 0.5,
+    "Fairy": 2.0
+  }
+}
+

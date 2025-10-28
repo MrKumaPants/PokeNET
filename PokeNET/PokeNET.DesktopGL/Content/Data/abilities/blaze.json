@@ -1,0 +1,12 @@
+{
+  "id": "blaze",
+  "name": "Blaze",
+  "description": "Powers up Fire-type moves when the Pokemon's HP is low.",
+  "effectScript": "scripts/abilities/blaze.csx",
+  "effectParameters": {
+    "triggerHPPercent": 33,
+    "boostMultiplier": 1.5,
+    "affectedTypes": ["Fire"]
+  }
+}
+

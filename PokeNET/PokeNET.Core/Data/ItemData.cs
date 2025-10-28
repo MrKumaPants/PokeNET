@@ -9,7 +9,7 @@ public class ItemData
     /// <summary>
     /// Unique item identifier.
     /// </summary>
-    public int Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     /// <summary>
     /// Item name.

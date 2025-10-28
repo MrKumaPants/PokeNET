@@ -1,0 +1,50 @@
+{
+  "id": "gym-leader-brock",
+  "name": "Brock",
+  "class": "Gym Leader",
+  "gender": "Male",
+  "spriteId": "brock",
+  "team": [
+    {
+      "speciesId": "geodude",
+      "level": 12,
+      "ability": "Sturdy",
+      "moves": ["Tackle", "Defense Curl", "Rock Throw"],
+      "nature": "Adamant",
+      "ivs": {
+        "hp": 25,
+        "attack": 25,
+        "defense": 25,
+        "specialAttack": 25,
+        "specialDefense": 25,
+        "speed": 25
+      },
+      "heldItem": "oran-berry"
+    },
+    {
+      "speciesId": "onix",
+      "level": 14,
+      "ability": "Rock Head",
+      "moves": ["Bind", "Rock Throw", "Rage", "Screech"],
+      "nature": "Adamant",
+      "ivs": {
+        "hp": 25,
+        "attack": 25,
+        "defense": 25,
+        "specialAttack": 25,
+        "specialDefense": 25,
+        "speed": 25
+      },
+      "heldItem": "sitrus-berry"
+    }
+  ],
+  "moneyReward": 1400,
+  "badge": "Boulder Badge",
+  "introText": "I'm Brock! I'm Pewter's Gym Leader! I believe in rock hard defense and determination!",
+  "defeatText": "I took you for granted. As proof of your victory, here's the Boulder Badge!",
+  "victoryText": "There are all kinds of Trainers in the world!",
+  "rematchable": false,
+  "aiLevel": 5,
+  "rewardItems": ["tm39"]
+}
+

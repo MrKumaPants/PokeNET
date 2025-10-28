@@ -1,0 +1,11 @@
+{
+  "id": "field",
+  "name": "Field",
+  "description": "Pokemon in this group are mostly terrestrial mammals.",
+  "compatibleWith": ["field", "monster", "water-1", "flying", "dragon", "fairy", "grass", "human-like"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

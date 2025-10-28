@@ -1,0 +1,15 @@
+{
+  "id": "leech-seed",
+  "name": "Leech Seed",
+  "type": "Volatile",
+  "description": "The Pokemon is seeded and loses HP each turn, which heals the attacker.",
+  "effectScript": "scripts/status/leech_seed.csx",
+  "effectParameters": {
+    "drainPercent": 12.5
+  },
+  "canBeOverwritten": true,
+  "curableBy": ["Switch Out"],
+  "preventedBy": ["Grass"],
+  "iconPath": "sprites/status/leech_seed.png"
+}
+

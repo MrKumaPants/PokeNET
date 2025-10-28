@@ -1,0 +1,9 @@
+{
+  "id": "naive",
+  "name": "Naive",
+  "increasedStat": "Speed",
+  "decreasedStat": "SpecialDefense",
+  "statModifier": 1.1,
+  "description": "Boosts Speed but lowers Special Defense."
+}
+

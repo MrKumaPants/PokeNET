@@ -1,0 +1,15 @@
+{
+  "id": "quick-attack",
+  "name": "Quick Attack",
+  "type": "Normal",
+  "category": "Physical",
+  "power": 40,
+  "accuracy": 100,
+  "pp": 30,
+  "priority": 1,
+  "target": "SingleTarget",
+  "effectChance": 0,
+  "description": "The user lunges at the target at a speed that makes it almost invisible. This move always goes first.",
+  "flags": ["Contact", "Protect", "Mirror"]
+}
+

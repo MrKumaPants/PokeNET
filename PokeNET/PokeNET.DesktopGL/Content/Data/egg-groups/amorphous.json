@@ -1,0 +1,11 @@
+{
+  "id": "amorphous",
+  "name": "Amorphous",
+  "description": "Pokemon in this group lack a solid form or have gaseous/ectoplasmic bodies.",
+  "compatibleWith": ["amorphous"],
+  "breedingModifiers": {
+    "baseSteps": 5120,
+    "eggMoveInheritance": true
+  }
+}
+

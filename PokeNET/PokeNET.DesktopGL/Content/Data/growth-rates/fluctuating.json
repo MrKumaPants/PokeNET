@@ -1,0 +1,29 @@
+{
+  "id": "fluctuating",
+  "name": "Fluctuating",
+  "description": "Experience requirements fluctuate throughout leveling.",
+  "levelTable": [
+    { "level": 1, "experience": 0 },
+    { "level": 5, "experience": 130 },
+    { "level": 10, "experience": 1040 },
+    { "level": 15, "experience": 3513 },
+    { "level": 20, "experience": 8327 },
+    { "level": 25, "experience": 15938 },
+    { "level": 30, "experience": 26977 },
+    { "level": 35, "experience": 42456 },
+    { "level": 40, "experience": 62878 },
+    { "level": 45, "experience": 88573 },
+    { "level": 50, "experience": 120000 },
+    { "level": 55, "experience": 157949 },
+    { "level": 60, "experience": 203340 },
+    { "level": 65, "experience": 257223 },
+    { "level": 70, "experience": 320890 },
+    { "level": 75, "experience": 395857 },
+    { "level": 80, "experience": 483895 },
+    { "level": 85, "experience": 587134 },
+    { "level": 90, "experience": 707998 },
+    { "level": 95, "experience": 849248 },
+    { "level": 100, "experience": 1640000 }
+  ]
+}
+

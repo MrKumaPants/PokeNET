@@ -1,0 +1,10 @@
+{
+  "id": "sturdy",
+  "name": "Sturdy",
+  "description": "The Pokemon cannot be knocked out with one hit. One-hit KO moves will also fail to knock it out.",
+  "effectScript": "scripts/abilities/sturdy.csx",
+  "effectParameters": {
+    "preventOHKO": true
+  }
+}
+

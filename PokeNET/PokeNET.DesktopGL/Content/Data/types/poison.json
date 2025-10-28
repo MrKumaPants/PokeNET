@@ -1,0 +1,16 @@
+{
+  "id": "poison",
+  "name": "Poison",
+  "color": "#A040A0",
+  "description": "Poison type Pokemon",
+  "matchups": {
+    "Grass": 2.0,
+    "Poison": 0.5,
+    "Ground": 0.5,
+    "Rock": 0.5,
+    "Ghost": 0.5,
+    "Steel": 0.0,
+    "Fairy": 2.0
+  }
+}
+

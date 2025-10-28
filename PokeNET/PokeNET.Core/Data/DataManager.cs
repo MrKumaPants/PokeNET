@@ -2,37 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PokeNET.Core.Data;
+using PokeNET.Core.Data.Extensions;
 
 namespace PokeNET.Core.Data;
 
 /// <summary>
 /// Manages loading and caching of static Pokemon game data from JSON files.
-/// Implements thread-safe access with mod override support.
+/// Implements thread-safe access with mod override support using Entity Framework Core.
 /// Follows the Single Responsibility Principle - only manages data loading.
 /// </summary>
-public class DataManager : IDataApi
+public class DataManager : IDataApi, IDisposable
 {
     private readonly ILogger<DataManager> _logger;
+    private readonly GameDataContext _context;
     private readonly string _dataPath;
     private readonly List<string> _modDataPaths = new();
     private readonly SemaphoreSlim _loadLock = new(1, 1);
-
-    // Thread-safe caches
-    private Dictionary<string, SpeciesData> _speciesById = new();
-    private Dictionary<string, SpeciesData> _speciesByName = new();
-    private Dictionary<string, MoveData> _movesById = new();
-    private Dictionary<string, MoveData> _movesByName = new();
-    private Dictionary<string, ItemData> _itemsById = new();
-    private Dictionary<string, ItemData> _itemsByName = new();
-    private Dictionary<string, EncounterTable> _encountersById = new();
-    private Dictionary<string, EncounterTable> _encountersByName = new();
-    private Dictionary<string, TypeData> _typesById = new();
-    private Dictionary<string, TypeData> _typesByName = new();
 
     private bool _isLoaded;
     private bool _disposed;
@@ -42,16 +34,23 @@ public class DataManager : IDataApi
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase) }
+        Converters =
+        {
+            new System.Text.Json.Serialization.JsonStringEnumConverter(
+                System.Text.Json.JsonNamingPolicy.CamelCase
+            ),
+        },
     };
 
     /// <summary>
     /// Initializes a new data manager.
     /// </summary>
+    /// <param name="context">Entity Framework Core context for game data.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="dataPath">Base path for game data JSON files.</param>
-    public DataManager(ILogger<DataManager> logger, string dataPath)
+    public DataManager(GameDataContext context, ILogger<DataManager> logger, string dataPath)
     {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _dataPath = dataPath ?? throw new ArgumentNullException(nameof(dataPath));
 
@@ -87,7 +86,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _speciesById.TryGetValue(speciesId, out var species) ? species : null;
+        return await _context.Species.AsNoTracking().FirstOrDefaultAsync(s => s.Id == speciesId);
     }
 
     /// <inheritdoc/>
@@ -95,10 +94,15 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = name?.Trim().ToLowerInvariant();
-        return normalizedName != null && _speciesByName.TryGetValue(normalizedName, out var species)
-            ? species
-            : null;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var normalizedName = name.Trim();
+        return await _context
+            .Species.AsNoTracking()
+            .FirstOrDefaultAsync(s =>
+                s.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     /// <inheritdoc/>
@@ -106,7 +110,25 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _speciesById.Values.ToList().AsReadOnly();
+        return await _context.Species.AsNoTracking().ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<SpeciesData>> QuerySpeciesAsync(
+        Expression<Func<SpeciesData, bool>> predicate
+    )
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.Species.AsNoTracking().Where(predicate).ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<SpeciesData>> GetSpeciesByTypeAsync(string type)
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.GetSpeciesByTypeAsync(type);
     }
 
     // ==================== Move Data ====================
@@ -116,7 +138,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _movesById.TryGetValue(moveId, out var move) ? move : null;
+        return await _context.Moves.AsNoTracking().FirstOrDefaultAsync(m => m.Id == moveId);
     }
 
     /// <inheritdoc/>
@@ -124,10 +146,15 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = name?.Trim().ToLowerInvariant();
-        return normalizedName != null && _movesByName.TryGetValue(normalizedName, out var move)
-            ? move
-            : null;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var normalizedName = name.Trim();
+        return await _context
+            .Moves.AsNoTracking()
+            .FirstOrDefaultAsync(m =>
+                m.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     /// <inheritdoc/>
@@ -135,7 +162,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _movesById.Values.ToList().AsReadOnly();
+        return await _context.Moves.AsNoTracking().ToListAsync();
     }
 
     /// <inheritdoc/>
@@ -143,10 +170,39 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _movesById
-            .Values.Where(m => m.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
-            .ToList()
-            .AsReadOnly();
+        if (string.IsNullOrWhiteSpace(type))
+            return Array.Empty<MoveData>().ToList().AsReadOnly();
+
+        return await _context
+            .Moves.AsNoTracking()
+            .Where(m => m.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<MoveData>> QueryMovesAsync(
+        Expression<Func<MoveData, bool>> predicate
+    )
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.Moves.AsNoTracking().Where(predicate).ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<MoveData>> GetMovesByPowerRangeAsync(int minPower, int maxPower)
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.GetMovesByPowerRangeAsync(minPower, maxPower);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<MoveData>> GetMovesByCategoryAsync(MoveCategory category)
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.GetMovesByCategoryAsync(category);
     }
 
     // ==================== Item Data ====================
@@ -156,7 +212,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _itemsById.TryGetValue(itemId, out var item) ? item : null;
+        return await _context.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == itemId);
     }
 
     /// <inheritdoc/>
@@ -164,10 +220,15 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = name?.Trim().ToLowerInvariant();
-        return normalizedName != null && _itemsByName.TryGetValue(normalizedName, out var item)
-            ? item
-            : null;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var normalizedName = name.Trim();
+        return await _context
+            .Items.AsNoTracking()
+            .FirstOrDefaultAsync(i =>
+                i.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     /// <inheritdoc/>
@@ -175,7 +236,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _itemsById.Values.ToList().AsReadOnly();
+        return await _context.Items.AsNoTracking().ToListAsync();
     }
 
     /// <inheritdoc/>
@@ -183,7 +244,25 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _itemsById.Values.Where(i => i.Category == category).ToList().AsReadOnly();
+        return await _context.Items.AsNoTracking().Where(i => i.Category == category).ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ItemData>> QueryItemsAsync(
+        Expression<Func<ItemData, bool>> predicate
+    )
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.Items.AsNoTracking().Where(predicate).ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ItemData>> GetItemsByPriceRangeAsync(int minPrice, int maxPrice)
+    {
+        await EnsureDataLoadedAsync();
+
+        return await _context.GetItemsByPriceRangeAsync(minPrice, maxPrice);
     }
 
     // ==================== Encounter Data ====================
@@ -193,7 +272,9 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _encountersById.TryGetValue(locationId, out var table) ? table : null;
+        return await _context
+            .Encounters.AsNoTracking()
+            .FirstOrDefaultAsync(e => e.LocationId == locationId);
     }
 
     /// <inheritdoc/>
@@ -201,10 +282,15 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = name?.Trim().ToLowerInvariant();
-        return normalizedName != null && _encountersByName.TryGetValue(normalizedName, out var table)
-            ? table
-            : null;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var normalizedName = name.Trim();
+        return await _context
+            .Encounters.AsNoTracking()
+            .FirstOrDefaultAsync(e =>
+                e.LocationName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     /// <inheritdoc/>
@@ -212,7 +298,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _encountersById.Values.ToList().AsReadOnly();
+        return await _context.Encounters.AsNoTracking().ToListAsync();
     }
 
     // ==================== Cache Management ====================
@@ -228,7 +314,6 @@ public class DataManager : IDataApi
         try
         {
             _isLoaded = false;
-            ClearCaches();
             await LoadAllDataAsync();
         }
         finally
@@ -267,129 +352,298 @@ public class DataManager : IDataApi
     {
         _logger.LogInformation("Loading game data from disk...");
 
-        var tasks = new[]
-        {
-            LoadSpeciesDataAsync(),
-            LoadMoveDataAsync(),
-            LoadItemDataAsync(),
-            LoadEncounterDataAsync(),
-            LoadTypesAsync(),
-        };
+        // Load data from JSON files first (before clearing database)
+        var species = await LoadAllJsonFromDirectoryAsync<SpeciesData>("species");
+        var moves = await LoadAllJsonFromDirectoryAsync<MoveData>("moves");
+        var items = await LoadAllJsonFromDirectoryAsync<ItemData>("items");
+        var encounters = await LoadAllJsonFromDirectoryAsync<EncounterTable>("encounters");
+        var types = await LoadAllJsonFromDirectoryAsync<TypeData>("types");
 
-        await Task.WhenAll(tasks);
+        // Clear existing data and change tracker
+        _context.Species.RemoveRange(_context.Species);
+        _context.Moves.RemoveRange(_context.Moves);
+        _context.Items.RemoveRange(_context.Items);
+        _context.Encounters.RemoveRange(_context.Encounters);
+        _context.Types.RemoveRange(_context.Types);
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear(); // Clear change tracker to avoid tracking conflicts
+
+        // Process loaded data and add to database
+        // IMPORTANT: Add and save species first separately to avoid owned entity tracking conflicts
+        // EF Core needs each batch of entities saved before adding more with similar owned entity keys
+        await ProcessSpeciesDataAsync(species);
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear(); // Clear after species to avoid conflicts with other entities
+
+        await ProcessMoveDataAsync(moves);
+        await ProcessItemDataAsync(items);
+        await ProcessEncounterDataAsync(encounters);
+        await ProcessTypeDataAsync(types);
+
+        // Save all remaining loaded data to database
+        await _context.SaveChangesAsync();
 
         _isLoaded = true;
         _logger.LogInformation(
             "Data loaded: {SpeciesCount} species, {MoveCount} moves, {ItemCount} items, {EncounterCount} encounters, {TypeCount} types",
-            _speciesById.Count,
-            _movesById.Count,
-            _itemsById.Count,
-            _encountersById.Count,
-            _typesById.Count
+            await _context.Species.CountAsync(),
+            await _context.Moves.CountAsync(),
+            await _context.Items.CountAsync(),
+            await _context.Encounters.CountAsync(),
+            await _context.Types.CountAsync()
         );
+    }
+
+    private async Task ProcessSpeciesDataAsync(List<SpeciesData> species)
+    {
+        // Process entities: mod data comes first in the list (from LoadAllJsonFromDirectoryAsync),
+        // so first entity wins (mods override base). Use a dictionary to track which IDs we've seen.
+        var seenIds = new HashSet<string>();
+        var speciesToAdd = new List<SpeciesData>();
+
+        foreach (var s in species)
+        {
+            if (seenIds.Contains(s.Id))
+            {
+                // Skip duplicates - mods were loaded first, so first occurrence wins
+                continue;
+            }
+
+            seenIds.Add(s.Id);
+
+            // Create a clean copy to avoid tracking conflicts with owned entities
+            // This ensures each LevelMove, Evolution, etc. is a new instance
+            var cleanSpecies = CreateCleanSpeciesCopy(s);
+            speciesToAdd.Add(cleanSpecies);
+        }
+
+        // Add and save entities one at a time to avoid EF Core owned entity tracking conflicts
+        // CRITICAL ISSUE: EF Core tracks owned entities by their composite key (Level, MoveName) during Add(),
+        // and when multiple parent entities (SpeciesData) have owned entities with the same composite key values,
+        // EF Core incorrectly identifies them as the same entity instance, causing a tracking conflict.
+        //
+        // This happens BEFORE SaveChanges() - EF Core's change tracker identifies conflicts during Add/AddRange.
+        // The only reliable solution is to save immediately after each entity to persist it and clear tracking state.
+        //
+        // PERFORMANCE NOTE: This is slower than bulk operations, but data loading happens once at startup,
+        // so the performance impact is acceptable for correctness. Typically 100-1000 species = 100-1000ms overhead.
+        foreach (var cleanSpecies in speciesToAdd)
+        {
+            // Check if species already exists in database (shouldn't happen due to deduplication, but safety check)
+            var existing = await _context
+                .Species.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == cleanSpecies.Id);
+
+            if (existing != null)
+            {
+                _logger.LogWarning(
+                    "Skipping duplicate species ID: {SpeciesId} ({SpeciesName})",
+                    cleanSpecies.Id,
+                    cleanSpecies.Name
+                );
+                continue;
+            }
+
+            await _context.Species.AddAsync(cleanSpecies);
+            try
+            {
+                await _context.SaveChangesAsync(); // Save immediately to persist and clear tracking
+            }
+            catch (ArgumentException ex) when (ex.Message.Contains("same key"))
+            {
+                // Log detailed error with sensitive data logging enabled
+                _logger.LogError(
+                    ex,
+                    "Duplicate key error when saving species {SpeciesId} ({SpeciesName}). "
+                        + "LevelMoves count: {LevelMoveCount}. First few LevelMoves: {LevelMoves}",
+                    cleanSpecies.Id,
+                    cleanSpecies.Name,
+                    cleanSpecies.LevelMoves.Count,
+                    string.Join(
+                        ", ",
+                        cleanSpecies.LevelMoves.Take(5).Select(lm => $"L{lm.Level}:{lm.MoveName}")
+                    )
+                );
+                throw; // Re-throw to see full stack trace
+            }
+            _context.ChangeTracker.Clear(); // Clear tracker after each save to prevent any residual conflicts
+        }
+
+        _logger.LogDebug("Loaded {Count} species", seenIds.Count);
+    }
+
+    private static SpeciesData CreateCleanSpeciesCopy(SpeciesData source)
+    {
+        // Create a new instance with clean collections to avoid EF Core tracking conflicts
+        // Deduplicate LevelMoves by key (Level, MoveName) - if duplicates exist, keep the first occurrence
+        // Use Dictionary for O(1) lookup performance
+        var levelMoveDict = new Dictionary<(int Level, string MoveName), LevelMove>();
+
+        foreach (var lm in source.LevelMoves ?? Enumerable.Empty<LevelMove>())
+        {
+            if (lm == null)
+                continue;
+
+            var key = (lm.Level, lm.MoveName);
+            // Only add if we haven't seen this key before
+            if (!levelMoveDict.ContainsKey(key))
+            {
+                levelMoveDict[key] = new LevelMove { Level = lm.Level, MoveName = lm.MoveName };
+            }
+        }
+
+        var deduplicatedLevelMoves = levelMoveDict.Values.ToList();
+
+        var copy = new SpeciesData
+        {
+            Id = source.Id,
+            NationalDexNumber = source.NationalDexNumber,
+            Name = source.Name,
+            Types = new List<string>(source.Types),
+            Abilities = new List<string>(source.Abilities),
+            EggGroups = new List<string>(source.EggGroups),
+            BaseStats = source.BaseStats, // Value type, so safe to copy
+            HiddenAbility = source.HiddenAbility,
+            LevelMoves = deduplicatedLevelMoves,
+            Evolutions = new List<Evolution>(
+                source.Evolutions.Select(e => new Evolution
+                {
+                    TargetSpeciesId = e.TargetSpeciesId,
+                    Method = e.Method,
+                    RequiredLevel = e.RequiredLevel,
+                    RequiredItem = e.RequiredItem,
+                    Conditions = new Dictionary<string, string>(e.Conditions),
+                })
+            ),
+            TmMoves = new List<string>(source.TmMoves),
+            EggMoves = new List<string>(source.EggMoves),
+            CatchRate = source.CatchRate,
+            BaseFriendship = source.BaseFriendship,
+            GenderRatio = source.GenderRatio,
+            GrowthRate = source.GrowthRate,
+            BaseExperience = source.BaseExperience,
+            HatchSteps = source.HatchSteps,
+            Height = source.Height,
+            Weight = source.Weight,
+            Description = source.Description,
+        };
+        return copy;
     }
 
     private async Task LoadSpeciesDataAsync()
     {
+        // This method is kept for compatibility but data loading is now done in LoadAllDataAsync
+        // This should not be called directly anymore
         var species = await LoadAllJsonFromDirectoryAsync<SpeciesData>("species");
+        await ProcessSpeciesDataAsync(species);
+    }
 
-        var byId = new Dictionary<string, SpeciesData>();
-        var byName = new Dictionary<string, SpeciesData>();
+    private async Task ProcessMoveDataAsync(List<MoveData> moves)
+    {
+        // Use a dictionary to track which IDs we've seen
+        var seenIds = new HashSet<string>();
 
-        foreach (var s in species)
+        foreach (var m in moves)
         {
-            byId[s.Id] = s;
-            byName[s.Name.ToLowerInvariant()] = s;
+            if (seenIds.Contains(m.Id))
+            {
+                continue;
+            }
+
+            seenIds.Add(m.Id);
+            await _context.Moves.AddAsync(m);
         }
 
-        _speciesById = byId;
-        _speciesByName = byName;
-
-        _logger.LogDebug("Loaded {Count} species", species.Count);
+        _logger.LogDebug("Loaded {Count} moves", moves.Count);
     }
 
     private async Task LoadMoveDataAsync()
     {
         var moves = await LoadAllJsonFromDirectoryAsync<MoveData>("moves");
+        await ProcessMoveDataAsync(moves);
+    }
 
-        var byId = new Dictionary<string, MoveData>();
-        var byName = new Dictionary<string, MoveData>();
+    private async Task ProcessItemDataAsync(List<ItemData> items)
+    {
+        // Use a dictionary to track which IDs we've seen
+        var seenIds = new HashSet<string>();
 
-        foreach (var m in moves)
+        foreach (var i in items)
         {
-            byId[m.Id] = m;
-            byName[m.Name.ToLowerInvariant()] = m;
+            if (seenIds.Contains(i.Id))
+            {
+                continue;
+            }
+
+            seenIds.Add(i.Id);
+            await _context.Items.AddAsync(i);
         }
 
-        _movesById = byId;
-        _movesByName = byName;
-
-        _logger.LogDebug("Loaded {Count} moves", moves.Count);
+        _logger.LogDebug("Loaded {Count} items", items.Count);
     }
 
     private async Task LoadItemDataAsync()
     {
         var items = await LoadAllJsonFromDirectoryAsync<ItemData>("items");
+        await ProcessItemDataAsync(items);
+    }
 
-        var byId = new Dictionary<string, ItemData>();
-        var byName = new Dictionary<string, ItemData>();
+    private async Task ProcessEncounterDataAsync(List<EncounterTable> encounters)
+    {
+        // Use a dictionary to track which IDs we've seen
+        var seenIds = new HashSet<string>();
 
-        foreach (var i in items)
+        foreach (var e in encounters)
         {
-            byId[i.Id] = i;
-            byName[i.Name.ToLowerInvariant()] = i;
+            if (seenIds.Contains(e.LocationId))
+            {
+                continue;
+            }
+
+            seenIds.Add(e.LocationId);
+            await _context.Encounters.AddAsync(e);
         }
 
-        _itemsById = byId;
-        _itemsByName = byName;
-
-        _logger.LogDebug("Loaded {Count} items", items.Count);
+        _logger.LogDebug("Loaded {Count} encounter tables", encounters.Count);
     }
 
     private async Task LoadEncounterDataAsync()
     {
         var encounters = await LoadAllJsonFromDirectoryAsync<EncounterTable>("encounters");
+        await ProcessEncounterDataAsync(encounters);
+    }
 
-        var byId = new Dictionary<string, EncounterTable>();
-        var byName = new Dictionary<string, EncounterTable>();
+    private async Task ProcessTypeDataAsync(List<TypeData> types)
+    {
+        // Use a dictionary to track which IDs we've seen
+        var seenIds = new HashSet<string>();
 
-        foreach (var e in encounters)
+        foreach (var t in types)
         {
-            byId[e.LocationId] = e;
-            byName[e.LocationName.ToLowerInvariant()] = e;
+            if (seenIds.Contains(t.Id))
+            {
+                continue;
+            }
+
+            seenIds.Add(t.Id);
+            await _context.Types.AddAsync(t);
         }
 
-        _encountersById = byId;
-        _encountersByName = byName;
+        if (types.Count == 0)
+        {
+            _logger.LogWarning(
+                "types directory not found or empty. Type effectiveness will be neutral (1.0) for all matchups. "
+                    + "This will result in incorrect battle calculations!"
+            );
+        }
 
-        _logger.LogDebug("Loaded {Count} encounter tables", encounters.Count);
+        _logger.LogDebug("Loaded {Count} types with matchups", types.Count);
     }
 
     private async Task LoadTypesAsync()
     {
         var types = await LoadAllJsonFromDirectoryAsync<TypeData>("types");
-
-        var byId = new Dictionary<string, TypeData>();
-        var byName = new Dictionary<string, TypeData>();
-
-        foreach (var t in types)
-        {
-            byId[t.Id] = t;
-            byName[t.Name.ToLowerInvariant()] = t;
-        }
-
-        _typesById = byId;
-        _typesByName = byName;
-
-        if (types.Count == 0)
-        {
-            _logger.LogWarning(
-                "types directory not found or empty. Type effectiveness will be neutral (1.0) for all matchups. " +
-                "This will result in incorrect battle calculations!"
-            );
-        }
-
-        _logger.LogDebug("Loaded {Count} types with matchups", types.Count);
+        await ProcessTypeDataAsync(types);
     }
 
     // ==================== Type Data Methods ====================
@@ -399,7 +653,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _typesById.TryGetValue(typeId, out var typeInfo) ? typeInfo : null;
+        return await _context.Types.AsNoTracking().FirstOrDefaultAsync(t => t.Id == typeId);
     }
 
     /// <inheritdoc/>
@@ -407,10 +661,15 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var normalizedName = name?.Trim().ToLowerInvariant();
-        return normalizedName != null && _typesByName.TryGetValue(normalizedName, out var typeInfo)
-            ? typeInfo
-            : null;
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var normalizedName = name.Trim();
+        return await _context
+            .Types.AsNoTracking()
+            .FirstOrDefaultAsync(t =>
+                t.Name.Equals(normalizedName, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     /// <inheritdoc/>
@@ -418,7 +677,7 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        return _typesById.Values.ToList().AsReadOnly();
+        return await _context.Types.AsNoTracking().ToListAsync();
     }
 
     // ==================== Type Effectiveness Methods ====================
@@ -428,30 +687,37 @@ public class DataManager : IDataApi
     {
         await EnsureDataLoadedAsync();
 
-        var attackTypeName = attackType?.Trim().ToLowerInvariant();
-        var defenseTypeName = defenseType?.Trim().ToLowerInvariant();
-
-        if (string.IsNullOrEmpty(attackTypeName) || string.IsNullOrEmpty(defenseTypeName))
+        if (string.IsNullOrWhiteSpace(attackType) || string.IsNullOrWhiteSpace(defenseType))
         {
             return 1.0; // Neutral if invalid input
         }
 
-        if (!_typesByName.TryGetValue(attackTypeName, out var attackTypeInfo))
+        var attackTypeName = attackType.Trim();
+        var defenseTypeName = defenseType.Trim();
+
+        var attackTypeInfo = await _context
+            .Types.AsNoTracking()
+            .FirstOrDefaultAsync(t =>
+                t.Name.Equals(attackTypeName, StringComparison.OrdinalIgnoreCase)
+            );
+
+        if (attackTypeInfo == null)
         {
             _logger.LogWarning("Attack type '{AttackType}' not found in type data", attackType);
             return 1.0; // Neutral if type not found
         }
 
-        // Try lowercase first
+        // Try exact match first
         if (attackTypeInfo.Matchups.TryGetValue(defenseTypeName, out var effectiveness))
         {
             return effectiveness;
         }
 
-        // Try with original casing (case-insensitive fallback)
-        var matchup = attackTypeInfo.Matchups.FirstOrDefault(m => 
-            m.Key.Equals(defenseType, StringComparison.OrdinalIgnoreCase));
-        
+        // Try case-insensitive match
+        var matchup = attackTypeInfo.Matchups.FirstOrDefault(m =>
+            m.Key.Equals(defenseTypeName, StringComparison.OrdinalIgnoreCase)
+        );
+
         if (matchup.Key != null)
         {
             return matchup.Value;
@@ -464,7 +730,8 @@ public class DataManager : IDataApi
     public async Task<double> GetDualTypeEffectivenessAsync(
         string attackType,
         string defenseType1,
-        string? defenseType2)
+        string? defenseType2
+    )
     {
         await EnsureDataLoadedAsync();
 
@@ -496,7 +763,7 @@ public class DataManager : IDataApi
                 searchPaths.Add(modDir);
             }
         }
-        
+
         var baseDir = Path.Combine(_dataPath, directoryName);
         if (Directory.Exists(baseDir))
         {
@@ -513,11 +780,11 @@ public class DataManager : IDataApi
         foreach (var searchPath in searchPaths)
         {
             var jsonFiles = Directory.GetFiles(searchPath, "*.json", SearchOption.TopDirectoryOnly);
-            
+
             foreach (var filePath in jsonFiles)
             {
                 var fileName = Path.GetFileName(filePath);
-                
+
                 // Skip if already loaded (mod override)
                 if (loadedFiles.Contains(fileName))
                 {
@@ -538,7 +805,11 @@ public class DataManager : IDataApi
                         {
                             allData.AddRange(arrayData);
                             loadedFiles.Add(fileName);
-                            _logger.LogTrace("Loaded {Count} items from {FileName}", arrayData.Count, fileName);
+                            _logger.LogTrace(
+                                "Loaded {Count} items from {FileName}",
+                                arrayData.Count,
+                                fileName
+                            );
                             continue;
                         }
                     }
@@ -563,22 +834,12 @@ public class DataManager : IDataApi
             }
         }
 
-        _logger.LogDebug("Loaded {Count} total items from {DirectoryName}", allData.Count, directoryName);
+        _logger.LogDebug(
+            "Loaded {Count} total items from {DirectoryName}",
+            allData.Count,
+            directoryName
+        );
         return allData;
-    }
-
-    private void ClearCaches()
-    {
-        _speciesById.Clear();
-        _speciesByName.Clear();
-        _movesById.Clear();
-        _movesByName.Clear();
-        _itemsById.Clear();
-        _itemsByName.Clear();
-        _encountersById.Clear();
-        _encountersByName.Clear();
-        _typesById.Clear();
-        _typesByName.Clear();
     }
 
     public void Dispose()
@@ -588,8 +849,8 @@ public class DataManager : IDataApi
 
         _logger.LogInformation("Disposing DataManager");
 
-        ClearCaches();
         _loadLock.Dispose();
+        // Note: We don't dispose _context here as it's typically managed by DI container
 
         _disposed = true;
         GC.SuppressFinalize(this);

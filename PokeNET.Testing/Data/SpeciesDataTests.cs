@@ -38,7 +38,7 @@ public class SpeciesDataTests
             Defense = 49,
             SpecialAttack = 65,
             SpecialDefense = 65,
-            Speed = 45
+            Speed = 45,
         };
 
         // Act
@@ -54,9 +54,9 @@ public class SpeciesDataTests
         // Arrange
         var evolution = new Evolution
         {
-            TargetSpeciesId = 2,
+            TargetSpeciesId = "ivysaur",
             Method = "Level",
-            RequiredLevel = 16
+            RequiredLevel = 16,
         };
 
         // Assert
@@ -70,9 +70,9 @@ public class SpeciesDataTests
         // Arrange
         var evolution = new Evolution
         {
-            TargetSpeciesId = 3,
+            TargetSpeciesId = "venusaur",
             Method = "Stone",
-            RequiredItem = "Fire Stone"
+            RequiredItem = "Fire Stone",
         };
 
         // Assert
@@ -84,11 +84,7 @@ public class SpeciesDataTests
     public void LevelMove_StoresCorrectData()
     {
         // Arrange
-        var levelMove = new LevelMove
-        {
-            Level = 7,
-            MoveName = "Vine Whip"
-        };
+        var levelMove = new LevelMove { Level = 7, MoveName = "Vine Whip" };
 
         // Assert
         Assert.Equal(7, levelMove.Level);
@@ -101,21 +97,49 @@ public class SpeciesDataTests
         // Arrange - Eevee with multiple evolution paths
         var species = new SpeciesData
         {
-            Id = 133,
+            Id = "eevee",
             Name = "Eevee",
             Evolutions = new List<Evolution>
             {
-                new() { TargetSpeciesId = 134, Method = "Stone", RequiredItem = "Water Stone" }, // Vaporeon
-                new() { TargetSpeciesId = 135, Method = "Stone", RequiredItem = "Thunder Stone" }, // Jolteon
-                new() { TargetSpeciesId = 136, Method = "Stone", RequiredItem = "Fire Stone" }, // Flareon
-                new() { TargetSpeciesId = 196, Method = "Friendship", Conditions = new() { { "TimeOfDay", "Day" } } }, // Espeon
-                new() { TargetSpeciesId = 197, Method = "Friendship", Conditions = new() { { "TimeOfDay", "Night" } } } // Umbreon
-            }
+                new()
+                {
+                    TargetSpeciesId = "vaporeon",
+                    Method = "Stone",
+                    RequiredItem = "Water Stone",
+                }, // Vaporeon
+                new()
+                {
+                    TargetSpeciesId = "jolteon",
+                    Method = "Stone",
+                    RequiredItem = "Thunder Stone",
+                }, // Jolteon
+                new()
+                {
+                    TargetSpeciesId = "flareon",
+                    Method = "Stone",
+                    RequiredItem = "Fire Stone",
+                }, // Flareon
+                new()
+                {
+                    TargetSpeciesId = "espeon",
+                    Method = "Friendship",
+                    Conditions = new() { { "TimeOfDay", "Day" } },
+                }, // Espeon
+                new()
+                {
+                    TargetSpeciesId = "umbreon",
+                    Method = "Friendship",
+                    Conditions = new() { { "TimeOfDay", "Night" } },
+                }, // Umbreon
+            },
         };
 
         // Assert
         Assert.Equal(5, species.Evolutions.Count);
-        Assert.All(species.Evolutions, evo => Assert.True(evo.TargetSpeciesId > 0));
+        Assert.All(
+            species.Evolutions,
+            evo => Assert.False(string.IsNullOrEmpty(evo.TargetSpeciesId))
+        );
     }
 
     [Fact]
@@ -124,16 +148,16 @@ public class SpeciesDataTests
         // Arrange
         var species = new SpeciesData
         {
-            Id = 6,
+            Id = "charizard",
             Name = "Charizard",
             LevelMoves = new List<LevelMove>
             {
                 new() { Level = 1, MoveName = "Scratch" },
                 new() { Level = 7, MoveName = "Ember" },
-                new() { Level = 36, MoveName = "Flamethrower" }
+                new() { Level = 36, MoveName = "Flamethrower" },
             },
             TmMoves = new List<string> { "Solar Beam", "Earthquake", "Dragon Claw" },
-            EggMoves = new List<string> { "Dragon Dance", "Belly Drum" }
+            EggMoves = new List<string> { "Dragon Dance", "Belly Drum" },
         };
 
         // Assert
@@ -151,9 +175,9 @@ public class SpeciesDataTests
         // Arrange
         var species = new SpeciesData
         {
-            Id = 1,
+            Id = "bulbasaur",
             Name = "Bulbasaur",
-            Types = new List<string> { "Grass", "Poison" }
+            Types = new List<string> { "Grass", "Poison" },
         };
 
         // Assert
@@ -168,9 +192,9 @@ public class SpeciesDataTests
         // Arrange
         var species = new SpeciesData
         {
-            Id = 25,
+            Id = "pikachu",
             Name = "Pikachu",
-            Types = new List<string> { "Electric" }
+            Types = new List<string> { "Electric" },
         };
 
         // Assert
@@ -185,14 +209,14 @@ public class SpeciesDataTests
         var withoutHidden = new SpeciesData
         {
             Abilities = new List<string> { "Overgrow" },
-            HiddenAbility = null
+            HiddenAbility = null,
         };
 
         // Pokemon with hidden ability
         var withHidden = new SpeciesData
         {
             Abilities = new List<string> { "Overgrow" },
-            HiddenAbility = "Chlorophyll"
+            HiddenAbility = "Chlorophyll",
         };
 
         // Assert

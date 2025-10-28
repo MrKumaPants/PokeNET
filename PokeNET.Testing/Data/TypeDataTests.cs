@@ -1,7 +1,7 @@
-using PokeNET.Core.Data;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using PokeNET.Core.Data;
 using Xunit;
 
 namespace PokeNET.Tests.Data;
@@ -35,11 +35,7 @@ public class TypeDataTests
             Name = "Fire",
             Color = "#F08030",
             Description = "Fire type Pokemon",
-            Matchups = new Dictionary<string, double>
-            {
-                { "Grass", 2.0 },
-                { "Water", 0.5 }
-            }
+            Matchups = new Dictionary<string, double> { { "Grass", 2.0 }, { "Water", 0.5 } },
         };
 
         // Assert
@@ -56,27 +52,27 @@ public class TypeDataTests
     {
         // Arrange
         var json = """
-        {
-            "name": "Fire",
-            "color": "#F08030",
-            "description": "Fire type Pokemon",
-            "matchups": {
-                "Fire": 0.5,
-                "Water": 0.5,
-                "Grass": 2.0,
-                "Ice": 2.0,
-                "Bug": 2.0,
-                "Rock": 0.5,
-                "Steel": 2.0
+            {
+                "name": "Fire",
+                "color": "#F08030",
+                "description": "Fire type Pokemon",
+                "matchups": {
+                    "Fire": 0.5,
+                    "Water": 0.5,
+                    "Grass": 2.0,
+                    "Ice": 2.0,
+                    "Bug": 2.0,
+                    "Rock": 0.5,
+                    "Steel": 2.0
+                }
             }
-        }
-        """;
+            """;
 
         // Act
-        var typeInfo = JsonSerializer.Deserialize<TypeData>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var typeInfo = JsonSerializer.Deserialize<TypeData>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
         // Assert
         Assert.NotNull(typeInfo);
@@ -95,46 +91,46 @@ public class TypeDataTests
     {
         // Arrange
         var json = """
-        [
-            {
-                "name": "Normal",
-                "color": "#A8A878",
-                "description": "Normal type Pokemon",
-                "matchups": {
-                    "Rock": 0.5,
-                    "Ghost": 0.0,
-                    "Steel": 0.5
+            [
+                {
+                    "name": "Normal",
+                    "color": "#A8A878",
+                    "description": "Normal type Pokemon",
+                    "matchups": {
+                        "Rock": 0.5,
+                        "Ghost": 0.0,
+                        "Steel": 0.5
+                    }
+                },
+                {
+                    "name": "Fire",
+                    "color": "#F08030",
+                    "description": "Fire type Pokemon",
+                    "matchups": {
+                        "Grass": 2.0,
+                        "Water": 0.5
+                    }
                 }
-            },
-            {
-                "name": "Fire",
-                "color": "#F08030",
-                "description": "Fire type Pokemon",
-                "matchups": {
-                    "Grass": 2.0,
-                    "Water": 0.5
-                }
-            }
-        ]
-        """;
+            ]
+            """;
 
         // Act
-        var types = JsonSerializer.Deserialize<List<TypeData>>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var types = JsonSerializer.Deserialize<List<TypeData>>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
         // Assert
         Assert.NotNull(types);
         Assert.Equal(2, types.Count);
-        
+
         // Verify Normal type
         var normalType = types[0];
         Assert.Equal("Normal", normalType.Name);
         Assert.Equal("#A8A878", normalType.Color);
         Assert.Equal(3, normalType.Matchups.Count);
         Assert.Equal(0.0, normalType.Matchups["Ghost"]);
-        
+
         // Verify Fire type
         var fireType = types[1];
         Assert.Equal("Fire", fireType.Name);
@@ -152,13 +148,13 @@ public class TypeDataTests
             Name = "Test",
             Matchups = new Dictionary<string, double>
             {
-                { "Immune", 0.0 },      // No effect
-                { "Quarter", 0.25 },    // Double resistance (dual-type)
-                { "Resist", 0.5 },      // Not very effective
-                { "Neutral", 1.0 },     // Normal damage
-                { "Super", 2.0 },       // Super effective
-                { "Quadruple", 4.0 }    // Double weakness (dual-type)
-            }
+                { "Immune", 0.0 }, // No effect
+                { "Quarter", 0.25 }, // Double resistance (dual-type)
+                { "Resist", 0.5 }, // Not very effective
+                { "Neutral", 1.0 }, // Normal damage
+                { "Super", 2.0 }, // Super effective
+                { "Quadruple", 4.0 }, // Double weakness (dual-type)
+            },
         };
 
         // Assert - All standard Pokemon effectiveness values
@@ -175,18 +171,18 @@ public class TypeDataTests
     {
         // Arrange
         var json = """
-        {
-            "name": "Normal",
-            "color": "#A8A878",
-            "matchups": {}
-        }
-        """;
+            {
+                "name": "Normal",
+                "color": "#A8A878",
+                "matchups": {}
+            }
+            """;
 
         // Act
-        var typeInfo = JsonSerializer.Deserialize<TypeData>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var typeInfo = JsonSerializer.Deserialize<TypeData>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
         // Assert
         Assert.NotNull(typeInfo);
@@ -200,19 +196,19 @@ public class TypeDataTests
     {
         // Arrange - Only required fields
         var json = """
-        {
-            "name": "Fire",
-            "matchups": {
-                "Grass": 2.0
+            {
+                "name": "Fire",
+                "matchups": {
+                    "Grass": 2.0
+                }
             }
-        }
-        """;
+            """;
 
         // Act
-        var typeInfo = JsonSerializer.Deserialize<TypeData>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var typeInfo = JsonSerializer.Deserialize<TypeData>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
         // Assert
         Assert.NotNull(typeInfo);
@@ -226,11 +222,26 @@ public class TypeDataTests
     public void TypeData_Gen6Types_AllEighteen_Deserialize()
     {
         // Arrange - Test with all 18 Gen 6+ types
-        var typeNames = new[] 
-        { 
-            "Normal", "Fire", "Water", "Electric", "Grass", "Ice",
-            "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug",
-            "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"
+        var typeNames = new[]
+        {
+            "Normal",
+            "Fire",
+            "Water",
+            "Electric",
+            "Grass",
+            "Ice",
+            "Fighting",
+            "Poison",
+            "Ground",
+            "Flying",
+            "Psychic",
+            "Bug",
+            "Rock",
+            "Ghost",
+            "Dragon",
+            "Dark",
+            "Steel",
+            "Fairy",
         };
 
         // Act & Assert - Verify each type can be created
@@ -240,7 +251,7 @@ public class TypeDataTests
             {
                 Name = typeName,
                 Color = "#FFFFFF",
-                Matchups = new Dictionary<string, double>()
+                Matchups = new Dictionary<string, double>(),
             };
 
             Assert.Equal(typeName, typeInfo.Name);
@@ -253,22 +264,18 @@ public class TypeDataTests
         // Arrange - Test various valid hex color formats
         var validColors = new[]
         {
-            "#FFFFFF",  // White
-            "#000000",  // Black
-            "#F08030",  // Fire orange
-            "#6890F0",  // Water blue
-            "#78C850",  // Grass green
-            "#A8A878"   // Normal gray
+            "#FFFFFF", // White
+            "#000000", // Black
+            "#F08030", // Fire orange
+            "#6890F0", // Water blue
+            "#78C850", // Grass green
+            "#A8A878", // Normal gray
         };
 
         // Act & Assert
         foreach (var color in validColors)
         {
-            var typeInfo = new TypeData
-            {
-                Name = "Test",
-                Color = color
-            };
+            var typeInfo = new TypeData { Name = "Test", Color = color };
 
             Assert.Equal(color, typeInfo.Color);
             Assert.StartsWith("#", typeInfo.Color);
@@ -289,16 +296,16 @@ public class TypeDataTests
             {
                 { "Dragon", 2.0 },
                 { "Steel", 0.5 },
-                { "Fairy", 0.0 }
-            }
+                { "Fairy", 0.0 },
+            },
         };
 
         // Act - Serialize then deserialize
         var json = JsonSerializer.Serialize(original);
-        var deserialized = JsonSerializer.Deserialize<TypeData>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var deserialized = JsonSerializer.Deserialize<TypeData>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
         // Assert
         Assert.NotNull(deserialized);
@@ -310,4 +317,3 @@ public class TypeDataTests
         Assert.Equal(original.Matchups["Fairy"], deserialized.Matchups["Fairy"]);
     }
 }
-

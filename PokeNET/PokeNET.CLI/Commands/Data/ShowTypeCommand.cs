@@ -19,27 +19,32 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
         public string TypeName { get; set; } = string.Empty;
     }
 
-    public ShowTypeCommand(CliContext context) : base(context) { }
+    public ShowTypeCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Loading type data...", async ctx =>
-            {
-                var typeData = await Context.DataApi.GetTypeByNameAsync(settings.TypeName);
-
-                if (typeData == null)
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading type data...",
+                async ctx =>
                 {
-                    AnsiConsole.MarkupLine($"[red]Type '{settings.TypeName}' not found[/]");
-                    return;
+                    var typeData = await Context.DataApi.GetTypeByNameAsync(settings.TypeName);
+
+                    if (typeData == null)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Type '{settings.TypeName}' not found[/]");
+                        return;
+                    }
+
+                    ctx.Status("Calculating defensive matchups...");
+                    var allTypes = await Context.DataApi.GetAllTypesAsync();
+
+                    ctx.Status("Rendering type chart...");
+                    DataDisplayHelper.DisplayType(typeData, allTypes);
                 }
-
-                ctx.Status("Calculating defensive matchups...");
-                var allTypes = await Context.DataApi.GetAllTypesAsync();
-
-                ctx.Status("Rendering type chart...");
-                DataDisplayHelper.DisplayType(typeData, allTypes);
-            });
+            );
     }
 
     // Removed duplicate display logic - now using DataDisplayHelper
@@ -49,7 +54,7 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
         var panel = new Panel(new Markup($"[bold white]{typeData.Name} Type[/]"))
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Yellow)
+            BorderStyle = new Style(Color.Yellow),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -60,18 +65,18 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
         offensiveTable.AddColumn("[yellow]Effectiveness[/]");
         offensiveTable.AddColumn("[yellow]Types[/]");
 
-        var superEffectiveOffense = typeData.Matchups
-            .Where(kvp => kvp.Value > 1.0)
+        var superEffectiveOffense = typeData
+            .Matchups.Where(kvp => kvp.Value > 1.0)
             .Select(kvp => kvp.Key)
             .ToList();
 
-        var notVeryEffectiveOffense = typeData.Matchups
-            .Where(kvp => kvp.Value > 0 && kvp.Value < 1.0)
+        var notVeryEffectiveOffense = typeData
+            .Matchups.Where(kvp => kvp.Value > 0 && kvp.Value < 1.0)
             .Select(kvp => kvp.Key)
             .ToList();
 
-        var noEffectOffense = typeData.Matchups
-            .Where(kvp => kvp.Value == 0)
+        var noEffectOffense = typeData
+            .Matchups.Where(kvp => kvp.Value == 0)
             .Select(kvp => kvp.Key)
             .ToList();
 
@@ -93,17 +98,16 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
 
         if (noEffectOffense.Any())
         {
-            offensiveTable.AddRow(
-                "[red]No Effect (0x)[/]",
-                string.Join(", ", noEffectOffense)
-            );
+            offensiveTable.AddRow("[red]No Effect (0x)[/]", string.Join(", ", noEffectOffense));
         }
 
-        AnsiConsole.Write(new Panel(offensiveTable)
-        {
-            Header = new PanelHeader($"[yellow]{typeData.Name} Type Attacking[/]"),
-            Border = BoxBorder.Rounded
-        });
+        AnsiConsole.Write(
+            new Panel(offensiveTable)
+            {
+                Header = new PanelHeader($"[yellow]{typeData.Name} Type Attacking[/]"),
+                Border = BoxBorder.Rounded,
+            }
+        );
         AnsiConsole.WriteLine();
 
         // Defensive effectiveness (other types attacking this type)
@@ -137,10 +141,7 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
 
         if (superEffectiveDefense.Any())
         {
-            defensiveTable.AddRow(
-                "[red]Weak to (2x)[/]",
-                string.Join(", ", superEffectiveDefense)
-            );
+            defensiveTable.AddRow("[red]Weak to (2x)[/]", string.Join(", ", superEffectiveDefense));
         }
 
         if (notVeryEffectiveDefense.Any())
@@ -153,17 +154,15 @@ public class ShowTypeCommand : CliCommand<ShowTypeCommand.Settings>
 
         if (noEffectDefense.Any())
         {
-            defensiveTable.AddRow(
-                "[blue]Immune to (0x)[/]",
-                string.Join(", ", noEffectDefense)
-            );
+            defensiveTable.AddRow("[blue]Immune to (0x)[/]", string.Join(", ", noEffectDefense));
         }
 
-        AnsiConsole.Write(new Panel(defensiveTable)
-        {
-            Header = new PanelHeader($"[cyan]{typeData.Name} Type Defending[/]"),
-            Border = BoxBorder.Rounded
-        });
+        AnsiConsole.Write(
+            new Panel(defensiveTable)
+            {
+                Header = new PanelHeader($"[cyan]{typeData.Name} Type Defending[/]"),
+                Border = BoxBorder.Rounded,
+            }
+        );
     }
 }
-

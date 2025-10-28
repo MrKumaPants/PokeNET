@@ -1,0 +1,41 @@
+{
+  "id": "caterpie",
+  "nationalDexNumber": 10,
+  "name": "Caterpie",
+  "types": ["Bug"],
+  "baseStats": {
+    "hp": 45,
+    "attack": 30,
+    "defense": 35,
+    "specialAttack": 20,
+    "specialDefense": 20,
+    "speed": 45
+  },
+  "abilities": ["Shield Dust"],
+  "hiddenAbility": "Run Away",
+  "growthRate": "Medium Fast",
+  "baseExperience": 39,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Bug"],
+  "hatchSteps": 3840,
+  "height": 3,
+  "weight": 29,
+  "description": "For protection, it releases a horrible stench from the antenna on its head to drive away enemies.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "String Shot" },
+    { "level": 9, "moveName": "Bug Bite" }
+  ],
+  "tmMoves": [],
+  "eggMoves": [],
+  "evolutions": [
+    {
+      "targetSpeciesId": "metapod",
+      "method": "Level",
+      "requiredLevel": 7
+    }
+  ]
+}
+

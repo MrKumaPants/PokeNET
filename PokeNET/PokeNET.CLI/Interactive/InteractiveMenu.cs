@@ -86,12 +86,14 @@ public class InteractiveMenu
     {
         var banner = new Panel(
             Align.Center(
-                new Markup("[bold yellow]PokeNET CLI Tool[/]\n[dim]Interactive Testing Environment[/]")
+                new Markup(
+                    "[bold yellow]PokeNET CLI Tool[/]\n[dim]Interactive Testing Environment[/]"
+                )
             )
         )
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Yellow)
+            BorderStyle = new Style(Color.Yellow),
         };
         AnsiConsole.Write(banner);
         AnsiConsole.WriteLine();
@@ -124,11 +126,15 @@ public class InteractiveMenu
 
     private async Task BrowseSpecies()
     {
-        var species = await AnsiConsole.Status()
-            .StartAsync("Loading species...", async ctx =>
-            {
-                return await _context.DataApi.GetAllSpeciesAsync();
-            });
+        var species = await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading species...",
+                async ctx =>
+                {
+                    return await _context.DataApi.GetAllSpeciesAsync();
+                }
+            );
 
         if (!species.Any())
         {
@@ -141,7 +147,9 @@ public class InteractiveMenu
                 .Title("[yellow]Select a species to view details:[/]")
                 .PageSize(15)
                 .AddChoices(species.Take(50))
-                .UseConverter(s => $"#{s.NationalDexNumber:D3} {s.Name} ({string.Join("/", s.Types)})")
+                .UseConverter(s =>
+                    $"#{s.NationalDexNumber:D3} {s.Name} ({string.Join("/", s.Types)})"
+                )
         );
 
         AnsiConsole.Clear();
@@ -151,11 +159,15 @@ public class InteractiveMenu
 
     private async Task BrowseMoves()
     {
-        var moves = await AnsiConsole.Status()
-            .StartAsync("Loading moves...", async ctx =>
-            {
-                return await _context.DataApi.GetAllMovesAsync();
-            });
+        var moves = await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading moves...",
+                async ctx =>
+                {
+                    return await _context.DataApi.GetAllMovesAsync();
+                }
+            );
 
         if (!moves.Any())
         {
@@ -168,7 +180,9 @@ public class InteractiveMenu
                 .Title("[yellow]Select a move to view details:[/]")
                 .PageSize(15)
                 .AddChoices(moves.Take(50))
-                .UseConverter(m => $"{m.Name} ({m.Type}) - Pwr: {(m.Power > 0 ? m.Power.ToString() : "—")}")
+                .UseConverter(m =>
+                    $"{m.Name} ({m.Type}) - Pwr: {(m.Power > 0 ? m.Power.ToString() : "—")}"
+                )
         );
 
         AnsiConsole.Clear();
@@ -178,11 +192,15 @@ public class InteractiveMenu
 
     private async Task BrowseItems()
     {
-        var items = await AnsiConsole.Status()
-            .StartAsync("Loading items...", async ctx =>
-            {
-                return await _context.DataApi.GetAllItemsAsync();
-            });
+        var items = await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading items...",
+                async ctx =>
+                {
+                    return await _context.DataApi.GetAllItemsAsync();
+                }
+            );
 
         if (!items.Any())
         {
@@ -205,11 +223,15 @@ public class InteractiveMenu
 
     private async Task BrowseTypes()
     {
-        var types = await AnsiConsole.Status()
-            .StartAsync("Loading types...", async ctx =>
-            {
-                return await _context.DataApi.GetAllTypesAsync();
-            });
+        var types = await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading types...",
+                async ctx =>
+                {
+                    return await _context.DataApi.GetAllTypesAsync();
+                }
+            );
 
         if (!types.Any())
         {
@@ -261,20 +283,28 @@ public class InteractiveMenu
         }
 
         var level = AnsiConsole.Ask("[yellow]Enter level (1-100):[/]", 50);
-        
+
         AnsiConsole.MarkupLine("\n[yellow]Calculating with 31 IVs, 0 EVs, and Hardy nature...[/]");
         AnsiConsole.MarkupLine("[dim]Use the command-line mode for custom IVs/EVs/Nature[/]\n");
 
         var stats = new Core.ECS.Components.PokemonStats
         {
-            IV_HP = 31, IV_Attack = 31, IV_Defense = 31,
-            IV_SpAttack = 31, IV_SpDefense = 31, IV_Speed = 31
+            IV_HP = 31,
+            IV_Attack = 31,
+            IV_Defense = 31,
+            IV_SpAttack = 31,
+            IV_SpDefense = 31,
+            IV_Speed = 31,
         };
 
         Core.Battle.StatCalculator.RecalculateAllStats(
             ref stats,
-            species.BaseStats.HP, species.BaseStats.Attack, species.BaseStats.Defense,
-            species.BaseStats.SpecialAttack, species.BaseStats.SpecialDefense, species.BaseStats.Speed,
+            species.BaseStats.HP,
+            species.BaseStats.Attack,
+            species.BaseStats.Defense,
+            species.BaseStats.SpecialAttack,
+            species.BaseStats.SpecialDefense,
+            species.BaseStats.Speed,
             level,
             Core.ECS.Components.Nature.Hardy
         );
@@ -286,38 +316,68 @@ public class InteractiveMenu
         table.AddColumn("[yellow]Final[/]");
 
         table.AddRow("HP", species.BaseStats.HP.ToString(), $"[green bold]{stats.MaxHP}[/]");
-        table.AddRow("Attack", species.BaseStats.Attack.ToString(), $"[green bold]{stats.Attack}[/]");
-        table.AddRow("Defense", species.BaseStats.Defense.ToString(), $"[green bold]{stats.Defense}[/]");
-        table.AddRow("Sp. Attack", species.BaseStats.SpecialAttack.ToString(), $"[green bold]{stats.SpAttack}[/]");
-        table.AddRow("Sp. Defense", species.BaseStats.SpecialDefense.ToString(), $"[green bold]{stats.SpDefense}[/]");
+        table.AddRow(
+            "Attack",
+            species.BaseStats.Attack.ToString(),
+            $"[green bold]{stats.Attack}[/]"
+        );
+        table.AddRow(
+            "Defense",
+            species.BaseStats.Defense.ToString(),
+            $"[green bold]{stats.Defense}[/]"
+        );
+        table.AddRow(
+            "Sp. Attack",
+            species.BaseStats.SpecialAttack.ToString(),
+            $"[green bold]{stats.SpAttack}[/]"
+        );
+        table.AddRow(
+            "Sp. Defense",
+            species.BaseStats.SpecialDefense.ToString(),
+            $"[green bold]{stats.SpDefense}[/]"
+        );
         table.AddRow("Speed", species.BaseStats.Speed.ToString(), $"[green bold]{stats.Speed}[/]");
 
-        AnsiConsole.Write(new Panel(table)
-        {
-            Header = new PanelHeader($"[yellow]{species.Name} Stats at Level {level}[/]"),
-            Border = BoxBorder.Rounded
-        });
+        AnsiConsole.Write(
+            new Panel(table)
+            {
+                Header = new PanelHeader($"[yellow]{species.Name} Stats at Level {level}[/]"),
+                Border = BoxBorder.Rounded,
+            }
+        );
     }
 
     private async Task CalculateTypeEffectiveness()
     {
         var attackType = AnsiConsole.Ask<string>("[yellow]Enter attacking type:[/]");
         var defenseType1 = AnsiConsole.Ask<string>("[yellow]Enter defending type 1:[/]");
-        var defenseType2 = AnsiConsole.Confirm("[yellow]Does the defender have a second type?[/]", false)
+        var defenseType2 = AnsiConsole.Confirm(
+            "[yellow]Does the defender have a second type?[/]",
+            false
+        )
             ? AnsiConsole.Ask<string>("[yellow]Enter defending type 2:[/]")
             : null;
 
         double effectiveness;
         if (string.IsNullOrEmpty(defenseType2))
         {
-            effectiveness = await _context.DataApi.GetTypeEffectivenessAsync(attackType, defenseType1);
+            effectiveness = await _context.DataApi.GetTypeEffectivenessAsync(
+                attackType,
+                defenseType1
+            );
         }
         else
         {
-            effectiveness = await _context.DataApi.GetDualTypeEffectivenessAsync(attackType, defenseType1, defenseType2);
+            effectiveness = await _context.DataApi.GetDualTypeEffectivenessAsync(
+                attackType,
+                defenseType1,
+                defenseType2
+            );
         }
 
-        var defenseTypes = string.IsNullOrEmpty(defenseType2) ? defenseType1 : $"{defenseType1}/{defenseType2}";
+        var defenseTypes = string.IsNullOrEmpty(defenseType2)
+            ? defenseType1
+            : $"{defenseType1}/{defenseType2}";
         var (effectivenessText, color) = effectiveness switch
         {
             0 => ("No Effect", "grey"),
@@ -326,21 +386,24 @@ public class InteractiveMenu
             1.0 => ("Normal Damage", "white"),
             2.0 => ("Super Effective", "green"),
             4.0 => ("Super Duper Effective", "lime"),
-            _ => ($"{effectiveness}x", "yellow")
+            _ => ($"{effectiveness}x", "yellow"),
         };
 
-        var panel = new Panel(new Markup($"[{color} bold]{effectivenessText}[/]\n{effectiveness}× damage"))
+        var panel = new Panel(
+            new Markup($"[{color} bold]{effectivenessText}[/]\n{effectiveness}× damage")
+        )
         {
             Header = new PanelHeader($"[yellow]{attackType} vs {defenseTypes}[/]"),
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Aqua)
+            BorderStyle = new Style(Color.Aqua),
         };
         AnsiConsole.Write(panel);
     }
 
     private async Task SystemTestsMenu()
     {
-        await AnsiConsole.Progress()
+        await AnsiConsole
+            .Progress()
             .StartAsync(async ctx =>
             {
                 var task = ctx.AddTask("[yellow]Running system tests[/]");
@@ -374,8 +437,11 @@ public class InteractiveMenu
                 task.StopTask();
 
                 AnsiConsole.WriteLine();
-                var totalItems = species.Count + moves.Count + items.Count + types.Count + encounters.Count;
-                AnsiConsole.MarkupLine($"[green bold]All tests passed![/] Total items: {totalItems}");
+                var totalItems =
+                    species.Count + moves.Count + items.Count + types.Count + encounters.Count;
+                AnsiConsole.MarkupLine(
+                    $"[green bold]All tests passed![/] Total items: {totalItems}"
+                );
             });
     }
 
@@ -419,13 +485,15 @@ public class InteractiveMenu
 
             foreach (var mod in mods)
             {
-                table.AddRow(new string[]
-                {
-                    $"[cyan]{mod.Id}[/]",
-                    mod.Name,
-                    mod.Version.ToString(),
-                    mod.Author ?? "[grey]Unknown[/]"
-                });
+                table.AddRow(
+                    new string[]
+                    {
+                        $"[cyan]{mod.Id}[/]",
+                        mod.Name,
+                        mod.Version.ToString(),
+                        mod.Author ?? "[grey]Unknown[/]",
+                    }
+                );
             }
 
             AnsiConsole.Write(table);
@@ -435,20 +503,24 @@ public class InteractiveMenu
 
     private async Task ValidateMods()
     {
-        var report = await AnsiConsole.Status()
-            .StartAsync("Validating mods...", async ctx =>
-            {
-                return await _context.ModLoader.ValidateModsAsync("Mods");
-            });
+        var report = await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Validating mods...",
+                async ctx =>
+                {
+                    return await _context.ModLoader.ValidateModsAsync("Mods");
+                }
+            );
 
         var statusColor = report.IsValid ? "green" : "red";
         var statusText = report.IsValid ? "PASSED" : "FAILED";
-        
+
         var panel = new Panel(new Markup($"[{statusColor} bold]{statusText}[/]"))
         {
             Header = new PanelHeader("[yellow]Validation Results[/]"),
             Border = BoxBorder.Double,
-            BorderStyle = new Style(report.IsValid ? Color.Green : Color.Red)
+            BorderStyle = new Style(report.IsValid ? Color.Green : Color.Red),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -477,4 +549,3 @@ public class InteractiveMenu
         }
     }
 }
-

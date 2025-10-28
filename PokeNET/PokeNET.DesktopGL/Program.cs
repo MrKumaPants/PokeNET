@@ -14,6 +14,7 @@ using PokeNET.Core;
 using PokeNET.Core.Assets;
 using PokeNET.Core.Assets.Loaders;
 using PokeNET.Core.Data;
+using PokeNET.Core.Data.Extensions;
 using PokeNET.Core.DependencyInjection;
 using PokeNET.Core.ECS;
 using PokeNET.Core.ECS.Events;

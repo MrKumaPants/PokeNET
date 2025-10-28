@@ -10,9 +10,8 @@ namespace PokeNET.Core.Data.Loaders;
 /// </summary>
 public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
 {
-    public EncounterDataLoader(ILogger<BaseDataLoader<List<EncounterTable>>> logger) : base(logger)
-    {
-    }
+    public EncounterDataLoader(ILogger<BaseDataLoader<List<EncounterTable>>> logger)
+        : base(logger) { }
 
     /// <inheritdoc/>
     public override bool Validate(List<EncounterTable> data)
@@ -24,7 +23,10 @@ public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
         {
             if (!ValidateItem(item))
             {
-                Logger.LogWarning("Invalid encounter data found: {LocationId}", item.LocationId ?? "Unknown");
+                Logger.LogWarning(
+                    "Invalid encounter data found: {LocationId}",
+                    item.LocationId ?? "Unknown"
+                );
                 return false;
             }
         }
@@ -53,10 +55,7 @@ public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
 
         if (!hasEncounters)
         {
-            Logger.LogWarning(
-                "Location {LocationId} has no encounters defined",
-                item.LocationId
-            );
+            Logger.LogWarning("Location {LocationId} has no encounters defined", item.LocationId);
             return false;
         }
 
@@ -141,7 +140,7 @@ public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
 
     private bool ValidateEncounter(Encounter encounter, string locationId, string encounterType)
     {
-        if (!ValidateRange(encounter.SpeciesId, nameof(encounter.SpeciesId), 1, 1025))
+        if (!ValidateString(encounter.SpeciesId, nameof(encounter.SpeciesId)))
             return false;
 
         if (!ValidateRange(encounter.MinLevel, nameof(encounter.MinLevel), 1, 100))
@@ -192,7 +191,11 @@ public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
         return true;
     }
 
-    private bool ValidateEncounterRates(System.Collections.Generic.List<Encounter> encounters, string locationId, string encounterType)
+    private bool ValidateEncounterRates(
+        System.Collections.Generic.List<Encounter> encounters,
+        string locationId,
+        string encounterType
+    )
     {
         // Check that encounter rates sum to approximately 100 (allowing some tolerance)
         var totalRate = encounters.Sum(e => e.Rate);
@@ -215,7 +218,7 @@ public class EncounterDataLoader : JsonArrayLoader<EncounterTable>
         if (!ValidateString(encounter.EncounterId, nameof(encounter.EncounterId)))
             return false;
 
-        if (!ValidateRange(encounter.SpeciesId, nameof(encounter.SpeciesId), 1, 1025))
+        if (!ValidateString(encounter.SpeciesId, nameof(encounter.SpeciesId)))
             return false;
 
         if (!ValidateRange(encounter.Level, nameof(encounter.Level), 1, 100))

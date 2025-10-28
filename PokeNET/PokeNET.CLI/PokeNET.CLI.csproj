@@ -6,12 +6,10 @@
     <Nullable>enable</Nullable>
     <AssemblyName>pokenet-cli</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- Spectre.Console for beautiful CLI -->
     <PackageReference Include="Spectre.Console" Version="0.53.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.0" />
-    
     <!-- Microsoft Extensions for DI and Logging -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
@@ -20,13 +18,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
   </ItemGroup>
-
   <ItemGroup>
     <!-- Project References -->
     <ProjectReference Include="..\PokeNET.Core\PokeNET.Core.csproj" />
     <ProjectReference Include="..\PokeNET.Scripting\PokeNET.Scripting.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <!-- Copy Data files to output -->
     <None Include="..\PokeNET.DesktopGL\Content\Data\**\*.*">
@@ -35,4 +31,3 @@
     </None>
   </ItemGroup>
 </Project>
-

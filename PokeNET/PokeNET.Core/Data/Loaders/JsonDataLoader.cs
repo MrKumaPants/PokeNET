@@ -23,20 +23,22 @@ public class JsonDataLoader<T> : BaseDataLoader<T>
     /// <summary>
     /// Default JSON serializer options.
     /// </summary>
-    public static readonly JsonSerializerOptions DefaultJsonOptions =
-        new()
-        {
-            PropertyNameCaseInsensitive = true,
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true,
-        };
+    public static readonly JsonSerializerOptions DefaultJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
 
     /// <summary>
     /// Initializes a new JSON data loader.
     /// </summary>
     /// <param name="logger">Logger instance.</param>
     /// <param name="jsonOptions">Optional JSON serializer options.</param>
-    public JsonDataLoader(ILogger<BaseDataLoader<T>> logger, JsonSerializerOptions? jsonOptions = null)
+    public JsonDataLoader(
+        ILogger<BaseDataLoader<T>> logger,
+        JsonSerializerOptions? jsonOptions = null
+    )
         : base(logger)
     {
         _jsonOptions = jsonOptions ?? DefaultJsonOptions;

@@ -22,65 +22,73 @@ public class ListSpeciesCommand : CliCommand<ListSpeciesCommand.Settings>
         public int Limit { get; set; } = 50;
     }
 
-    public ListSpeciesCommand(CliContext context) : base(context) { }
+    public ListSpeciesCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Loading species data...", async ctx =>
-            {
-                var allSpecies = await Context.DataApi.GetAllSpeciesAsync();
-                
-                // Apply filters
-                var filtered = allSpecies.AsEnumerable();
-
-                if (!string.IsNullOrEmpty(settings.Type))
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading species data...",
+                async ctx =>
                 {
-                    filtered = filtered.Where(s => 
-                        s.Types.Contains(settings.Type, StringComparer.OrdinalIgnoreCase));
-                }
+                    var allSpecies = await Context.DataApi.GetAllSpeciesAsync();
 
-                var species = filtered.Take(settings.Limit).ToList();
+                    // Apply filters
+                    var filtered = allSpecies.AsEnumerable();
 
-                ctx.Status("Rendering table...");
+                    if (!string.IsNullOrEmpty(settings.Type))
+                    {
+                        filtered = filtered.Where(s =>
+                            s.Types.Contains(settings.Type, StringComparer.OrdinalIgnoreCase)
+                        );
+                    }
 
-                // Create table
-                var table = new Table();
-                table.Border(TableBorder.Rounded);
-                table.AddColumn("[yellow]#[/]");
-                table.AddColumn("[yellow]Name[/]");
-                table.AddColumn("[yellow]Type(s)[/]");
-                table.AddColumn("[yellow]HP[/]");
-                table.AddColumn("[yellow]Atk[/]");
-                table.AddColumn("[yellow]Def[/]");
-                table.AddColumn("[yellow]SpA[/]");
-                table.AddColumn("[yellow]SpD[/]");
-                table.AddColumn("[yellow]Spe[/]");
-                table.AddColumn("[yellow]Total[/]");
+                    var species = filtered.Take(settings.Limit).ToList();
 
-                foreach (var s in species)
-                {
-                    var typeStr = string.Join("/", s.Types);
-                    var typeColor = GetTypeColor(s.Types[0]);
-                    var total = s.BaseStats.Total;
+                    ctx.Status("Rendering table...");
 
-                    table.AddRow(
-                        $"[grey]{s.Id:D3}[/]",
-                        $"[{typeColor}]{s.Name}[/]",
-                        typeStr,
-                        s.BaseStats.HP.ToString(),
-                        s.BaseStats.Attack.ToString(),
-                        s.BaseStats.Defense.ToString(),
-                        s.BaseStats.SpecialAttack.ToString(),
-                        s.BaseStats.SpecialDefense.ToString(),
-                        s.BaseStats.Speed.ToString(),
-                        $"[bold]{total}[/]"
+                    // Create table
+                    var table = new Table();
+                    table.Border(TableBorder.Rounded);
+                    table.AddColumn("[yellow]#[/]");
+                    table.AddColumn("[yellow]Name[/]");
+                    table.AddColumn("[yellow]Type(s)[/]");
+                    table.AddColumn("[yellow]HP[/]");
+                    table.AddColumn("[yellow]Atk[/]");
+                    table.AddColumn("[yellow]Def[/]");
+                    table.AddColumn("[yellow]SpA[/]");
+                    table.AddColumn("[yellow]SpD[/]");
+                    table.AddColumn("[yellow]Spe[/]");
+                    table.AddColumn("[yellow]Total[/]");
+
+                    foreach (var s in species)
+                    {
+                        var typeStr = string.Join("/", s.Types);
+                        var typeColor = GetTypeColor(s.Types[0]);
+                        var total = s.BaseStats.Total;
+
+                        table.AddRow(
+                            $"[grey]{s.Id:D3}[/]",
+                            $"[{typeColor}]{s.Name}[/]",
+                            typeStr,
+                            s.BaseStats.HP.ToString(),
+                            s.BaseStats.Attack.ToString(),
+                            s.BaseStats.Defense.ToString(),
+                            s.BaseStats.SpecialAttack.ToString(),
+                            s.BaseStats.SpecialDefense.ToString(),
+                            s.BaseStats.Speed.ToString(),
+                            $"[bold]{total}[/]"
+                        );
+                    }
+
+                    AnsiConsole.Write(table);
+                    AnsiConsole.MarkupLine(
+                        $"\n[grey]Showing {species.Count} of {allSpecies.Count} species[/]"
                     );
                 }
-
-                AnsiConsole.Write(table);
-                AnsiConsole.MarkupLine($"\n[grey]Showing {species.Count} of {allSpecies.Count} species[/]");
-            });
+            );
     }
 
     private static string GetTypeColor(string type)
@@ -105,8 +113,7 @@ public class ListSpeciesCommand : CliCommand<ListSpeciesCommand.Settings>
             "ghost" => "purple",
             "steel" => "grey",
             "normal" => "white",
-            _ => "white"
+            _ => "white",
         };
     }
 }
-

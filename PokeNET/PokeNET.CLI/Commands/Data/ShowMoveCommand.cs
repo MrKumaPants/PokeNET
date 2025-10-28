@@ -19,24 +19,29 @@ public class ShowMoveCommand : CliCommand<ShowMoveCommand.Settings>
         public string Name { get; set; } = string.Empty;
     }
 
-    public ShowMoveCommand(CliContext context) : base(context) { }
+    public ShowMoveCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Loading move data...", async ctx =>
-            {
-                var move = await Context.DataApi.GetMoveByNameAsync(settings.Name);
-
-                if (move == null)
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading move data...",
+                async ctx =>
                 {
-                    AnsiConsole.MarkupLine($"[red]Move '{settings.Name}' not found[/]");
-                    return;
-                }
+                    var move = await Context.DataApi.GetMoveByNameAsync(settings.Name);
 
-                ctx.Status("Rendering details...");
-                DataDisplayHelper.DisplayMove(move);
-            });
+                    if (move == null)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Move '{settings.Name}' not found[/]");
+                        return;
+                    }
+
+                    ctx.Status("Rendering details...");
+                    DataDisplayHelper.DisplayMove(move);
+                }
+            );
     }
 
     // Removed duplicate display logic - now using DataDisplayHelper
@@ -47,7 +52,7 @@ public class ShowMoveCommand : CliCommand<ShowMoveCommand.Settings>
         var panel = new Panel(new Markup($"[bold white]{title}[/]"))
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Aqua)
+            BorderStyle = new Style(Color.Aqua),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -94,11 +99,13 @@ public class ShowMoveCommand : CliCommand<ShowMoveCommand.Settings>
 
         if (move.EffectParameters?.Any() == true)
         {
-            var paramsStr = string.Join(", ", move.EffectParameters.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+            var paramsStr = string.Join(
+                ", ",
+                move.EffectParameters.Select(kvp => $"{kvp.Key}: {kvp.Value}")
+            );
             table.AddRow("[grey]Effect Params:[/]", $"[grey]{paramsStr}[/]");
         }
 
         AnsiConsole.Write(table);
     }
 }
-

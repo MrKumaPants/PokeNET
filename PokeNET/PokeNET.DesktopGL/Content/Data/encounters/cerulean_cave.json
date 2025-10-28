@@ -84,7 +84,7 @@
       "weather": "Any"
     },
     {
-      "speciesId": 82,
+      "speciesId": "magnemite",
       "minLevel": 50,
       "maxLevel": 58,
       "rate": 15,
@@ -92,7 +92,7 @@
       "weather": "Any"
     },
     {
-      "speciesId": 101,
+      "speciesId": "electrode",
       "minLevel": 52,
       "maxLevel": 60,
       "rate": 15,

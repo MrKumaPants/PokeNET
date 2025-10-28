@@ -1,0 +1,50 @@
+{
+  "id": "spearow",
+  "nationalDexNumber": 21,
+  "name": "Spearow",
+  "types": ["Normal", "Flying"],
+  "baseStats": {
+    "hp": 40,
+    "attack": 60,
+    "defense": 30,
+    "specialAttack": 31,
+    "specialDefense": 31,
+    "speed": 70
+  },
+  "abilities": ["Keen Eye"],
+  "hiddenAbility": "Sniper",
+  "growthRate": "Medium Fast",
+  "baseExperience": 52,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Flying"],
+  "hatchSteps": 3840,
+  "height": 3,
+  "weight": 20,
+  "description": "Eats bugs in grassy areas. It has to flap its short wings at high speed to stay airborne.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Peck" },
+    { "level": 1, "moveName": "Growl" },
+    { "level": 4, "moveName": "Leer" },
+    { "level": 8, "moveName": "Pursuit" },
+    { "level": 11, "moveName": "Fury Attack" },
+    { "level": 15, "moveName": "Aerial Ace" },
+    { "level": 18, "moveName": "Mirror Move" },
+    { "level": 22, "moveName": "Assurance" },
+    { "level": 25, "moveName": "Agility" },
+    { "level": 29, "moveName": "Focus Energy" },
+    { "level": 32, "moveName": "Roost" },
+    { "level": 36, "moveName": "Drill Peck" }
+  ],
+  "tmMoves": ["Work Up", "Toxic", "Hidden Power", "Sunny Day", "Protect", "Rain Dance", "Roost", "Frustration", "Return", "Double Team", "Aerial Ace", "Facade", "Rest", "Attract", "Thief", "Round", "Echoed Voice", "False Swipe", "Fly", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Confide"],
+  "eggMoves": ["Astonish", "Feather Dance", "Quick Attack", "Razor Wind", "Scary Face", "Sky Attack", "Tri Attack", "Uproar", "Whirlwind"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "fearow",
+      "method": "Level",
+      "requiredLevel": 20
+    }
+  ]
+}
+

@@ -1,0 +1,54 @@
+{
+  "id": "pidgeotto",
+  "nationalDexNumber": 17,
+  "name": "Pidgeotto",
+  "types": ["Normal", "Flying"],
+  "baseStats": {
+    "hp": 63,
+    "attack": 60,
+    "defense": 55,
+    "specialAttack": 50,
+    "specialDefense": 50,
+    "speed": 71
+  },
+  "abilities": ["Keen Eye", "Tangled Feet"],
+  "hiddenAbility": "Big Pecks",
+  "growthRate": "Medium Slow",
+  "baseExperience": 122,
+  "genderRatio": 127,
+  "catchRate": 120,
+  "baseFriendship": 70,
+  "eggGroups": ["Flying"],
+  "hatchSteps": 3840,
+  "height": 11,
+  "weight": 300,
+  "description": "This Pokemon is full of vitality. It constantly flies around its large territory in search of prey.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Sand Attack" },
+    { "level": 1, "moveName": "Gust" },
+    { "level": 5, "moveName": "Sand Attack" },
+    { "level": 9, "moveName": "Gust" },
+    { "level": 13, "moveName": "Quick Attack" },
+    { "level": 17, "moveName": "Whirlwind" },
+    { "level": 22, "moveName": "Twister" },
+    { "level": 27, "moveName": "Feather Dance" },
+    { "level": 32, "moveName": "Agility" },
+    { "level": 37, "moveName": "Wing Attack" },
+    { "level": 42, "moveName": "Roost" },
+    { "level": 47, "moveName": "Tailwind" },
+    { "level": 52, "moveName": "Mirror Move" },
+    { "level": 57, "moveName": "Air Slash" },
+    { "level": 62, "moveName": "Hurricane" }
+  ],
+  "tmMoves": ["Work Up", "Toxic", "Hidden Power", "Sunny Day", "Protect", "Rain Dance", "Roost", "Frustration", "Return", "Double Team", "Aerial Ace", "Facade", "Rest", "Attract", "Thief", "Round", "Steel Wing", "Echoed Voice", "Fly", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Confide"],
+  "eggMoves": ["Air Cutter", "Air Slash", "Brave Bird", "Defog", "Foresight", "Pursuit", "Steel Wing", "Uproar"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "pidgeot",
+      "method": "Level",
+      "requiredLevel": 36
+    }
+  ]
+}
+

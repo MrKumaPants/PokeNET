@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace PokeNET.Core.Data;
@@ -32,6 +34,22 @@ public interface IDataApi
     /// <returns>Read-only list of all species.</returns>
     Task<IReadOnlyList<SpeciesData>> GetAllSpeciesAsync();
 
+    /// <summary>
+    /// Queries species data with a custom predicate expression.
+    /// </summary>
+    /// <param name="predicate">Expression to filter species.</param>
+    /// <returns>List of species matching the predicate.</returns>
+    Task<IReadOnlyList<SpeciesData>> QuerySpeciesAsync(
+        Expression<Func<SpeciesData, bool>> predicate
+    );
+
+    /// <summary>
+    /// Gets all species of the specified type.
+    /// </summary>
+    /// <param name="type">Pokemon type (e.g., "Fire", "Water").</param>
+    /// <returns>List of species with the specified type.</returns>
+    Task<IReadOnlyList<SpeciesData>> GetSpeciesByTypeAsync(string type);
+
     // ==================== Move Data ====================
 
     /// <summary>
@@ -61,6 +79,28 @@ public interface IDataApi
     /// <returns>List of moves matching the type.</returns>
     Task<IReadOnlyList<MoveData>> GetMovesByTypeAsync(string type);
 
+    /// <summary>
+    /// Queries move data with a custom predicate expression.
+    /// </summary>
+    /// <param name="predicate">Expression to filter moves.</param>
+    /// <returns>List of moves matching the predicate.</returns>
+    Task<IReadOnlyList<MoveData>> QueryMovesAsync(Expression<Func<MoveData, bool>> predicate);
+
+    /// <summary>
+    /// Gets moves within a power range.
+    /// </summary>
+    /// <param name="minPower">Minimum power (inclusive).</param>
+    /// <param name="maxPower">Maximum power (inclusive).</param>
+    /// <returns>List of moves within the power range.</returns>
+    Task<IReadOnlyList<MoveData>> GetMovesByPowerRangeAsync(int minPower, int maxPower);
+
+    /// <summary>
+    /// Gets moves by category.
+    /// </summary>
+    /// <param name="category">Move category.</param>
+    /// <returns>List of moves in the category.</returns>
+    Task<IReadOnlyList<MoveData>> GetMovesByCategoryAsync(MoveCategory category);
+
     // ==================== Item Data ====================
 
     /// <summary>
@@ -89,6 +129,21 @@ public interface IDataApi
     /// <param name="category">Item category.</param>
     /// <returns>List of items in the category.</returns>
     Task<IReadOnlyList<ItemData>> GetItemsByCategoryAsync(ItemCategory category);
+
+    /// <summary>
+    /// Queries item data with a custom predicate expression.
+    /// </summary>
+    /// <param name="predicate">Expression to filter items.</param>
+    /// <returns>List of items matching the predicate.</returns>
+    Task<IReadOnlyList<ItemData>> QueryItemsAsync(Expression<Func<ItemData, bool>> predicate);
+
+    /// <summary>
+    /// Gets items within a price range.
+    /// </summary>
+    /// <param name="minPrice">Minimum price (inclusive).</param>
+    /// <param name="maxPrice">Maximum price (inclusive).</param>
+    /// <returns>List of items within the price range.</returns>
+    Task<IReadOnlyList<ItemData>> GetItemsByPriceRangeAsync(int minPrice, int maxPrice);
 
     // ==================== Encounter Data ====================
 
@@ -155,7 +210,8 @@ public interface IDataApi
     Task<double> GetDualTypeEffectivenessAsync(
         string attackType,
         string defenseType1,
-        string? defenseType2);
+        string? defenseType2
+    );
 
     // ==================== Cache Management ====================
 

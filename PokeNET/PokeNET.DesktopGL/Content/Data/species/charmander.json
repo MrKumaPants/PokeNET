@@ -37,8 +37,8 @@
     { "level": 31, "moveName": "Fire Spin" },
     { "level": 34, "moveName": "Inferno" }
   ],
-  "tmMoves": ["Toxic", "Body Slam", "Fire Blast", "Rest", "Substitute", "Flamethrower"],
-  "eggMoves": ["Belly Drum", "Ancient Power", "Dragon Dance", "Outrage"],
+  "tmMoves": ["Toxic", "Hidden Power", "Sunny Day", "Protect", "Frustration", "Return", "Brick Break", "Double Team", "Flamethrower", "Fire Blast", "Aerial Ace", "Facade", "Flame Charge", "Rest", "Attract", "Round", "Overheat", "Focus Blast", "Fling", "Will-O-Wisp", "Shadow Claw", "Swagger", "Power-Up Punch", "Sleep Talk", "Substitute", "Rock Smash", "Confide"],
+  "eggMoves": ["Air Cutter", "Ancient Power", "Beat Up", "Belly Drum", "Bite", "Counter", "Crunch", "Dragon Dance", "Dragon Pulse", "Dragon Rush", "Flare Blitz", "Focus Punch", "Metal Claw", "Outrage"],
   "evolutions": [
     {
       "targetSpeciesId": "charmeleon",

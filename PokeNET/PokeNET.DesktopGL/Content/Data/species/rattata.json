@@ -1,0 +1,51 @@
+{
+  "id": "rattata",
+  "nationalDexNumber": 19,
+  "name": "Rattata",
+  "types": ["Normal"],
+  "baseStats": {
+    "hp": 30,
+    "attack": 56,
+    "defense": 35,
+    "specialAttack": 25,
+    "specialDefense": 35,
+    "speed": 72
+  },
+  "abilities": ["Run Away", "Guts"],
+  "hiddenAbility": "Hustle",
+  "growthRate": "Medium Fast",
+  "baseExperience": 51,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Field"],
+  "hatchSteps": 3840,
+  "height": 3,
+  "weight": 35,
+  "description": "Bites anything when it attacks. Small and very quick, it is a common sight in many places.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Tail Whip" },
+    { "level": 4, "moveName": "Quick Attack" },
+    { "level": 7, "moveName": "Focus Energy" },
+    { "level": 10, "moveName": "Bite" },
+    { "level": 13, "moveName": "Pursuit" },
+    { "level": 16, "moveName": "Hyper Fang" },
+    { "level": 19, "moveName": "Assurance" },
+    { "level": 22, "moveName": "Crunch" },
+    { "level": 25, "moveName": "Sucker Punch" },
+    { "level": 28, "moveName": "Super Fang" },
+    { "level": 31, "moveName": "Double-Edge" },
+    { "level": 34, "moveName": "Endeavor" }
+  ],
+  "tmMoves": ["Work Up", "Toxic", "Hidden Power", "Sunny Day", "Ice Beam", "Blizzard", "Protect", "Rain Dance", "Frustration", "Thunderbolt", "Thunder", "Return", "Dig", "Shadow Ball", "Double Team", "Flamethrower", "Sludge Bomb", "Facade", "Rest", "Attract", "Thief", "Round", "Charge Beam", "Grass Knot", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Wild Charge", "Confide"],
+  "eggMoves": ["Bite", "Counter", "Final Gambit", "Flame Wheel", "Fury Swipes", "Last Resort", "Me First", "Revenge", "Reversal", "Screech", "Uproar"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "raticate",
+      "method": "Level",
+      "requiredLevel": 20
+    }
+  ]
+}
+

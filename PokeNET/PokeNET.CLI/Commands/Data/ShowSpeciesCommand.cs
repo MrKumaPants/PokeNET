@@ -19,41 +19,48 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
         public string Identifier { get; set; } = string.Empty;
     }
 
-    public ShowSpeciesCommand(CliContext context) : base(context) { }
+    public ShowSpeciesCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Loading species data...", async ctx =>
-            {
-                // Try to parse as ID first
-                SpeciesData? species = null;
-                if (int.TryParse(settings.Identifier, out var dexNumber))
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading species data...",
+                async ctx =>
                 {
-                    // Try to find by National Dex Number
-                    var allSpecies = await Context.DataApi.GetAllSpeciesAsync();
-                    species = allSpecies.FirstOrDefault(s => s.NationalDexNumber == dexNumber);
-                }
-                else
-                {
-                    // Try by name or string ID
-                    species = await Context.DataApi.GetSpeciesByNameAsync(settings.Identifier);
+                    // Try to parse as ID first
+                    SpeciesData? species = null;
+                    if (int.TryParse(settings.Identifier, out var dexNumber))
+                    {
+                        // Try to find by National Dex Number
+                        var allSpecies = await Context.DataApi.GetAllSpeciesAsync();
+                        species = allSpecies.FirstOrDefault(s => s.NationalDexNumber == dexNumber);
+                    }
+                    else
+                    {
+                        // Try by name or string ID
+                        species = await Context.DataApi.GetSpeciesByNameAsync(settings.Identifier);
+                        if (species == null)
+                        {
+                            // Try by ID as fallback
+                            species = await Context.DataApi.GetSpeciesAsync(settings.Identifier);
+                        }
+                    }
+
                     if (species == null)
                     {
-                        // Try by ID as fallback
-                        species = await Context.DataApi.GetSpeciesAsync(settings.Identifier);
+                        AnsiConsole.MarkupLine(
+                            $"[red]Species '{settings.Identifier}' not found[/]"
+                        );
+                        return;
                     }
-                }
 
-                if (species == null)
-                {
-                    AnsiConsole.MarkupLine($"[red]Species '{settings.Identifier}' not found[/]");
-                    return;
+                    ctx.Status("Rendering details...");
+                    DataDisplayHelper.DisplaySpecies(species);
                 }
-
-                ctx.Status("Rendering details...");
-                DataDisplayHelper.DisplaySpecies(species);
-            });
+            );
     }
 
     // Removed duplicate display logic - now using DataDisplayHelper
@@ -62,11 +69,11 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
         // Header
         var typeStr = string.Join("/", species.Types);
         var title = $"#{species.Id:D3} {species.Name} ({typeStr})";
-        
+
         var panel = new Panel(new Markup($"[bold white]{title}[/]"))
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Yellow)
+            BorderStyle = new Style(Color.Yellow),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -88,11 +95,13 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
         AddStatRow(statsTable, "Speed", species.BaseStats.Speed);
         statsTable.AddRow("[bold]Total[/]", $"[bold]{total}[/]", "");
 
-        AnsiConsole.Write(new Panel(statsTable)
-        {
-            Header = new PanelHeader("[yellow]Base Stats[/]"),
-            Border = BoxBorder.Rounded
-        });
+        AnsiConsole.Write(
+            new Panel(statsTable)
+            {
+                Header = new PanelHeader("[yellow]Base Stats[/]"),
+                Border = BoxBorder.Rounded,
+            }
+        );
         AnsiConsole.WriteLine();
 
         // Additional info
@@ -114,8 +123,10 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
 
         if (species.Evolutions?.Any() == true)
         {
-            var evos = string.Join(", ", species.Evolutions.Select(e => 
-                $"{e.TargetSpeciesId} at Lv.{e.RequiredLevel}"));
+            var evos = string.Join(
+                ", ",
+                species.Evolutions.Select(e => $"{e.TargetSpeciesId} at Lv.{e.RequiredLevel}")
+            );
             infoTable.AddRow("[yellow]Evolves Into:[/]", evos);
         }
 
@@ -142,27 +153,29 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
         detailsTable.AddRow("Base Experience", species.BaseExperience.ToString());
         detailsTable.AddRow("Catch Rate", $"{species.CatchRate} / 255");
         detailsTable.AddRow("Base Friendship", species.BaseFriendship.ToString());
-        
+
         var genderRatio = species.GenderRatio switch
         {
             -1 => "Genderless",
             0 => "100% Male",
             254 => "100% Female",
-            _ => $"{(species.GenderRatio / 254.0 * 100):F1}% Female"
+            _ => $"{(species.GenderRatio / 254.0 * 100):F1}% Female",
         };
         detailsTable.AddRow("Gender Ratio", genderRatio);
-        
+
         if (species.EggGroups?.Any() == true)
         {
             detailsTable.AddRow("Egg Groups", string.Join(", ", species.EggGroups));
             detailsTable.AddRow("Hatch Steps", species.HatchSteps.ToString());
         }
 
-        AnsiConsole.Write(new Panel(detailsTable)
-        {
-            Header = new PanelHeader("[cyan]Details[/]"),
-            Border = BoxBorder.Rounded
-        });
+        AnsiConsole.Write(
+            new Panel(detailsTable)
+            {
+                Header = new PanelHeader("[cyan]Details[/]"),
+                Border = BoxBorder.Rounded,
+            }
+        );
         AnsiConsole.WriteLine();
 
         // Level-up moves
@@ -178,11 +191,13 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
                 movesTable.AddRow(move.Level.ToString(), move.MoveName);
             }
 
-            AnsiConsole.Write(new Panel(movesTable)
-            {
-                Header = new PanelHeader("[green]Level-up Moves[/]"),
-                Border = BoxBorder.Rounded
-            });
+            AnsiConsole.Write(
+                new Panel(movesTable)
+                {
+                    Header = new PanelHeader("[green]Level-up Moves[/]"),
+                    Border = BoxBorder.Rounded,
+                }
+            );
             AnsiConsole.WriteLine();
         }
 
@@ -207,20 +222,15 @@ public class ShowSpeciesCommand : CliCommand<ShowSpeciesCommand.Settings>
         const int maxStat = 255;
         var barLength = (int)((value / (double)maxStat) * 20);
         var bar = new string('█', barLength) + new string('░', 20 - barLength);
-        
+
         var color = value switch
         {
             >= 150 => "green",
             >= 100 => "yellow",
             >= 50 => "orange1",
-            _ => "red"
+            _ => "red",
         };
 
-        table.AddRow(
-            statName,
-            $"[{color}]{value}[/]",
-            $"[{color}]{bar}[/]"
-        );
+        table.AddRow(statName, $"[{color}]{value}[/]", $"[{color}]{bar}[/]");
     }
 }
-

@@ -1,0 +1,48 @@
+{
+  "id": "blastoise",
+  "nationalDexNumber": 9,
+  "name": "Blastoise",
+  "types": ["Water"],
+  "baseStats": {
+    "hp": 79,
+    "attack": 83,
+    "defense": 100,
+    "specialAttack": 85,
+    "specialDefense": 105,
+    "speed": 78
+  },
+  "abilities": ["Torrent"],
+  "hiddenAbility": "Rain Dish",
+  "growthRate": "Medium Slow",
+  "baseExperience": 265,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Water 1"],
+  "hatchSteps": 5120,
+  "height": 16,
+  "weight": 855,
+  "description": "It deliberately makes itself heavy so it can withstand the recoil of the water jets it fires.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Tail Whip" },
+    { "level": 1, "moveName": "Water Gun" },
+    { "level": 1, "moveName": "Withdraw" },
+    { "level": 7, "moveName": "Water Gun" },
+    { "level": 10, "moveName": "Withdraw" },
+    { "level": 13, "moveName": "Bubble" },
+    { "level": 17, "moveName": "Bite" },
+    { "level": 20, "moveName": "Rapid Spin" },
+    { "level": 23, "moveName": "Protect" },
+    { "level": 28, "moveName": "Water Pulse" },
+    { "level": 31, "moveName": "Aqua Tail" },
+    { "level": 39, "moveName": "Skull Bash" },
+    { "level": 45, "moveName": "Iron Defense" },
+    { "level": 50, "moveName": "Rain Dance" },
+    { "level": 53, "moveName": "Hydro Pump" }
+  ],
+  "tmMoves": ["Toxic", "Hail", "Hidden Power", "Ice Beam", "Blizzard", "Hyper Beam", "Protect", "Rain Dance", "Frustration", "Earthquake", "Return", "Dig", "Brick Break", "Double Team", "Rock Tomb", "Facade", "Rest", "Attract", "Round", "Focus Blast", "Scald", "Fling", "Giga Impact", "Gyro Ball", "Bulldoze", "Frost Breath", "Rock Slide", "Dragon Pulse", "Swagger", "Sleep Talk", "Substitute", "Flash Cannon", "Rock Smash", "Power-Up Punch", "Confide", "Surf", "Waterfall", "Dive"],
+  "eggMoves": ["Aqua Jet", "Aqua Ring", "Aura Sphere", "Brine", "Dragon Pulse", "Fake Out", "Flail", "Foresight", "Haze", "Mirror Coat", "Mud Sport", "Muddy Water", "Refresh", "Water Spout", "Yawn"],
+  "evolutions": []
+}
+

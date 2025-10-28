@@ -9,11 +9,10 @@ namespace PokeNET.CLI.Commands.Mod;
 /// </summary>
 public class ListModsCommand : CliCommand<ListModsCommand.Settings>
 {
-    public class Settings : CommandSettings
-    {
-    }
+    public class Settings : CommandSettings { }
 
-    public ListModsCommand(CliContext context) : base(context) { }
+    public ListModsCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
@@ -36,13 +35,15 @@ public class ListModsCommand : CliCommand<ListModsCommand.Settings>
 
             foreach (var mod in mods)
             {
-                table.AddRow(new string[]
-                {
-                    $"[cyan]{mod.Id}[/]",
-                    mod.Name,
-                    mod.Version.ToString(),
-                    mod.Author ?? "[grey]Unknown[/]"
-                });
+                table.AddRow(
+                    new string[]
+                    {
+                        $"[cyan]{mod.Id}[/]",
+                        mod.Name,
+                        mod.Version.ToString(),
+                        mod.Author ?? "[grey]Unknown[/]",
+                    }
+                );
             }
 
             AnsiConsole.Write(table);
@@ -50,4 +51,3 @@ public class ListModsCommand : CliCommand<ListModsCommand.Settings>
         });
     }
 }
-

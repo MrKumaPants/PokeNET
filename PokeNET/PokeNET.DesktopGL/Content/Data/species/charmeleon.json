@@ -1,0 +1,51 @@
+{
+  "id": "charmeleon",
+  "nationalDexNumber": 5,
+  "name": "Charmeleon",
+  "types": ["Fire"],
+  "baseStats": {
+    "hp": 58,
+    "attack": 64,
+    "defense": 58,
+    "specialAttack": 80,
+    "specialDefense": 65,
+    "speed": 80
+  },
+  "abilities": ["Blaze"],
+  "hiddenAbility": "Solar Power",
+  "growthRate": "Medium Slow",
+  "baseExperience": 142,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Dragon"],
+  "hatchSteps": 5120,
+  "height": 11,
+  "weight": 190,
+  "description": "When it swings its burning tail, it elevates the temperature to unbearably high levels.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Scratch" },
+    { "level": 1, "moveName": "Growl" },
+    { "level": 1, "moveName": "Ember" },
+    { "level": 7, "moveName": "Ember" },
+    { "level": 10, "moveName": "Smokescreen" },
+    { "level": 17, "moveName": "Dragon Rage" },
+    { "level": 21, "moveName": "Scary Face" },
+    { "level": 28, "moveName": "Fire Fang" },
+    { "level": 32, "moveName": "Flame Burst" },
+    { "level": 39, "moveName": "Slash" },
+    { "level": 43, "moveName": "Flamethrower" },
+    { "level": 50, "moveName": "Fire Spin" },
+    { "level": 54, "moveName": "Inferno" }
+  ],
+  "tmMoves": ["Toxic", "Hidden Power", "Sunny Day", "Protect", "Frustration", "Return", "Brick Break", "Double Team", "Flamethrower", "Fire Blast", "Aerial Ace", "Facade", "Flame Charge", "Rest", "Attract", "Round", "Overheat", "Focus Blast", "Fling", "Will-O-Wisp", "Shadow Claw", "Swagger", "Power-Up Punch", "Sleep Talk", "Substitute", "Rock Smash", "Confide"],
+  "eggMoves": ["Air Cutter", "Ancient Power", "Beat Up", "Belly Drum", "Bite", "Counter", "Crunch", "Dragon Dance", "Dragon Pulse", "Dragon Rush", "Flare Blitz", "Focus Punch", "Metal Claw", "Outrage"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "charizard",
+      "method": "Level",
+      "requiredLevel": 36
+    }
+  ]
+}
+

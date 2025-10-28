@@ -37,8 +37,8 @@
     { "level": 31, "moveName": "Skull Bash" },
     { "level": 34, "moveName": "Hydro Pump" }
   ],
-  "tmMoves": ["Toxic", "Body Slam", "Surf", "Ice Beam", "Blizzard", "Rest", "Substitute"],
-  "eggMoves": ["Mirror Coat", "Aqua Jet", "Aura Sphere", "Dragon Pulse"],
+  "tmMoves": ["Toxic", "Hail", "Hidden Power", "Ice Beam", "Blizzard", "Protect", "Rain Dance", "Frustration", "Return", "Dig", "Brick Break", "Double Team", "Rock Tomb", "Facade", "Rest", "Attract", "Round", "Scald", "Fling", "Gyro Ball", "Bulldoze", "Frost Breath", "Swagger", "Sleep Talk", "Substitute", "Rock Smash", "Power-Up Punch", "Confide", "Surf", "Waterfall"],
+  "eggMoves": ["Aqua Jet", "Aqua Ring", "Aura Sphere", "Brine", "Dragon Pulse", "Fake Out", "Flail", "Foresight", "Haze", "Mirror Coat", "Mud Sport", "Muddy Water", "Refresh", "Water Spout", "Yawn"],
   "evolutions": [
     {
       "targetSpeciesId": "wartortle",

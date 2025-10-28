@@ -10,7 +10,7 @@ public class MoveData
     /// Unique move identifier.
     /// </summary>
     public string Id { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Unique move identifier/name.
     /// </summary>

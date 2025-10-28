@@ -60,7 +60,7 @@ public class Encounter
     /// <summary>
     /// Species ID of the wild Pokemon.
     /// </summary>
-    public int SpeciesId { get; set; }
+    public string SpeciesId { get; set; } = string.Empty;
 
     /// <summary>
     /// Minimum level of the encounter.
@@ -101,7 +101,7 @@ public class SpecialEncounter
     /// <summary>
     /// Species ID of the special Pokemon.
     /// </summary>
-    public int SpeciesId { get; set; }
+    public string SpeciesId { get; set; } = string.Empty;
 
     /// <summary>
     /// Fixed level for this encounter.

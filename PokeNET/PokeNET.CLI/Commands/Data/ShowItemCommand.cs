@@ -19,24 +19,29 @@ public class ShowItemCommand : CliCommand<ShowItemCommand.Settings>
         public string Name { get; set; } = string.Empty;
     }
 
-    public ShowItemCommand(CliContext context) : base(context) { }
+    public ShowItemCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Loading item data...", async ctx =>
-            {
-                var item = await Context.DataApi.GetItemByNameAsync(settings.Name);
-
-                if (item == null)
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Loading item data...",
+                async ctx =>
                 {
-                    AnsiConsole.MarkupLine($"[red]Item '{settings.Name}' not found[/]");
-                    return;
-                }
+                    var item = await Context.DataApi.GetItemByNameAsync(settings.Name);
 
-                ctx.Status("Rendering details...");
-                DataDisplayHelper.DisplayItem(item);
-            });
+                    if (item == null)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Item '{settings.Name}' not found[/]");
+                        return;
+                    }
+
+                    ctx.Status("Rendering details...");
+                    DataDisplayHelper.DisplayItem(item);
+                }
+            );
     }
 
     // Removed duplicate display logic - now using DataDisplayHelper
@@ -46,7 +51,7 @@ public class ShowItemCommand : CliCommand<ShowItemCommand.Settings>
         var panel = new Panel(new Markup($"[bold white]{item.Name}[/]"))
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Green)
+            BorderStyle = new Style(Color.Green),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -70,7 +75,7 @@ public class ShowItemCommand : CliCommand<ShowItemCommand.Settings>
         {
             table.AddRow("[yellow]Buy Price:[/]", $"₽{item.BuyPrice}");
         }
-        
+
         if (item.SellPrice > 0)
         {
             table.AddRow("[yellow]Sell Price:[/]", $"₽{item.SellPrice}");
@@ -94,11 +99,13 @@ public class ShowItemCommand : CliCommand<ShowItemCommand.Settings>
 
         if (item.EffectParameters?.Any() == true)
         {
-            var paramsStr = string.Join(", ", item.EffectParameters.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+            var paramsStr = string.Join(
+                ", ",
+                item.EffectParameters.Select(kvp => $"{kvp.Key}: {kvp.Value}")
+            );
             table.AddRow("[grey]Effect Params:[/]", $"[grey]{paramsStr}[/]");
         }
 
         AnsiConsole.Write(table);
     }
 }
-

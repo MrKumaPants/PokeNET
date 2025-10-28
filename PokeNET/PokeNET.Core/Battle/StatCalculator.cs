@@ -98,18 +98,45 @@ public static class StatCalculator
         int baseSpDefense,
         int baseSpeed,
         int level,
-        Nature nature)
+        Nature nature
+    )
     {
         // Calculate HP (no nature modifier)
         stats.MaxHP = CalculateHP(baseHP, stats.IV_HP, stats.EV_HP, level);
 
         // Calculate other stats with nature modifiers
-        var (attackMod, defenseMod, spAttackMod, spDefenseMod, speedMod) = GetNatureModifiers(nature);
+        var (attackMod, defenseMod, spAttackMod, spDefenseMod, speedMod) = GetNatureModifiers(
+            nature
+        );
 
-        stats.Attack = CalculateStat(baseAttack, stats.IV_Attack, stats.EV_Attack, level, attackMod);
-        stats.Defense = CalculateStat(baseDefense, stats.IV_Defense, stats.EV_Defense, level, defenseMod);
-        stats.SpAttack = CalculateStat(baseSpAttack, stats.IV_SpAttack, stats.EV_SpAttack, level, spAttackMod);
-        stats.SpDefense = CalculateStat(baseSpDefense, stats.IV_SpDefense, stats.EV_SpDefense, level, spDefenseMod);
+        stats.Attack = CalculateStat(
+            baseAttack,
+            stats.IV_Attack,
+            stats.EV_Attack,
+            level,
+            attackMod
+        );
+        stats.Defense = CalculateStat(
+            baseDefense,
+            stats.IV_Defense,
+            stats.EV_Defense,
+            level,
+            defenseMod
+        );
+        stats.SpAttack = CalculateStat(
+            baseSpAttack,
+            stats.IV_SpAttack,
+            stats.EV_SpAttack,
+            level,
+            spAttackMod
+        );
+        stats.SpDefense = CalculateStat(
+            baseSpDefense,
+            stats.IV_SpDefense,
+            stats.EV_SpDefense,
+            level,
+            spDefenseMod
+        );
         stats.Speed = CalculateStat(baseSpeed, stats.IV_Speed, stats.EV_Speed, level, speedMod);
     }
 
@@ -125,43 +152,54 @@ public static class StatCalculator
     /// - Neutral stat: 1.0 (no change)
     /// - Hardy, Docile, Serious, Bashful, Quirky are neutral natures (all 1.0)
     /// </remarks>
-    private static (float attack, float defense, float spAttack, float spDefense, float speed) GetNatureModifiers(Nature nature)
+    private static (
+        float attack,
+        float defense,
+        float spAttack,
+        float spDefense,
+        float speed
+    ) GetNatureModifiers(Nature nature)
     {
         return nature switch
         {
             // Attack boosted
-            Nature.Lonely => (1.1f, 0.9f, 1.0f, 1.0f, 1.0f),   // +Atk -Def
-            Nature.Brave => (1.1f, 1.0f, 1.0f, 1.0f, 0.9f),    // +Atk -Spd
-            Nature.Adamant => (1.1f, 1.0f, 0.9f, 1.0f, 1.0f),  // +Atk -SpAtk
-            Nature.Naughty => (1.1f, 1.0f, 1.0f, 0.9f, 1.0f),  // +Atk -SpDef
+            Nature.Lonely => (1.1f, 0.9f, 1.0f, 1.0f, 1.0f), // +Atk -Def
+            Nature.Brave => (1.1f, 1.0f, 1.0f, 1.0f, 0.9f), // +Atk -Spd
+            Nature.Adamant => (1.1f, 1.0f, 0.9f, 1.0f, 1.0f), // +Atk -SpAtk
+            Nature.Naughty => (1.1f, 1.0f, 1.0f, 0.9f, 1.0f), // +Atk -SpDef
 
             // Defense boosted
-            Nature.Bold => (0.9f, 1.1f, 1.0f, 1.0f, 1.0f),     // +Def -Atk
-            Nature.Relaxed => (1.0f, 1.1f, 1.0f, 1.0f, 0.9f),  // +Def -Spd
-            Nature.Impish => (1.0f, 1.1f, 0.9f, 1.0f, 1.0f),   // +Def -SpAtk
-            Nature.Lax => (1.0f, 1.1f, 1.0f, 0.9f, 1.0f),      // +Def -SpDef
+            Nature.Bold => (0.9f, 1.1f, 1.0f, 1.0f, 1.0f), // +Def -Atk
+            Nature.Relaxed => (1.0f, 1.1f, 1.0f, 1.0f, 0.9f), // +Def -Spd
+            Nature.Impish => (1.0f, 1.1f, 0.9f, 1.0f, 1.0f), // +Def -SpAtk
+            Nature.Lax => (1.0f, 1.1f, 1.0f, 0.9f, 1.0f), // +Def -SpDef
 
             // SpAttack boosted
-            Nature.Modest => (0.9f, 1.0f, 1.1f, 1.0f, 1.0f),   // +SpAtk -Atk
-            Nature.Mild => (1.0f, 0.9f, 1.1f, 1.0f, 1.0f),     // +SpAtk -Def
-            Nature.Quiet => (1.0f, 1.0f, 1.1f, 1.0f, 0.9f),    // +SpAtk -Spd
-            Nature.Rash => (1.0f, 1.0f, 1.1f, 0.9f, 1.0f),     // +SpAtk -SpDef
+            Nature.Modest => (0.9f, 1.0f, 1.1f, 1.0f, 1.0f), // +SpAtk -Atk
+            Nature.Mild => (1.0f, 0.9f, 1.1f, 1.0f, 1.0f), // +SpAtk -Def
+            Nature.Quiet => (1.0f, 1.0f, 1.1f, 1.0f, 0.9f), // +SpAtk -Spd
+            Nature.Rash => (1.0f, 1.0f, 1.1f, 0.9f, 1.0f), // +SpAtk -SpDef
 
             // SpDefense boosted
-            Nature.Calm => (0.9f, 1.0f, 1.0f, 1.1f, 1.0f),     // +SpDef -Atk
-            Nature.Gentle => (1.0f, 0.9f, 1.0f, 1.1f, 1.0f),   // +SpDef -Def
-            Nature.Sassy => (1.0f, 1.0f, 1.0f, 1.1f, 0.9f),    // +SpDef -Spd
-            Nature.Careful => (1.0f, 1.0f, 0.9f, 1.1f, 1.0f),  // +SpDef -SpAtk
+            Nature.Calm => (0.9f, 1.0f, 1.0f, 1.1f, 1.0f), // +SpDef -Atk
+            Nature.Gentle => (1.0f, 0.9f, 1.0f, 1.1f, 1.0f), // +SpDef -Def
+            Nature.Sassy => (1.0f, 1.0f, 1.0f, 1.1f, 0.9f), // +SpDef -Spd
+            Nature.Careful => (1.0f, 1.0f, 0.9f, 1.1f, 1.0f), // +SpDef -SpAtk
 
             // Speed boosted
-            Nature.Timid => (0.9f, 1.0f, 1.0f, 1.0f, 1.1f),    // +Spd -Atk
-            Nature.Hasty => (1.0f, 0.9f, 1.0f, 1.0f, 1.1f),    // +Spd -Def
-            Nature.Jolly => (1.0f, 1.0f, 0.9f, 1.0f, 1.1f),    // +Spd -SpAtk
-            Nature.Naive => (1.0f, 1.0f, 1.0f, 0.9f, 1.1f),    // +Spd -SpDef
+            Nature.Timid => (0.9f, 1.0f, 1.0f, 1.0f, 1.1f), // +Spd -Atk
+            Nature.Hasty => (1.0f, 0.9f, 1.0f, 1.0f, 1.1f), // +Spd -Def
+            Nature.Jolly => (1.0f, 1.0f, 0.9f, 1.0f, 1.1f), // +Spd -SpAtk
+            Nature.Naive => (1.0f, 1.0f, 1.0f, 0.9f, 1.1f), // +Spd -SpDef
 
             // Neutral natures (no stat changes)
-            Nature.Hardy or Nature.Docile or Nature.Serious or Nature.Bashful or Nature.Quirky
-                => (1.0f, 1.0f, 1.0f, 1.0f, 1.0f),
+            Nature.Hardy or Nature.Docile or Nature.Serious or Nature.Bashful or Nature.Quirky => (
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f
+            ),
 
             // Default to neutral
             _ => (1.0f, 1.0f, 1.0f, 1.0f, 1.0f),
@@ -175,16 +213,27 @@ public static class StatCalculator
     /// <returns>True if EV distribution is legal, false otherwise</returns>
     public static bool ValidateEVs(in PokemonStats stats)
     {
-        int totalEVs = stats.EV_HP + stats.EV_Attack + stats.EV_Defense
-                     + stats.EV_SpAttack + stats.EV_SpDefense + stats.EV_Speed;
+        int totalEVs =
+            stats.EV_HP
+            + stats.EV_Attack
+            + stats.EV_Defense
+            + stats.EV_SpAttack
+            + stats.EV_SpDefense
+            + stats.EV_Speed;
 
         // Check total EV limit (510)
         if (totalEVs > 510)
             return false;
 
         // Check individual stat limits (252 each)
-        if (stats.EV_HP > 252 || stats.EV_Attack > 252 || stats.EV_Defense > 252
-            || stats.EV_SpAttack > 252 || stats.EV_SpDefense > 252 || stats.EV_Speed > 252)
+        if (
+            stats.EV_HP > 252
+            || stats.EV_Attack > 252
+            || stats.EV_Defense > 252
+            || stats.EV_SpAttack > 252
+            || stats.EV_SpDefense > 252
+            || stats.EV_Speed > 252
+        )
             return false;
 
         return true;

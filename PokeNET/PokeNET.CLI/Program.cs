@@ -89,74 +89,94 @@ internal class Program
         {
             config.SetApplicationName("pokenet-cli");
             config.PropagateExceptions();
-            
+
             // Data commands
-            config.AddBranch("data", data =>
-            {
-                data.SetDescription("Browse and inspect game data");
-                
-                data.AddCommand<Commands.Data.ListSpeciesCommand>("list-species")
-                    .WithDescription("List all species with optional filters");
-                data.AddCommand<Commands.Data.ListMovesCommand>("list-moves")
-                    .WithDescription("List all moves with optional filters");
-                data.AddCommand<Commands.Data.ListItemsCommand>("list-items")
-                    .WithDescription("List all items with optional filters");
-                
-                data.AddBranch("show", show =>
+            config.AddBranch(
+                "data",
+                data =>
                 {
-                    show.SetDescription("Show detailed information");
-                    
-                    show.AddCommand<Commands.Data.ShowSpeciesCommand>("species")
-                        .WithDescription("Show species details");
-                    
-                    show.AddCommand<Commands.Data.ShowMoveCommand>("move")
-                        .WithDescription("Show move details");
-                    
-                    show.AddCommand<Commands.Data.ShowItemCommand>("item")
-                        .WithDescription("Show item details");
-                    
-                    show.AddCommand<Commands.Data.ShowTypeCommand>("type")
-                        .WithDescription("Show type effectiveness chart");
-                });
-            });
+                    data.SetDescription("Browse and inspect game data");
+
+                    data.AddCommand<Commands.Data.ListSpeciesCommand>("list-species")
+                        .WithDescription("List all species with optional filters");
+                    data.AddCommand<Commands.Data.ListMovesCommand>("list-moves")
+                        .WithDescription("List all moves with optional filters");
+                    data.AddCommand<Commands.Data.ListItemsCommand>("list-items")
+                        .WithDescription("List all items with optional filters");
+
+                    data.AddBranch(
+                        "show",
+                        show =>
+                        {
+                            show.SetDescription("Show detailed information");
+
+                            show.AddCommand<Commands.Data.ShowSpeciesCommand>("species")
+                                .WithDescription("Show species details");
+
+                            show.AddCommand<Commands.Data.ShowMoveCommand>("move")
+                                .WithDescription("Show move details");
+
+                            show.AddCommand<Commands.Data.ShowItemCommand>("item")
+                                .WithDescription("Show item details");
+
+                            show.AddCommand<Commands.Data.ShowTypeCommand>("type")
+                                .WithDescription("Show type effectiveness chart");
+                        }
+                    );
+                }
+            );
 
             // Battle commands
-            config.AddBranch("battle", battle =>
-            {
-                battle.SetDescription("Battle simulation and calculations");
-                
-                battle.AddCommand<Commands.Battle.CalculateStatsCommand>("stats")
-                    .WithDescription("Calculate Pokemon stats with IVs/EVs/Nature");
-                
-                battle.AddCommand<Commands.Battle.TypeEffectivenessCommand>("effectiveness")
-                    .WithDescription("Calculate type effectiveness multiplier");
-            });
+            config.AddBranch(
+                "battle",
+                battle =>
+                {
+                    battle.SetDescription("Battle simulation and calculations");
+
+                    battle
+                        .AddCommand<Commands.Battle.CalculateStatsCommand>("stats")
+                        .WithDescription("Calculate Pokemon stats with IVs/EVs/Nature");
+
+                    battle
+                        .AddCommand<Commands.Battle.TypeEffectivenessCommand>("effectiveness")
+                        .WithDescription("Calculate type effectiveness multiplier");
+                }
+            );
 
             // System commands
-            config.AddBranch("system", system =>
-            {
-                system.SetDescription("System tests and benchmarks");
-                
-                system.AddBranch("test", test =>
+            config.AddBranch(
+                "system",
+                system =>
                 {
-                    test.SetDescription("Run system tests");
-                    
-                    test.AddCommand<Commands.System.TestDataCommand>("data")
-                        .WithDescription("Test data loading and validation");
-                });
-            });
+                    system.SetDescription("System tests and benchmarks");
+
+                    system.AddBranch(
+                        "test",
+                        test =>
+                        {
+                            test.SetDescription("Run system tests");
+
+                            test.AddCommand<Commands.System.TestDataCommand>("data")
+                                .WithDescription("Test data loading and validation");
+                        }
+                    );
+                }
+            );
 
             // Mod commands
-            config.AddBranch("mod", mod =>
-            {
-                mod.SetDescription("Mod management and validation");
-                
-                mod.AddCommand<Commands.Mod.ListModsCommand>("list")
-                    .WithDescription("List all discovered mods");
-                
-                mod.AddCommand<Commands.Mod.ValidateModCommand>("validate")
-                    .WithDescription("Validate mod manifests and dependencies");
-            });
+            config.AddBranch(
+                "mod",
+                mod =>
+                {
+                    mod.SetDescription("Mod management and validation");
+
+                    mod.AddCommand<Commands.Mod.ListModsCommand>("list")
+                        .WithDescription("List all discovered mods");
+
+                    mod.AddCommand<Commands.Mod.ValidateModCommand>("validate")
+                        .WithDescription("Validate mod manifests and dependencies");
+                }
+            );
         });
     }
 }
@@ -211,4 +231,3 @@ internal sealed class TypeResolver : ITypeResolver
         return type == null ? null : _provider.GetService(type);
     }
 }
-

@@ -37,8 +37,8 @@
     { "level": 31, "moveName": "Synthesis" },
     { "level": 33, "moveName": "Solar Beam" }
   ],
-  "tmMoves": ["Toxic", "Body Slam", "Double-Edge", "Solar Beam", "Rest", "Substitute"],
-  "eggMoves": ["Skull Bash", "Amnesia", "Curse", "Ingrain"],
+  "tmMoves": ["Toxic", "Venoshock", "Hidden Power", "Sunny Day", "Protect", "Frustration", "Solar Beam", "Return", "Double Team", "Sludge Bomb", "Facade", "Rest", "Attract", "Round", "Energy Ball", "False Swipe", "Grass Knot", "Swagger", "Sleep Talk", "Substitute", "Nature Power", "Confide"],
+  "eggMoves": ["Amnesia", "Charm", "Curse", "Endure", "Giga Drain", "Grass Whistle", "Grassy Terrain", "Ingrain", "Leaf Storm", "Magical Leaf", "Nature Power", "Petal Dance", "Power Whip", "Skull Bash", "Sludge"],
   "evolutions": [
     {
       "targetSpeciesId": "ivysaur",

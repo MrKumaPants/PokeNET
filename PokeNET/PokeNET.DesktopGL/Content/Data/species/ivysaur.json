@@ -27,7 +27,6 @@
     { "level": 1, "moveName": "Tackle" },
     { "level": 1, "moveName": "Growl" },
     { "level": 1, "moveName": "Vine Whip" },
-    { "level": 7, "moveName": "Vine Whip" },
     { "level": 9, "moveName": "Growth" },
     { "level": 13, "moveName": "Leech Seed" },
     { "level": 15, "moveName": "Razor Leaf" },
@@ -38,8 +37,8 @@
     { "level": 36, "moveName": "Synthesis" },
     { "level": 39, "moveName": "Solar Beam" }
   ],
-  "tmMoves": ["Toxic", "Body Slam", "Double-Edge", "Solar Beam", "Rest", "Substitute"],
-  "eggMoves": [],
+  "tmMoves": ["Toxic", "Venoshock", "Hidden Power", "Sunny Day", "Protect", "Frustration", "Solar Beam", "Return", "Double Team", "Sludge Bomb", "Facade", "Rest", "Attract", "Round", "Energy Ball", "False Swipe", "Grass Knot", "Swagger", "Sleep Talk", "Substitute", "Nature Power", "Confide"],
+  "eggMoves": ["Amnesia", "Charm", "Curse", "Endure", "Giga Drain", "Grass Whistle", "Grassy Terrain", "Ingrain", "Leaf Storm", "Magical Leaf", "Nature Power", "Petal Dance", "Power Whip", "Skull Bash", "Sludge"],
   "evolutions": [
     {
       "targetSpeciesId": "venusaur",

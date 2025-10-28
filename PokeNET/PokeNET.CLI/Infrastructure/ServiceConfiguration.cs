@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,16 +20,29 @@ public static class ServiceConfiguration
     /// </summary>
     public static IServiceCollection AddDataServices(
         this IServiceCollection services,
-        string dataPath)
+        string dataPath
+    )
     {
+        // Register GameDataContext with in-memory database provider
+        services.AddDbContext<GameDataContext>(
+            options =>
+            {
+                options.UseInMemoryDatabase($"PokeNET_CLI_GameData_{System.Guid.NewGuid()}");
+                options.EnableSensitiveDataLogging(); // Enable detailed entity tracking information
+                options.EnableDetailedErrors(); // Enable detailed error messages
+            },
+            ServiceLifetime.Singleton
+        );
+
         // Register DataManager as IDataApi
         services.AddSingleton<IDataApi>(sp =>
         {
+            var context = sp.GetRequiredService<GameDataContext>();
             var logger = sp.GetRequiredService<ILogger<DataManager>>();
-            var manager = new DataManager(logger, dataPath);
-            
+            var manager = new DataManager(context, logger, dataPath);
+
             // Data will be loaded lazily on first access via EnsureDataLoadedAsync
-            
+
             return manager;
         });
 
@@ -40,7 +54,8 @@ public static class ServiceConfiguration
     /// </summary>
     public static IServiceCollection AddModdingServices(
         this IServiceCollection services,
-        string modsDirectory)
+        string modsDirectory
+    )
     {
         services.AddSingleton<IModLoader>(sp =>
         {
@@ -57,7 +72,8 @@ public static class ServiceConfiguration
     /// </summary>
     public static IServiceCollection AddScriptingServices(
         this IServiceCollection services,
-        int maxCacheSize = 100)
+        int maxCacheSize = 100
+    )
     {
         // Register script loader
         services.AddSingleton<IScriptLoader>(sp =>
@@ -88,4 +104,3 @@ public static class ServiceConfiguration
         return services;
     }
 }
-

@@ -36,9 +36,21 @@ public class EncounterDataTests
             LocationName = "Route 1",
             GrassEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 16, MinLevel = 2, MaxLevel = 5, Rate = 50 },   // Pidgey
-                new() { SpeciesId = 19, MinLevel = 2, MaxLevel = 4, Rate = 50 }    // Rattata
-            }
+                new()
+                {
+                    SpeciesId = "pidgey",
+                    MinLevel = 2,
+                    MaxLevel = 5,
+                    Rate = 50,
+                }, // Pidgey
+                new()
+                {
+                    SpeciesId = "rattata",
+                    MinLevel = 2,
+                    MaxLevel = 4,
+                    Rate = 50,
+                }, // Rattata
+            },
         };
 
         // Assert
@@ -52,10 +64,10 @@ public class EncounterDataTests
         // Arrange & Act
         var encounter = new Encounter
         {
-            SpeciesId = 1,
+            SpeciesId = "bulbasaur",
             MinLevel = 5,
             MaxLevel = 10,
-            Rate = 20
+            Rate = 20,
         };
 
         // Assert
@@ -70,10 +82,10 @@ public class EncounterDataTests
         // Arrange & Act
         var encounter = new Encounter
         {
-            SpeciesId = 25,
+            SpeciesId = "pikachu",
             MinLevel = 3,
             MaxLevel = 5,
-            Rate = 15
+            Rate = 15,
         };
 
         // Assert
@@ -87,9 +99,9 @@ public class EncounterDataTests
         // Arrange & Act
         var encounter = new Encounter
         {
-            SpeciesId = 25,
+            SpeciesId = "pikachu",
             MinLevel = 5,
-            MaxLevel = 5
+            MaxLevel = 5,
         };
 
         // Assert
@@ -102,20 +114,20 @@ public class EncounterDataTests
         // Arrange & Act
         var morningEncounter = new Encounter
         {
-            SpeciesId = 16, // Pidgey
+            SpeciesId = "pidgey", // Pidgey
             MinLevel = 2,
             MaxLevel = 5,
             Rate = 30,
-            TimeOfDay = "Morning"
+            TimeOfDay = "Morning",
         };
 
         var nightEncounter = new Encounter
         {
-            SpeciesId = 41, // Zubat
+            SpeciesId = "zubat", // Zubat
             MinLevel = 5,
             MaxLevel = 8,
             Rate = 40,
-            TimeOfDay = "Night"
+            TimeOfDay = "Night",
         };
 
         // Assert
@@ -139,11 +151,11 @@ public class EncounterDataTests
         // Arrange & Act
         var rainyEncounter = new Encounter
         {
-            SpeciesId = 54, // Psyduck
+            SpeciesId = "psyduck", // Psyduck
             MinLevel = 20,
             MaxLevel = 25,
             Rate = 50,
-            Weather = "Rainy"
+            Weather = "Rainy",
         };
 
         // Assert
@@ -159,8 +171,14 @@ public class EncounterDataTests
             LocationId = "route_24",
             WaterEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 60, MinLevel = 10, MaxLevel = 25, Rate = 100 } // Poliwag
-            }
+                new()
+                {
+                    SpeciesId = "poliwag",
+                    MinLevel = 10,
+                    MaxLevel = 25,
+                    Rate = 100,
+                }, // Poliwag
+            },
         };
 
         // Assert
@@ -177,17 +195,41 @@ public class EncounterDataTests
             LocationId = "vermilion_port",
             OldRodEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 129, MinLevel = 5, MaxLevel = 5, Rate = 100 } // Magikarp
+                new()
+                {
+                    SpeciesId = "magikarp",
+                    MinLevel = 5,
+                    MaxLevel = 5,
+                    Rate = 100,
+                }, // Magikarp
             },
             GoodRodEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 60, MinLevel = 10, MaxLevel = 20, Rate = 60 }, // Poliwag
-                new() { SpeciesId = 72, MinLevel = 10, MaxLevel = 20, Rate = 40 }  // Tentacool
+                new()
+                {
+                    SpeciesId = "poliwag",
+                    MinLevel = 10,
+                    MaxLevel = 20,
+                    Rate = 60,
+                }, // Poliwag
+                new()
+                {
+                    SpeciesId = "tentacool",
+                    MinLevel = 10,
+                    MaxLevel = 20,
+                    Rate = 40,
+                }, // Tentacool
             },
             SuperRodEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 130, MinLevel = 20, MaxLevel = 30, Rate = 100 } // Gyarados
-            }
+                new()
+                {
+                    SpeciesId = "gyarados",
+                    MinLevel = 20,
+                    MaxLevel = 30,
+                    Rate = 100,
+                }, // Gyarados
+            },
         };
 
         // Assert
@@ -203,9 +245,9 @@ public class EncounterDataTests
         var legendary = new SpecialEncounter
         {
             EncounterId = "mewtwo_cerulean_cave",
-            SpeciesId = 150, // Mewtwo
+            SpeciesId = "mewtwo", // Mewtwo
             Level = 70,
-            OneTime = true
+            OneTime = true,
         };
 
         // Assert
@@ -220,14 +262,14 @@ public class EncounterDataTests
         var special = new SpecialEncounter
         {
             EncounterId = "special_eevee",
-            SpeciesId = 133,
+            SpeciesId = "eevee",
             Level = 25,
             Conditions = new Dictionary<string, object>
             {
                 { "RequiredItem", "Special Key" },
                 { "MinBadges", 3 },
-                { "TimeOfDay", "Morning" }
-            }
+                { "TimeOfDay", "Morning" },
+            },
         };
 
         // Assert
@@ -243,16 +285,16 @@ public class EncounterDataTests
         var withScript = new SpecialEncounter
         {
             EncounterId = "scripted_event",
-            SpeciesId = 151,
+            SpeciesId = "mew",
             Level = 5,
-            Script = "scripts/encounters/mew_event.csx"
+            Script = "scripts/encounters/mew_event.csx",
         };
 
         var withoutScript = new SpecialEncounter
         {
             EncounterId = "simple_legendary",
-            SpeciesId = 144,
-            Level = 50
+            SpeciesId = "articuno",
+            Level = 50,
         };
 
         // Assert
@@ -269,10 +311,28 @@ public class EncounterDataTests
             LocationId = "mt_moon",
             CaveEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 41, MinLevel = 7, MaxLevel = 11, Rate = 49 }, // Zubat
-                new() { SpeciesId = 74, MinLevel = 7, MaxLevel = 9, Rate = 25 },  // Geodude
-                new() { SpeciesId = 46, MinLevel = 8, MaxLevel = 10, Rate = 26 }  // Paras
-            }
+                new()
+                {
+                    SpeciesId = "zubat",
+                    MinLevel = 7,
+                    MaxLevel = 11,
+                    Rate = 49,
+                }, // Zubat
+                new()
+                {
+                    SpeciesId = "geodude",
+                    MinLevel = 7,
+                    MaxLevel = 9,
+                    Rate = 25,
+                }, // Geodude
+                new()
+                {
+                    SpeciesId = "paras",
+                    MinLevel = 8,
+                    MaxLevel = 10,
+                    Rate = 26,
+                }, // Paras
+            },
         };
 
         // Assert
@@ -289,16 +349,34 @@ public class EncounterDataTests
             LocationId = "safari_zone",
             GrassEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 29, MinLevel = 22, MaxLevel = 24, Rate = 30 }
+                new()
+                {
+                    SpeciesId = "nidoran-f",
+                    MinLevel = 22,
+                    MaxLevel = 24,
+                    Rate = 30,
+                },
             },
             WaterEncounters = new List<Encounter>
             {
-                new() { SpeciesId = 118, MinLevel = 10, MaxLevel = 15, Rate = 100 }
+                new()
+                {
+                    SpeciesId = "goldeen",
+                    MinLevel = 10,
+                    MaxLevel = 15,
+                    Rate = 100,
+                },
             },
             SpecialEncounters = new List<SpecialEncounter>
             {
-                new() { EncounterId = "rare_chansey", SpeciesId = 113, Level = 25, OneTime = false }
-            }
+                new()
+                {
+                    EncounterId = "rare_chansey",
+                    SpeciesId = "chansey",
+                    Level = 25,
+                    OneTime = false,
+                },
+            },
         };
 
         // Assert

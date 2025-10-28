@@ -35,4 +35,3 @@ public class TypeData
     /// </summary>
     public string? Description { get; set; }
 }
-

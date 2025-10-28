@@ -1,0 +1,39 @@
+{
+  "id": "metapod",
+  "nationalDexNumber": 11,
+  "name": "Metapod",
+  "types": ["Bug"],
+  "baseStats": {
+    "hp": 50,
+    "attack": 20,
+    "defense": 55,
+    "specialAttack": 25,
+    "specialDefense": 25,
+    "speed": 30
+  },
+  "abilities": ["Shed Skin"],
+  "hiddenAbility": "",
+  "growthRate": "Medium Fast",
+  "baseExperience": 72,
+  "genderRatio": 127,
+  "catchRate": 120,
+  "baseFriendship": 70,
+  "eggGroups": ["Bug"],
+  "hatchSteps": 3840,
+  "height": 7,
+  "weight": 99,
+  "description": "It is waiting for the moment to evolve. At this stage, it can only harden, so it remains motionless to avoid attack.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Harden" }
+  ],
+  "tmMoves": [],
+  "eggMoves": [],
+  "evolutions": [
+    {
+      "targetSpeciesId": "butterfree",
+      "method": "Level",
+      "requiredLevel": 10
+    }
+  ]
+}
+

@@ -1,0 +1,39 @@
+{
+  "id": "kakuna",
+  "nationalDexNumber": 14,
+  "name": "Kakuna",
+  "types": ["Bug", "Poison"],
+  "baseStats": {
+    "hp": 45,
+    "attack": 25,
+    "defense": 50,
+    "specialAttack": 25,
+    "specialDefense": 25,
+    "speed": 35
+  },
+  "abilities": ["Shed Skin"],
+  "hiddenAbility": "",
+  "growthRate": "Medium Fast",
+  "baseExperience": 72,
+  "genderRatio": 127,
+  "catchRate": 120,
+  "baseFriendship": 70,
+  "eggGroups": ["Bug"],
+  "hatchSteps": 3840,
+  "height": 6,
+  "weight": 100,
+  "description": "Almost incapable of moving, this Pokemon can only harden its shell to protect itself from predators.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Harden" }
+  ],
+  "tmMoves": [],
+  "eggMoves": [],
+  "evolutions": [
+    {
+      "targetSpeciesId": "beedrill",
+      "method": "Level",
+      "requiredLevel": 10
+    }
+  ]
+}
+

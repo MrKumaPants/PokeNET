@@ -10,9 +10,8 @@ namespace PokeNET.Core.Data.Loaders;
 /// </summary>
 public class MoveDataLoader : JsonArrayLoader<MoveData>
 {
-    public MoveDataLoader(ILogger<BaseDataLoader<List<MoveData>>> logger) : base(logger)
-    {
-    }
+    public MoveDataLoader(ILogger<BaseDataLoader<List<MoveData>>> logger)
+        : base(logger) { }
 
     /// <inheritdoc/>
     public override bool Validate(List<MoveData> data)
@@ -42,10 +41,19 @@ public class MoveDataLoader : JsonArrayLoader<MoveData>
             return false;
 
         // Validate move category
-        var validCategories = new[] { MoveCategory.Physical, MoveCategory.Special, MoveCategory.Status };
+        var validCategories = new[]
+        {
+            MoveCategory.Physical,
+            MoveCategory.Special,
+            MoveCategory.Status,
+        };
         if (!validCategories.Contains(item.Category))
         {
-            Logger.LogWarning("Move {Name} has invalid category: {Category}", item.Name, item.Category);
+            Logger.LogWarning(
+                "Move {Name} has invalid category: {Category}",
+                item.Name,
+                item.Category
+            );
             return false;
         }
 
@@ -122,7 +130,12 @@ public class MoveDataLoader : JsonArrayLoader<MoveData>
         if (!ValidateCollection(item.Flags, nameof(item.Flags), allowEmpty: true))
             return false;
 
-        Logger.LogTrace("Validated move: {Name} (Type: {Type}, Category: {Category})", item.Name, item.Type, item.Category);
+        Logger.LogTrace(
+            "Validated move: {Name} (Type: {Type}, Category: {Category})",
+            item.Name,
+            item.Type,
+            item.Category
+        );
         return true;
     }
 
@@ -153,7 +166,11 @@ public class MoveDataLoader : JsonArrayLoader<MoveData>
         return true;
     }
 
-    private bool ValidateCollection<TItem>(List<TItem>? collection, string fieldName, bool allowEmpty = false)
+    private bool ValidateCollection<TItem>(
+        List<TItem>? collection,
+        string fieldName,
+        bool allowEmpty = false
+    )
     {
         if (collection == null)
         {

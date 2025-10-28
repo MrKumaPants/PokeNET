@@ -37,8 +37,8 @@
     { "level": 37, "moveName": "Discharge" },
     { "level": 42, "moveName": "Thunder" }
   ],
-  "tmMoves": ["Toxic", "Body Slam", "Thunder Wave", "Thunderbolt", "Thunder", "Rest", "Substitute"],
-  "eggMoves": ["Volt Tackle", "Wish", "Reversal", "Fake Out"],
+  "tmMoves": ["Focus Punch", "Toxic", "Hidden Power", "Light Screen", "Protect", "Rain Dance", "Frustration", "Thunderbolt", "Thunder", "Return", "Brick Break", "Double Team", "Facade", "Rest", "Attract", "Thief", "Round", "Echoed Voice", "Fling", "Charge Beam", "Volt Switch", "Thunder Wave", "Grass Knot", "Swagger", "Sleep Talk", "Substitute", "Wild Charge", "Confide"],
+  "eggMoves": ["Bestow", "Bide", "Charge", "Disarming Voice", "Double Slap", "Encore", "Endure", "Fake Out", "Flail", "Lucky Chant", "Present", "Reversal", "Sweet Kiss", "Tickle", "Volt Tackle", "Wish"],
   "evolutions": [
     {
       "targetSpeciesId": "raichu",

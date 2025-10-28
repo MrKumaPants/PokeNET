@@ -10,9 +10,8 @@ namespace PokeNET.Core.Data.Loaders;
 /// </summary>
 public class ItemDataLoader : JsonArrayLoader<ItemData>
 {
-    public ItemDataLoader(ILogger<BaseDataLoader<List<ItemData>>> logger) : base(logger)
-    {
-    }
+    public ItemDataLoader(ILogger<BaseDataLoader<List<ItemData>>> logger)
+        : base(logger) { }
 
     /// <inheritdoc/>
     public override bool Validate(List<ItemData> data)
@@ -57,7 +56,11 @@ public class ItemDataLoader : JsonArrayLoader<ItemData>
 
         if (!validCategories.Contains(item.Category))
         {
-            Logger.LogWarning("Item {Name} has invalid category: {Category}", item.Name, item.Category);
+            Logger.LogWarning(
+                "Item {Name} has invalid category: {Category}",
+                item.Name,
+                item.Category
+            );
             return false;
         }
 
@@ -97,7 +100,10 @@ public class ItemDataLoader : JsonArrayLoader<ItemData>
         }
 
         // Key items and TMs should typically not be consumable
-        if ((item.Category == ItemCategory.KeyItem || item.Category == ItemCategory.TM) && item.Consumable)
+        if (
+            (item.Category == ItemCategory.KeyItem || item.Category == ItemCategory.TM)
+            && item.Consumable
+        )
         {
             Logger.LogWarning(
                 "Item {Name} is {Category} but marked as consumable",
@@ -107,7 +113,11 @@ public class ItemDataLoader : JsonArrayLoader<ItemData>
         }
 
         // Validate that Medicine and BattleItems have usage flags
-        if (item.Category == ItemCategory.Medicine && !item.UsableInBattle && !item.UsableOutsideBattle)
+        if (
+            item.Category == ItemCategory.Medicine
+            && !item.UsableInBattle
+            && !item.UsableOutsideBattle
+        )
         {
             Logger.LogWarning(
                 "Medicine {Name} is not usable in battle or outside battle",
@@ -116,7 +126,12 @@ public class ItemDataLoader : JsonArrayLoader<ItemData>
             return false;
         }
 
-        Logger.LogTrace("Validated item: {Name} (ID: {Id}, Category: {Category})", item.Name, item.Id, item.Category);
+        Logger.LogTrace(
+            "Validated item: {Name} (ID: {Id}, Category: {Category})",
+            item.Name,
+            item.Id,
+            item.Category
+        );
         return true;
     }
 

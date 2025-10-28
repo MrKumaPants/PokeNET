@@ -15,14 +15,14 @@ public class ItemDataTests
         // Arrange & Act
         var potion = new ItemData
         {
-            Id = 1,
+            Id = "potion",
             Name = "Potion",
             Category = ItemCategory.Medicine,
             BuyPrice = 200,
             SellPrice = 100,
             Consumable = true,
             UsableInBattle = true,
-            UsableOutsideBattle = true
+            UsableOutsideBattle = true,
         };
 
         // Assert
@@ -38,14 +38,14 @@ public class ItemDataTests
         // Arrange & Act
         var pokeball = new ItemData
         {
-            Id = 4,
+            Id = "pokeball",
             Name = "Pokeball",
             Category = ItemCategory.Pokeball,
             BuyPrice = 200,
             SellPrice = 100,
             Consumable = true,
             UsableInBattle = true,
-            UsableOutsideBattle = false
+            UsableOutsideBattle = false,
         };
 
         // Assert
@@ -61,13 +61,13 @@ public class ItemDataTests
         // Arrange & Act
         var leftovers = new ItemData
         {
-            Id = 10,
+            Id = "leftovers",
             Name = "Leftovers",
             Category = ItemCategory.HeldItem,
             BuyPrice = 0, // Cannot buy
             SellPrice = 100,
             Consumable = false,
-            Holdable = true
+            Holdable = true,
         };
 
         // Assert
@@ -83,12 +83,12 @@ public class ItemDataTests
         // Arrange & Act
         var keyItem = new ItemData
         {
-            Id = 100,
+            Id = "bicycle",
             Name = "Bicycle",
             Category = ItemCategory.KeyItem,
             BuyPrice = 0,
             SellPrice = 0,
-            Consumable = false
+            Consumable = false,
         };
 
         // Assert
@@ -103,13 +103,13 @@ public class ItemDataTests
         // Arrange & Act
         var tm = new ItemData
         {
-            Id = 50,
+            Id = "tm01",
             Name = "TM01",
             Category = ItemCategory.TM,
             BuyPrice = 3000,
             SellPrice = 1500,
             Consumable = true,
-            UsableOutsideBattle = true
+            UsableOutsideBattle = true,
         };
 
         // Assert
@@ -124,14 +124,14 @@ public class ItemDataTests
         // Arrange & Act
         var berry = new ItemData
         {
-            Id = 200,
+            Id = "oran-berry",
             Name = "Oran Berry",
             Category = ItemCategory.Berry,
             BuyPrice = 0,
             SellPrice = 10,
             Consumable = true,
             Holdable = true,
-            UsableInBattle = true
+            UsableInBattle = true,
         };
 
         // Assert
@@ -146,13 +146,13 @@ public class ItemDataTests
         // Arrange & Act
         var stone = new ItemData
         {
-            Id = 80,
+            Id = "fire-stone",
             Name = "Fire Stone",
             Category = ItemCategory.EvolutionItem,
             BuyPrice = 2100,
             SellPrice = 1050,
             Consumable = true,
-            UsableOutsideBattle = true
+            UsableOutsideBattle = true,
         };
 
         // Assert
@@ -168,7 +168,7 @@ public class ItemDataTests
         {
             Name = "Super Potion",
             BuyPrice = 700,
-            SellPrice = 350
+            SellPrice = 350,
         };
 
         // Assert
@@ -183,13 +183,10 @@ public class ItemDataTests
         {
             Name = "Potion",
             EffectScript = "scripts/items/potion.csx",
-            EffectParameters = new() { { "healAmount", 20 } }
+            EffectParameters = new() { { "healAmount", 20 } },
         };
 
-        var itemWithoutScript = new ItemData
-        {
-            Name = "Bicycle"
-        };
+        var itemWithoutScript = new ItemData { Name = "Bicycle" };
 
         // Assert
         Assert.NotNull(itemWithScript.EffectScript);
@@ -205,13 +202,10 @@ public class ItemDataTests
         var itemWithSprite = new ItemData
         {
             Name = "Potion",
-            SpritePath = "sprites/items/potion.png"
+            SpritePath = "sprites/items/potion.png",
         };
 
-        var itemWithoutSprite = new ItemData
-        {
-            Name = "New Item"
-        };
+        var itemWithoutSprite = new ItemData { Name = "New Item" };
 
         // Assert
         Assert.Equal("sprites/items/potion.png", itemWithSprite.SpritePath);
@@ -222,10 +216,7 @@ public class ItemDataTests
     public void ItemData_Description_CanBeEmpty()
     {
         // Arrange & Act
-        var item = new ItemData
-        {
-            Name = "Test Item"
-        };
+        var item = new ItemData { Name = "Test Item" };
 
         // Assert
         Assert.NotNull(item.Description);
@@ -242,7 +233,7 @@ public class ItemDataTests
             Category = ItemCategory.BattleItem,
             Consumable = true,
             UsableInBattle = true,
-            UsableOutsideBattle = false
+            UsableOutsideBattle = false,
         };
 
         // Assert
@@ -264,11 +255,7 @@ public class ItemDataTests
     public void ItemData_AllCategories_AreValid(ItemCategory category)
     {
         // Arrange & Act
-        var item = new ItemData
-        {
-            Name = "Test Item",
-            Category = category
-        };
+        var item = new ItemData { Name = "Test Item", Category = category };
 
         // Assert
         Assert.Equal(category, item.Category);

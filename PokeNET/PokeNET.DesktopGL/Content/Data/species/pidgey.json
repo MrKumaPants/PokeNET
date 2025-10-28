@@ -1,0 +1,52 @@
+{
+  "id": "pidgey",
+  "nationalDexNumber": 16,
+  "name": "Pidgey",
+  "types": ["Normal", "Flying"],
+  "baseStats": {
+    "hp": 40,
+    "attack": 45,
+    "defense": 40,
+    "specialAttack": 35,
+    "specialDefense": 35,
+    "speed": 56
+  },
+  "abilities": ["Keen Eye", "Tangled Feet"],
+  "hiddenAbility": "Big Pecks",
+  "growthRate": "Medium Slow",
+  "baseExperience": 50,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Flying"],
+  "hatchSteps": 3840,
+  "height": 3,
+  "weight": 18,
+  "description": "Very docile. If attacked, it will often kick up sand to protect itself rather than fight back.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 5, "moveName": "Sand Attack" },
+    { "level": 9, "moveName": "Gust" },
+    { "level": 13, "moveName": "Quick Attack" },
+    { "level": 17, "moveName": "Whirlwind" },
+    { "level": 21, "moveName": "Twister" },
+    { "level": 25, "moveName": "Feather Dance" },
+    { "level": 29, "moveName": "Agility" },
+    { "level": 33, "moveName": "Wing Attack" },
+    { "level": 37, "moveName": "Roost" },
+    { "level": 41, "moveName": "Tailwind" },
+    { "level": 45, "moveName": "Mirror Move" },
+    { "level": 49, "moveName": "Air Slash" },
+    { "level": 53, "moveName": "Hurricane" }
+  ],
+  "tmMoves": ["Work Up", "Toxic", "Hidden Power", "Sunny Day", "Protect", "Rain Dance", "Roost", "Frustration", "Return", "Double Team", "Aerial Ace", "Facade", "Rest", "Attract", "Thief", "Round", "Steel Wing", "Echoed Voice", "Fly", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Confide"],
+  "eggMoves": ["Air Cutter", "Air Slash", "Brave Bird", "Defog", "Foresight", "Pursuit", "Steel Wing", "Uproar"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "pidgeotto",
+      "method": "Level",
+      "requiredLevel": 18
+    }
+  ]
+}
+

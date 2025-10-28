@@ -1,0 +1,52 @@
+{
+  "id": "wartortle",
+  "nationalDexNumber": 8,
+  "name": "Wartortle",
+  "types": ["Water"],
+  "baseStats": {
+    "hp": 59,
+    "attack": 63,
+    "defense": 80,
+    "specialAttack": 65,
+    "specialDefense": 80,
+    "speed": 58
+  },
+  "abilities": ["Torrent"],
+  "hiddenAbility": "Rain Dish",
+  "growthRate": "Medium Slow",
+  "baseExperience": 142,
+  "genderRatio": 31,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Monster", "Water 1"],
+  "hatchSteps": 5120,
+  "height": 10,
+  "weight": 225,
+  "description": "It is recognized as a symbol of longevity. If its shell has algae on it, that Wartortle is very old.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Tail Whip" },
+    { "level": 1, "moveName": "Water Gun" },
+    { "level": 7, "moveName": "Water Gun" },
+    { "level": 10, "moveName": "Withdraw" },
+    { "level": 13, "moveName": "Bubble" },
+    { "level": 17, "moveName": "Bite" },
+    { "level": 20, "moveName": "Rapid Spin" },
+    { "level": 23, "moveName": "Protect" },
+    { "level": 28, "moveName": "Water Pulse" },
+    { "level": 31, "moveName": "Aqua Tail" },
+    { "level": 35, "moveName": "Skull Bash" },
+    { "level": 40, "moveName": "Rain Dance" },
+    { "level": 43, "moveName": "Hydro Pump" }
+  ],
+  "tmMoves": ["Toxic", "Hail", "Hidden Power", "Ice Beam", "Blizzard", "Protect", "Rain Dance", "Frustration", "Return", "Dig", "Brick Break", "Double Team", "Rock Tomb", "Facade", "Rest", "Attract", "Round", "Scald", "Fling", "Gyro Ball", "Bulldoze", "Frost Breath", "Swagger", "Sleep Talk", "Substitute", "Rock Smash", "Power-Up Punch", "Confide", "Surf", "Waterfall"],
+  "eggMoves": ["Aqua Jet", "Aqua Ring", "Aura Sphere", "Brine", "Dragon Pulse", "Fake Out", "Flail", "Foresight", "Haze", "Mirror Coat", "Mud Sport", "Muddy Water", "Refresh", "Water Spout", "Yawn"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "blastoise",
+      "method": "Level",
+      "requiredLevel": 36
+    }
+  ]
+}
+

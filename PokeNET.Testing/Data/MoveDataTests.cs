@@ -21,7 +21,7 @@ public class MoveDataTests
             Category = MoveCategory.Physical,
             Power = 40,
             Accuracy = 100,
-            PP = 35
+            PP = 35,
         };
 
         // Assert
@@ -42,7 +42,7 @@ public class MoveDataTests
             Category = MoveCategory.Special,
             Power = 90,
             Accuracy = 100,
-            PP = 15
+            PP = 15,
         };
 
         // Assert
@@ -61,7 +61,7 @@ public class MoveDataTests
             Category = MoveCategory.Status,
             Power = 0,
             Accuracy = 90,
-            PP = 20
+            PP = 20,
         };
 
         // Assert
@@ -80,7 +80,7 @@ public class MoveDataTests
             Category = MoveCategory.Special,
             Power = 60,
             Accuracy = 0, // 0 means never miss
-            PP = 20
+            PP = 20,
         };
 
         // Assert
@@ -91,10 +91,7 @@ public class MoveDataTests
     public void MoveData_Priority_DefaultsToZero()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Tackle"
-        };
+        var move = new MoveData { Name = "Tackle" };
 
         // Assert
         Assert.Equal(0, move.Priority);
@@ -104,11 +101,7 @@ public class MoveDataTests
     public void MoveData_PriorityMove_HasPositivePriority()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Quick Attack",
-            Priority = 1
-        };
+        var move = new MoveData { Name = "Quick Attack", Priority = 1 };
 
         // Assert
         Assert.Equal(1, move.Priority);
@@ -118,10 +111,7 @@ public class MoveDataTests
     public void MoveData_Target_DefaultsToSingleTarget()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Tackle"
-        };
+        var move = new MoveData { Name = "Tackle" };
 
         // Assert
         Assert.Equal("SingleTarget", move.Target);
@@ -131,11 +121,7 @@ public class MoveDataTests
     public void MoveData_MultiTargetMove_HasCorrectTarget()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Earthquake",
-            Target = "AllOpponents"
-        };
+        var move = new MoveData { Name = "Earthquake", Target = "AllOpponents" };
 
         // Assert
         Assert.Equal("AllOpponents", move.Target);
@@ -149,7 +135,7 @@ public class MoveDataTests
         {
             Name = "Thunderbolt",
             Type = "Electric",
-            EffectChance = 10
+            EffectChance = 10,
         };
 
         // Assert
@@ -160,10 +146,7 @@ public class MoveDataTests
     public void MoveData_Flags_CanBeEmpty()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Teleport"
-        };
+        var move = new MoveData { Name = "Teleport" };
 
         // Assert
         Assert.NotNull(move.Flags);
@@ -177,7 +160,7 @@ public class MoveDataTests
         var move = new MoveData
         {
             Name = "Drain Punch",
-            Flags = new List<string> { "Contact", "Punch", "Healing" }
+            Flags = new List<string> { "Contact", "Punch", "Healing" },
         };
 
         // Assert
@@ -194,14 +177,10 @@ public class MoveDataTests
         var contactMove = new MoveData
         {
             Name = "Tackle",
-            Flags = new List<string> { "Contact" }
+            Flags = new List<string> { "Contact" },
         };
 
-        var nonContactMove = new MoveData
-        {
-            Name = "Thunderbolt",
-            Flags = new List<string>()
-        };
+        var nonContactMove = new MoveData { Name = "Thunderbolt", Flags = new List<string>() };
 
         // Assert
         Assert.True(contactMove.MakesContact);
@@ -216,13 +195,10 @@ public class MoveDataTests
         {
             Name = "Fire Blast",
             EffectScript = "scripts/moves/burn.csx",
-            EffectParameters = new Dictionary<string, object> { { "burnChance", 10 } }
+            EffectParameters = new Dictionary<string, object> { { "burnChance", 10 } },
         };
 
-        var moveWithoutScript = new MoveData
-        {
-            Name = "Tackle"
-        };
+        var moveWithoutScript = new MoveData { Name = "Tackle" };
 
         // Assert
         Assert.NotNull(moveWithScript.EffectScript);
@@ -238,10 +214,7 @@ public class MoveDataTests
     public void MoveData_Description_CanBeEmpty()
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "New Move"
-        };
+        var move = new MoveData { Name = "New Move" };
 
         // Assert
         Assert.NotNull(move.Description);
@@ -255,11 +228,7 @@ public class MoveDataTests
     public void MoveData_AllCategories_AreValid(MoveCategory category)
     {
         // Arrange & Act
-        var move = new MoveData
-        {
-            Name = "Test Move",
-            Category = category
-        };
+        var move = new MoveData { Name = "Test Move", Category = category };
 
         // Assert
         Assert.Equal(category, move.Category);
@@ -269,11 +238,7 @@ public class MoveDataTests
     public void MoveData_HighPowerMove_CanExceed100()
     {
         // Arrange & Act - Explosion has base power 250
-        var move = new MoveData
-        {
-            Name = "Explosion",
-            Power = 250
-        };
+        var move = new MoveData { Name = "Explosion", Power = 250 };
 
         // Assert
         Assert.Equal(250, move.Power);
@@ -283,11 +248,7 @@ public class MoveDataTests
     public void MoveData_LowAccuracyMove_IsValid()
     {
         // Arrange & Act - Thunder has 70% accuracy
-        var move = new MoveData
-        {
-            Name = "Thunder",
-            Accuracy = 70
-        };
+        var move = new MoveData { Name = "Thunder", Accuracy = 70 };
 
         // Assert
         Assert.Equal(70, move.Accuracy);

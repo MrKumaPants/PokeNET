@@ -10,9 +10,8 @@ namespace PokeNET.Core.Data.Loaders;
 /// </summary>
 public class SpeciesDataLoader : JsonArrayLoader<SpeciesData>
 {
-    public SpeciesDataLoader(ILogger<BaseDataLoader<List<SpeciesData>>> logger) : base(logger)
-    {
-    }
+    public SpeciesDataLoader(ILogger<BaseDataLoader<List<SpeciesData>>> logger)
+        : base(logger) { }
 
     /// <inheritdoc/>
     public override bool Validate(List<SpeciesData> data)
@@ -68,7 +67,15 @@ public class SpeciesDataLoader : JsonArrayLoader<SpeciesData>
         if (!ValidateString(item.GrowthRate, nameof(item.GrowthRate)))
             return false;
 
-        var validGrowthRates = new[] { "Fast", "Medium Fast", "Medium Slow", "Slow", "Erratic", "Fluctuating" };
+        var validGrowthRates = new[]
+        {
+            "Fast",
+            "Medium Fast",
+            "Medium Slow",
+            "Slow",
+            "Erratic",
+            "Fluctuating",
+        };
         if (!validGrowthRates.Contains(item.GrowthRate))
         {
             Logger.LogWarning(
@@ -194,7 +201,11 @@ public class SpeciesDataLoader : JsonArrayLoader<SpeciesData>
         return true;
     }
 
-    private bool ValidateCollection<TItem>(List<TItem>? collection, string fieldName, bool allowEmpty = false)
+    private bool ValidateCollection<TItem>(
+        List<TItem>? collection,
+        string fieldName,
+        bool allowEmpty = false
+    )
     {
         if (collection == null)
         {

@@ -1,0 +1,41 @@
+{
+  "id": "weedle",
+  "nationalDexNumber": 13,
+  "name": "Weedle",
+  "types": ["Bug", "Poison"],
+  "baseStats": {
+    "hp": 40,
+    "attack": 35,
+    "defense": 30,
+    "specialAttack": 20,
+    "specialDefense": 20,
+    "speed": 50
+  },
+  "abilities": ["Shield Dust"],
+  "hiddenAbility": "Run Away",
+  "growthRate": "Medium Fast",
+  "baseExperience": 39,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Bug"],
+  "hatchSteps": 3840,
+  "height": 3,
+  "weight": 32,
+  "description": "Beware of the sharp stinger on its head. It hides in grass and bushes where it eats leaves.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Poison Sting" },
+    { "level": 1, "moveName": "String Shot" },
+    { "level": 9, "moveName": "Bug Bite" }
+  ],
+  "tmMoves": [],
+  "eggMoves": [],
+  "evolutions": [
+    {
+      "targetSpeciesId": "kakuna",
+      "method": "Level",
+      "requiredLevel": 7
+    }
+  ]
+}
+

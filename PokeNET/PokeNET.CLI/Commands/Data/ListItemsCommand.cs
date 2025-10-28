@@ -19,7 +19,8 @@ public sealed class ListItemsCommand : CliCommand<ListItemsCommand.Settings>
         public int? Limit { get; set; } = 20;
     }
 
-    public ListItemsCommand(CliContext context) : base(context) { }
+    public ListItemsCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
@@ -29,7 +30,9 @@ public sealed class ListItemsCommand : CliCommand<ListItemsCommand.Settings>
         // Apply filters
         if (!string.IsNullOrEmpty(settings.Category))
         {
-            items = items.Where(i => i.Category.ToString().Equals(settings.Category, StringComparison.OrdinalIgnoreCase));
+            items = items.Where(i =>
+                i.Category.ToString().Equals(settings.Category, StringComparison.OrdinalIgnoreCase)
+            );
         }
 
         var itemList = items.ToList();
@@ -46,9 +49,10 @@ public sealed class ListItemsCommand : CliCommand<ListItemsCommand.Settings>
 
         foreach (var item in displayItems)
         {
-            var description = item.Description.Length > 50
-                ? item.Description.Substring(0, 47) + "..."
-                : item.Description;
+            var description =
+                item.Description.Length > 50
+                    ? item.Description.Substring(0, 47) + "..."
+                    : item.Description;
 
             table.AddRow(
                 item.Id.ToString(),
@@ -64,4 +68,3 @@ public sealed class ListItemsCommand : CliCommand<ListItemsCommand.Settings>
         AnsiConsole.MarkupLine($"\nShowing {displayItems.Count()} of {itemList.Count} items");
     }
 }
-

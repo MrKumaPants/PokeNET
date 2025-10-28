@@ -17,7 +17,11 @@ public abstract class CliCommand<TSettings> : Spectre.Console.Cli.AsyncCommand<T
         Context = context;
     }
 
-    public sealed override async Task<int> ExecuteAsync(CommandContext context, TSettings settings, CancellationToken cancellationToken)
+    public sealed override async Task<int> ExecuteAsync(
+        CommandContext context,
+        TSettings settings,
+        CancellationToken cancellationToken
+    )
     {
         try
         {

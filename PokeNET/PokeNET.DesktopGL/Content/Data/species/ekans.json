@@ -1,0 +1,55 @@
+{
+  "id": "ekans",
+  "nationalDexNumber": 23,
+  "name": "Ekans",
+  "types": ["Poison"],
+  "baseStats": {
+    "hp": 35,
+    "attack": 60,
+    "defense": 44,
+    "specialAttack": 40,
+    "specialDefense": 54,
+    "speed": 55
+  },
+  "abilities": ["Intimidate", "Shed Skin"],
+  "hiddenAbility": "Unnerve",
+  "growthRate": "Medium Fast",
+  "baseExperience": 58,
+  "genderRatio": 127,
+  "catchRate": 255,
+  "baseFriendship": 70,
+  "eggGroups": ["Field", "Dragon"],
+  "hatchSteps": 5120,
+  "height": 20,
+  "weight": 69,
+  "description": "The older it gets, the longer it grows. At night, it wraps its long body around tree branches to rest.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Wrap" },
+    { "level": 1, "moveName": "Leer" },
+    { "level": 4, "moveName": "Poison Sting" },
+    { "level": 9, "moveName": "Bite" },
+    { "level": 12, "moveName": "Glare" },
+    { "level": 17, "moveName": "Screech" },
+    { "level": 20, "moveName": "Acid" },
+    { "level": 25, "moveName": "Spit Up" },
+    { "level": 25, "moveName": "Stockpile" },
+    { "level": 25, "moveName": "Swallow" },
+    { "level": 28, "moveName": "Acid Spray" },
+    { "level": 33, "moveName": "Mud Bomb" },
+    { "level": 36, "moveName": "Gastro Acid" },
+    { "level": 41, "moveName": "Belch" },
+    { "level": 44, "moveName": "Haze" },
+    { "level": 49, "moveName": "Coil" },
+    { "level": 52, "moveName": "Gunk Shot" }
+  ],
+  "tmMoves": ["Toxic", "Venoshock", "Hidden Power", "Sunny Day", "Protect", "Rain Dance", "Frustration", "Earthquake", "Return", "Dig", "Double Team", "Sludge Bomb", "Rock Tomb", "Torment", "Facade", "Rest", "Attract", "Thief", "Round", "Payback", "Bulldoze", "Dragon Tail", "Infestation", "Swagger", "Sleep Talk", "Substitute", "Dark Pulse", "Confide"],
+  "eggMoves": ["Beat Up", "Disable", "Iron Tail", "Poison Fang", "Poison Tail", "Pursuit", "Scary Face", "Snatch", "Spite", "Sucker Punch", "Switcheroo"],
+  "evolutions": [
+    {
+      "targetSpeciesId": "arbok",
+      "method": "Level",
+      "requiredLevel": 22
+    }
+  ]
+}
+

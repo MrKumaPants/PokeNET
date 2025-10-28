@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using PokeNET.Core.Data;
-using PokeNET.Domain.Data;
 using Xunit;
 
 namespace PokeNET.Core.Tests.Data;
@@ -16,6 +16,7 @@ namespace PokeNET.Core.Tests.Data;
 public class DataManagerTests : IDisposable
 {
     private readonly string _testDataPath;
+    private readonly GameDataContext _context;
     private readonly DataManager _dataManager;
 
     public DataManagerTests()
@@ -24,7 +25,22 @@ public class DataManagerTests : IDisposable
         _testDataPath = Path.Combine(Path.GetTempPath(), $"PokeNET_Test_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDataPath);
 
-        _dataManager = new DataManager(NullLogger<DataManager>.Instance, _testDataPath);
+        // Create subdirectories for data files
+        Directory.CreateDirectory(Path.Combine(_testDataPath, "species"));
+        Directory.CreateDirectory(Path.Combine(_testDataPath, "moves"));
+        Directory.CreateDirectory(Path.Combine(_testDataPath, "items"));
+        Directory.CreateDirectory(Path.Combine(_testDataPath, "encounters"));
+        Directory.CreateDirectory(Path.Combine(_testDataPath, "types"));
+
+        // Create GameDataContext with in-memory database
+        var options = new DbContextOptionsBuilder<GameDataContext>()
+            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+            .EnableSensitiveDataLogging() // Enable detailed entity tracking information for debugging
+            .EnableDetailedErrors() // Enable detailed error messages
+            .Options;
+        _context = new GameDataContext(options);
+
+        _dataManager = new DataManager(_context, NullLogger<DataManager>.Instance, _testDataPath);
 
         // Create test data files
         CreateTestData();
@@ -32,174 +48,206 @@ public class DataManagerTests : IDisposable
 
     private void CreateTestData()
     {
-        // Create test species data
-        var species = new List<SpeciesData>
+        // Create test species data (one per file)
+        var bulbasaur = new SpeciesData
         {
-            new()
+            Id = "bulbasaur",
+            NationalDexNumber = 1,
+            Name = "Bulbasaur",
+            Types = new List<string> { "Grass", "Poison" },
+            BaseStats = new BaseStats
             {
-                Id = 1,
-                Name = "Bulbasaur",
-                Types = new List<string> { "Grass", "Poison" },
-                BaseStats = new BaseStats
-                {
-                    HP = 45,
-                    Attack = 49,
-                    Defense = 49,
-                    SpecialAttack = 65,
-                    SpecialDefense = 65,
-                    Speed = 45
-                }
+                HP = 45,
+                Attack = 49,
+                Defense = 49,
+                SpecialAttack = 65,
+                SpecialDefense = 65,
+                Speed = 45,
             },
-            new()
-            {
-                Id = 4,
-                Name = "Charmander",
-                Types = new List<string> { "Fire" },
-                BaseStats = new BaseStats
-                {
-                    HP = 39,
-                    Attack = 52,
-                    Defense = 43,
-                    SpecialAttack = 60,
-                    SpecialDefense = 50,
-                    Speed = 65
-                }
-            }
         };
 
-        // Create test move data
-        var moves = new List<MoveData>
+        var charmander = new SpeciesData
         {
-            new()
+            Id = "charmander",
+            NationalDexNumber = 4,
+            Name = "Charmander",
+            Types = new List<string> { "Fire" },
+            BaseStats = new BaseStats
             {
-                Name = "Tackle",
-                Type = "Normal",
-                Category = MoveCategory.Physical,
-                Power = 40,
-                Accuracy = 100,
-                PP = 35
+                HP = 39,
+                Attack = 52,
+                Defense = 43,
+                SpecialAttack = 60,
+                SpecialDefense = 50,
+                Speed = 65,
             },
-            new()
-            {
-                Name = "Thunderbolt",
-                Type = "Electric",
-                Category = MoveCategory.Special,
-                Power = 90,
-                Accuracy = 100,
-                PP = 15
-            }
         };
 
-        // Create test item data
-        var items = new List<ItemData>
+        // Create test move data (one per file)
+        var tackle = new MoveData
         {
-            new()
-            {
-                Id = 1,
-                Name = "Potion",
-                Category = ItemCategory.Medicine,
-                BuyPrice = 200,
-                SellPrice = 100,
-                Consumable = true
-            },
-            new()
-            {
-                Id = 4,
-                Name = "Pokeball",
-                Category = ItemCategory.Pokeball,
-                BuyPrice = 200,
-                SellPrice = 100,
-                Consumable = true
-            }
+            Id = "tackle",
+            Name = "Tackle",
+            Type = "Normal",
+            Category = MoveCategory.Physical,
+            Power = 40,
+            Accuracy = 100,
+            PP = 35,
+        };
+
+        var thunderbolt = new MoveData
+        {
+            Id = "thunderbolt",
+            Name = "Thunderbolt",
+            Type = "Electric",
+            Category = MoveCategory.Special,
+            Power = 90,
+            Accuracy = 100,
+            PP = 15,
+        };
+
+        // Create test item data (one per file)
+        var potion = new ItemData
+        {
+            Id = "potion",
+            Name = "Potion",
+            Category = ItemCategory.Medicine,
+            BuyPrice = 200,
+            SellPrice = 100,
+            Consumable = true,
+        };
+
+        var pokeball = new ItemData
+        {
+            Id = "pokeball",
+            Name = "Pokeball",
+            Category = ItemCategory.Pokeball,
+            BuyPrice = 200,
+            SellPrice = 100,
+            Consumable = true,
         };
 
         // Create test encounter data
-        var encounters = new List<EncounterTable>
+        var route1 = new EncounterTable
         {
-            new()
+            LocationId = "route_1",
+            LocationName = "Route 1",
+            GrassEncounters = new List<Encounter>
             {
-                LocationId = "route_1",
-                LocationName = "Route 1",
-                GrassEncounters = new List<Encounter>
+                new()
                 {
-                    new() { SpeciesId = 1, MinLevel = 2, MaxLevel = 4, Rate = 50 }
-                }
-            }
+                    SpeciesId = "bulbasaur",
+                    MinLevel = 2,
+                    MaxLevel = 4,
+                    Rate = 50,
+                },
+            },
         };
-
-        // Write JSON files
-        var options = new JsonSerializerOptions { WriteIndented = true };
-
-        File.WriteAllText(
-            Path.Combine(_testDataPath, "species.json"),
-            JsonSerializer.Serialize(species, options)
-        );
-
-        File.WriteAllText(
-            Path.Combine(_testDataPath, "moves.json"),
-            JsonSerializer.Serialize(moves, options)
-        );
-
-        File.WriteAllText(
-            Path.Combine(_testDataPath, "items.json"),
-            JsonSerializer.Serialize(items, options)
-        );
-
-        File.WriteAllText(
-            Path.Combine(_testDataPath, "encounters.json"),
-            JsonSerializer.Serialize(encounters, options)
-        );
 
         // Create test type data
-        var types = new List<TypeData>
+        var fire = new TypeData
         {
-            new()
+            Id = "fire",
+            Name = "Fire",
+            Color = "#F08030",
+            Description = "Fire type Pokemon",
+            Matchups = new Dictionary<string, double>
             {
-                Name = "Fire",
-                Color = "#F08030",
-                Description = "Fire type Pokemon",
-                Matchups = new Dictionary<string, double>
-                {
-                    { "Fire", 0.5 },
-                    { "Water", 0.5 },
-                    { "Grass", 2.0 },
-                    { "Ice", 2.0 },
-                    { "Steel", 2.0 }
-                }
+                { "Fire", 0.5 },
+                { "Water", 0.5 },
+                { "Grass", 2.0 },
+                { "Ice", 2.0 },
+                { "Steel", 2.0 },
             },
-            new()
+        };
+
+        var water = new TypeData
+        {
+            Id = "water",
+            Name = "Water",
+            Color = "#6890F0",
+            Description = "Water type Pokemon",
+            Matchups = new Dictionary<string, double>
             {
-                Name = "Water",
-                Color = "#6890F0",
-                Description = "Water type Pokemon",
-                Matchups = new Dictionary<string, double>
-                {
-                    { "Fire", 2.0 },
-                    { "Water", 0.5 },
-                    { "Grass", 0.5 },
-                    { "Ground", 2.0 },
-                    { "Rock", 2.0 }
-                }
+                { "Fire", 2.0 },
+                { "Water", 0.5 },
+                { "Grass", 0.5 },
+                { "Ground", 2.0 },
+                { "Rock", 2.0 },
             },
-            new()
+        };
+
+        var grass = new TypeData
+        {
+            Id = "grass",
+            Name = "Grass",
+            Color = "#78C850",
+            Description = "Grass type Pokemon",
+            Matchups = new Dictionary<string, double>
             {
-                Name = "Grass",
-                Color = "#78C850",
-                Description = "Grass type Pokemon",
-                Matchups = new Dictionary<string, double>
-                {
-                    { "Fire", 0.5 },
-                    { "Water", 2.0 },
-                    { "Grass", 0.5 },
-                    { "Ground", 2.0 },
-                    { "Rock", 2.0 }
-                }
-            }
+                { "Fire", 0.5 },
+                { "Water", 2.0 },
+                { "Grass", 0.5 },
+                { "Ground", 2.0 },
+                { "Rock", 2.0 },
+            },
+        };
+
+        // Write JSON files (one file per entity, as expected by the new directory structure)
+        var jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
         File.WriteAllText(
-            Path.Combine(_testDataPath, "types.json"),
-            JsonSerializer.Serialize(types, options)
+            Path.Combine(_testDataPath, "species", "bulbasaur.json"),
+            JsonSerializer.Serialize(bulbasaur, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "species", "charmander.json"),
+            JsonSerializer.Serialize(charmander, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "moves", "tackle.json"),
+            JsonSerializer.Serialize(tackle, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "moves", "thunderbolt.json"),
+            JsonSerializer.Serialize(thunderbolt, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "items", "potion.json"),
+            JsonSerializer.Serialize(potion, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "items", "pokeball.json"),
+            JsonSerializer.Serialize(pokeball, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "encounters", "route_1.json"),
+            JsonSerializer.Serialize(route1, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "types", "fire.json"),
+            JsonSerializer.Serialize(fire, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "types", "water.json"),
+            JsonSerializer.Serialize(water, jsonOptions)
+        );
+
+        File.WriteAllText(
+            Path.Combine(_testDataPath, "types", "grass.json"),
+            JsonSerializer.Serialize(grass, jsonOptions)
         );
     }
 
@@ -207,11 +255,11 @@ public class DataManagerTests : IDisposable
     public async Task GetSpeciesAsync_ReturnsSpeciesById()
     {
         // Act
-        var species = await _dataManager.GetSpeciesAsync(1);
+        var species = await _dataManager.GetSpeciesAsync("bulbasaur");
 
         // Assert
         Assert.NotNull(species);
-        Assert.Equal(1, species.Id);
+        Assert.Equal("bulbasaur", species.Id);
         Assert.Equal("Bulbasaur", species.Name);
         Assert.Contains("Grass", species.Types);
     }
@@ -224,7 +272,7 @@ public class DataManagerTests : IDisposable
 
         // Assert
         Assert.NotNull(species);
-        Assert.Equal(4, species.Id);
+        Assert.Equal("charmander", species.Id);
         Assert.Equal("Charmander", species.Name);
     }
 
@@ -250,10 +298,10 @@ public class DataManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetMoveAsync_ReturnsMoveByName()
+    public async Task GetMoveAsync_ReturnsMoveById()
     {
         // Act
-        var move = await _dataManager.GetMoveAsync("Tackle");
+        var move = await _dataManager.GetMoveAsync("tackle");
 
         // Assert
         Assert.NotNull(move);
@@ -276,7 +324,7 @@ public class DataManagerTests : IDisposable
     public async Task GetItemAsync_ReturnsItemById()
     {
         // Act
-        var item = await _dataManager.GetItemAsync(1);
+        var item = await _dataManager.GetItemAsync("potion");
 
         // Assert
         Assert.NotNull(item);
@@ -292,7 +340,7 @@ public class DataManagerTests : IDisposable
 
         // Assert
         Assert.NotNull(item);
-        Assert.Equal(4, item.Id);
+        Assert.Equal("pokeball", item.Id);
     }
 
     [Fact]
@@ -322,14 +370,14 @@ public class DataManagerTests : IDisposable
     public async Task ReloadDataAsync_RefreshesCache()
     {
         // Arrange - Load data initially
-        await _dataManager.GetSpeciesAsync(1);
+        await _dataManager.GetSpeciesAsync("bulbasaur");
         Assert.True(_dataManager.IsDataLoaded());
 
         // Act - Reload
         await _dataManager.ReloadDataAsync();
 
         // Assert - Data still accessible
-        var species = await _dataManager.GetSpeciesAsync(1);
+        var species = await _dataManager.GetSpeciesAsync("bulbasaur");
         Assert.NotNull(species);
     }
 
@@ -339,21 +387,34 @@ public class DataManagerTests : IDisposable
         // Arrange - Create mod directory with modified species
         var modPath = Path.Combine(Path.GetTempPath(), $"PokeNET_Mod_{Guid.NewGuid()}");
         Directory.CreateDirectory(modPath);
+        Directory.CreateDirectory(Path.Combine(modPath, "species"));
 
-        var modSpecies = new List<SpeciesData>
+        var modSpecies = new SpeciesData
         {
-            new()
+            Id = "bulbasaur",
+            NationalDexNumber = 1,
+            Name = "Bulbasaur",
+            Types = new List<string> { "Grass", "Poison", "Dragon" }, // Modified!
+            BaseStats = new BaseStats
             {
-                Id = 1,
-                Name = "Bulbasaur",
-                Types = new List<string> { "Grass", "Poison", "Dragon" }, // Modified!
-                BaseStats = new BaseStats { HP = 100 } // Modified!
-            }
+                HP = 100,
+                Attack = 49,
+                Defense = 49,
+                SpecialAttack = 65,
+                SpecialDefense = 65,
+                Speed = 45,
+            }, // Modified!
+        };
+
+        var jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
         File.WriteAllText(
-            Path.Combine(modPath, "species.json"),
-            JsonSerializer.Serialize(modSpecies)
+            Path.Combine(modPath, "species", "bulbasaur.json"),
+            JsonSerializer.Serialize(modSpecies, jsonOptions)
         );
 
         // Act - Set mod path and reload
@@ -361,7 +422,7 @@ public class DataManagerTests : IDisposable
         await _dataManager.ReloadDataAsync();
 
         // Assert - Mod data is used
-        var species = await _dataManager.GetSpeciesAsync(1);
+        var species = await _dataManager.GetSpeciesAsync("bulbasaur");
         Assert.NotNull(species);
         Assert.Contains("Dragon", species.Types);
         Assert.Equal(100, species.BaseStats.HP);
@@ -373,11 +434,15 @@ public class DataManagerTests : IDisposable
     [Fact]
     public async Task ThreadSafety_ConcurrentAccess()
     {
-        // Act - Multiple concurrent requests
+        // Arrange - Ensure data is loaded first
+        await _dataManager.GetSpeciesAsync("bulbasaur");
+        Assert.True(_dataManager.IsDataLoaded());
+
+        // Act - Multiple concurrent read requests (EF Core supports concurrent reads from loaded data)
         var tasks = new List<Task<SpeciesData?>>();
         for (int i = 0; i < 10; i++)
         {
-            tasks.Add(_dataManager.GetSpeciesAsync(1));
+            tasks.Add(_dataManager.GetSpeciesAsync("bulbasaur"));
         }
 
         var results = await Task.WhenAll(tasks);
@@ -393,10 +458,10 @@ public class DataManagerTests : IDisposable
     // ==================== Type Data Tests ====================
 
     [Fact]
-    public async Task GetTypeAsync_ReturnsTypeByName()
+    public async Task GetTypeByNameAsync_ReturnsTypeByName()
     {
         // Act
-        var fireType = await _dataManager.GetTypeAsync("Fire");
+        var fireType = await _dataManager.GetTypeByNameAsync("Fire");
 
         // Assert
         Assert.NotNull(fireType);
@@ -407,10 +472,10 @@ public class DataManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetTypeAsync_IsCaseInsensitive()
+    public async Task GetTypeByNameAsync_IsCaseInsensitive()
     {
         // Act
-        var waterType = await _dataManager.GetTypeAsync("WATER");
+        var waterType = await _dataManager.GetTypeByNameAsync("WATER");
 
         // Assert
         Assert.NotNull(waterType);
@@ -418,13 +483,24 @@ public class DataManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetTypeAsync_ReturnsNullForInvalidType()
+    public async Task GetTypeByNameAsync_ReturnsNullForInvalidType()
     {
         // Act
-        var invalidType = await _dataManager.GetTypeAsync("InvalidType");
+        var invalidType = await _dataManager.GetTypeByNameAsync("InvalidType");
 
         // Assert
         Assert.Null(invalidType);
+    }
+
+    [Fact]
+    public async Task GetTypeAsync_ReturnsTypeById()
+    {
+        // Act
+        var fireType = await _dataManager.GetTypeAsync("fire");
+
+        // Assert
+        Assert.NotNull(fireType);
+        Assert.Equal("Fire", fireType.Name);
     }
 
     [Fact]
@@ -494,7 +570,11 @@ public class DataManagerTests : IDisposable
     public async Task GetDualTypeEffectivenessAsync_DualType_MultipliesEffectiveness()
     {
         // Act - Water vs Fire/Ground (2.0 × 2.0 = 4.0)
-        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("Water", "Fire", "Ground");
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync(
+            "Water",
+            "Fire",
+            "Ground"
+        );
 
         // Assert
         Assert.Equal(4.0, effectiveness); // Super effective against both
@@ -504,7 +584,11 @@ public class DataManagerTests : IDisposable
     public async Task GetDualTypeEffectivenessAsync_DualType_Resistance()
     {
         // Act - Fire vs Water/Grass (0.5 × 2.0 = 1.0)
-        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("Fire", "Water", "Grass");
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync(
+            "Fire",
+            "Water",
+            "Grass"
+        );
 
         // Assert
         Assert.Equal(1.0, effectiveness); // Resisted by Water, super effective on Grass
@@ -514,7 +598,11 @@ public class DataManagerTests : IDisposable
     public async Task GetDualTypeEffectivenessAsync_InvalidAttackType_ReturnsNeutral()
     {
         // Act
-        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync("InvalidType", "Fire", "Water");
+        var effectiveness = await _dataManager.GetDualTypeEffectivenessAsync(
+            "InvalidType",
+            "Fire",
+            "Water"
+        );
 
         // Assert
         Assert.Equal(1.0, effectiveness);
@@ -524,7 +612,7 @@ public class DataManagerTests : IDisposable
     public async Task TypeData_LoadsMatchupsCorrectly()
     {
         // Act
-        var fireType = await _dataManager.GetTypeAsync("Fire");
+        var fireType = await _dataManager.GetTypeByNameAsync("Fire");
 
         // Assert
         Assert.NotNull(fireType);
@@ -535,9 +623,85 @@ public class DataManagerTests : IDisposable
         Assert.Equal(2.0, fireType.Matchups["Steel"]);
     }
 
+    [Fact]
+    public async Task QuerySpeciesAsync_WithPredicate_ReturnsFilteredResults()
+    {
+        // Act
+        var fireTypes = await _dataManager.QuerySpeciesAsync(s => s.Types.Contains("Fire"));
+
+        // Assert
+        Assert.Single(fireTypes);
+        Assert.Equal("Charmander", fireTypes[0].Name);
+    }
+
+    [Fact]
+    public async Task GetSpeciesByTypeAsync_ReturnsCorrectSpecies()
+    {
+        // Act
+        var grassTypes = await _dataManager.GetSpeciesByTypeAsync("Grass");
+
+        // Assert
+        Assert.Single(grassTypes);
+        Assert.Equal("Bulbasaur", grassTypes[0].Name);
+    }
+
+    [Fact]
+    public async Task QueryMovesAsync_WithPowerRange_ReturnsFilteredResults()
+    {
+        // Act
+        var powerfulMoves = await _dataManager.QueryMovesAsync(m => m.Power >= 80);
+
+        // Assert
+        Assert.Single(powerfulMoves);
+        Assert.Equal("Thunderbolt", powerfulMoves[0].Name);
+    }
+
+    [Fact]
+    public async Task GetMovesByPowerRangeAsync_ReturnsCorrectMoves()
+    {
+        // Act
+        var mediumPowerMoves = await _dataManager.GetMovesByPowerRangeAsync(50, 100);
+
+        // Assert
+        Assert.Single(mediumPowerMoves);
+        Assert.Equal("Thunderbolt", mediumPowerMoves[0].Name);
+    }
+
+    [Fact]
+    public async Task GetMovesByCategoryAsync_ReturnsCorrectMoves()
+    {
+        // Act
+        var physicalMoves = await _dataManager.GetMovesByCategoryAsync(MoveCategory.Physical);
+
+        // Assert
+        Assert.Single(physicalMoves);
+        Assert.Equal("Tackle", physicalMoves[0].Name);
+    }
+
+    [Fact]
+    public async Task QueryItemsAsync_WithPriceRange_ReturnsFilteredResults()
+    {
+        // Act
+        var affordableItems = await _dataManager.QueryItemsAsync(i => i.BuyPrice <= 200);
+
+        // Assert
+        Assert.Equal(2, affordableItems.Count);
+    }
+
+    [Fact]
+    public async Task GetItemsByPriceRangeAsync_ReturnsCorrectItems()
+    {
+        // Act
+        var cheapItems = await _dataManager.GetItemsByPriceRangeAsync(0, 200);
+
+        // Assert
+        Assert.Equal(2, cheapItems.Count);
+    }
+
     public void Dispose()
     {
         _dataManager.Dispose();
+        _context.Dispose();
 
         if (Directory.Exists(_testDataPath))
         {

@@ -1,0 +1,48 @@
+{
+  "id": "raticate",
+  "nationalDexNumber": 20,
+  "name": "Raticate",
+  "types": ["Normal"],
+  "baseStats": {
+    "hp": 55,
+    "attack": 81,
+    "defense": 60,
+    "specialAttack": 50,
+    "specialDefense": 70,
+    "speed": 97
+  },
+  "abilities": ["Run Away", "Guts"],
+  "hiddenAbility": "Hustle",
+  "growthRate": "Medium Fast",
+  "baseExperience": 145,
+  "genderRatio": 127,
+  "catchRate": 127,
+  "baseFriendship": 70,
+  "eggGroups": ["Field"],
+  "hatchSteps": 3840,
+  "height": 7,
+  "weight": 185,
+  "description": "Its hind feet are webbed. They act as flippers, so it can swim in rivers and hunt for prey.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Swords Dance" },
+    { "level": 1, "moveName": "Tackle" },
+    { "level": 1, "moveName": "Tail Whip" },
+    { "level": 1, "moveName": "Quick Attack" },
+    { "level": 1, "moveName": "Focus Energy" },
+    { "level": 4, "moveName": "Quick Attack" },
+    { "level": 7, "moveName": "Focus Energy" },
+    { "level": 10, "moveName": "Bite" },
+    { "level": 13, "moveName": "Pursuit" },
+    { "level": 16, "moveName": "Hyper Fang" },
+    { "level": 19, "moveName": "Assurance" },
+    { "level": 24, "moveName": "Crunch" },
+    { "level": 29, "moveName": "Sucker Punch" },
+    { "level": 34, "moveName": "Super Fang" },
+    { "level": 39, "moveName": "Double-Edge" },
+    { "level": 44, "moveName": "Endeavor" }
+  ],
+  "tmMoves": ["Work Up", "Roar", "Toxic", "Hidden Power", "Sunny Day", "Ice Beam", "Blizzard", "Hyper Beam", "Protect", "Rain Dance", "Frustration", "Thunderbolt", "Thunder", "Return", "Dig", "Shadow Ball", "Double Team", "Flamethrower", "Sludge Bomb", "Facade", "Rest", "Attract", "Thief", "Round", "Charge Beam", "Giga Impact", "Thunder Wave", "Grass Knot", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Wild Charge", "Confide"],
+  "eggMoves": ["Bite", "Counter", "Final Gambit", "Flame Wheel", "Fury Swipes", "Last Resort", "Me First", "Revenge", "Reversal", "Screech", "Uproar"],
+  "evolutions": []
+}
+

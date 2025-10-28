@@ -205,7 +205,8 @@ public class StatCalculatorTests
     [InlineData(Nature.Jolly, 1.0f)] // +Spd -SpAtk (neutral attack)
     public void RecalculateAllStats_NatureModifiers_ApplyCorrectly(
         Nature nature,
-        float expectedAtkMod)
+        float expectedAtkMod
+    )
     {
         // Arrange
         var stats = new PokemonStats
@@ -221,7 +222,7 @@ public class StatCalculatorTests
             EV_Defense = 0,
             EV_SpAttack = 252,
             EV_SpDefense = 4,
-            EV_Speed = 0
+            EV_Speed = 0,
         };
 
         // Base stats for a typical special attacker (like Alakazam)
@@ -236,7 +237,12 @@ public class StatCalculatorTests
         // Act
         StatCalculator.RecalculateAllStats(
             ref stats,
-            baseHP, baseAtk, baseDef, baseSpAtk, baseSpDef, baseSpd,
+            baseHP,
+            baseAtk,
+            baseDef,
+            baseSpAtk,
+            baseSpDef,
+            baseSpd,
             level,
             nature
         );
@@ -268,7 +274,7 @@ public class StatCalculatorTests
             EV_Defense = 4,
             EV_SpAttack = 0,
             EV_SpDefense = 0,
-            EV_Speed = 0
+            EV_Speed = 0,
         };
 
         // Garchomp base stats
@@ -284,7 +290,12 @@ public class StatCalculatorTests
         // Act
         StatCalculator.RecalculateAllStats(
             ref stats,
-            baseHP, baseAtk, baseDef, baseSpAtk, baseSpDef, baseSpd,
+            baseHP,
+            baseAtk,
+            baseDef,
+            baseSpAtk,
+            baseSpDef,
+            baseSpd,
             level,
             nature
         );
@@ -321,7 +332,7 @@ public class StatCalculatorTests
             EV_Defense = 0,
             EV_SpAttack = 0,
             EV_SpDefense = 0,
-            EV_Speed = 252
+            EV_Speed = 252,
         };
 
         // Act
@@ -342,7 +353,7 @@ public class StatCalculatorTests
             EV_Defense = 96,
             EV_SpAttack = 0,
             EV_SpDefense = 0,
-            EV_Speed = 0
+            EV_Speed = 0,
         };
 
         // Act
@@ -363,7 +374,7 @@ public class StatCalculatorTests
             EV_Defense = 0,
             EV_SpAttack = 0,
             EV_SpDefense = 0,
-            EV_Speed = 0
+            EV_Speed = 0,
         };
 
         // Act
@@ -384,7 +395,7 @@ public class StatCalculatorTests
             IV_Defense = 31,
             IV_SpAttack = 31,
             IV_SpDefense = 31,
-            IV_Speed = 31
+            IV_Speed = 31,
         };
 
         // Act
@@ -405,7 +416,7 @@ public class StatCalculatorTests
             IV_Defense = 31,
             IV_SpAttack = 31,
             IV_SpDefense = 31,
-            IV_Speed = 31
+            IV_Speed = 31,
         };
 
         // Act
@@ -426,7 +437,7 @@ public class StatCalculatorTests
             IV_Defense = 31,
             IV_SpAttack = 31,
             IV_SpDefense = 31,
-            IV_Speed = 31
+            IV_Speed = 31,
         };
 
         // Act
@@ -457,13 +468,18 @@ public class StatCalculatorTests
             EV_Defense = 4,
             EV_SpAttack = 0,
             EV_SpDefense = 0,
-            EV_Speed = 252
+            EV_Speed = 252,
         };
 
         // Act
         StatCalculator.RecalculateAllStats(
             ref stats,
-            108, 130, 95, 80, 85, 102, // Garchomp base stats
+            108,
+            130,
+            95,
+            80,
+            85,
+            102, // Garchomp base stats
             50,
             Nature.Jolly // +Spd -SpAtk
         );
@@ -492,13 +508,18 @@ public class StatCalculatorTests
             EV_Defense = 0,
             EV_SpAttack = 252,
             EV_SpDefense = 4,
-            EV_Speed = 252
+            EV_Speed = 252,
         };
 
         // Act
         StatCalculator.RecalculateAllStats(
             ref stats,
-            55, 50, 45, 135, 95, 120, // Alakazam base stats
+            55,
+            50,
+            45,
+            135,
+            95,
+            120, // Alakazam base stats
             50,
             Nature.Timid // +Spd -Atk
         );

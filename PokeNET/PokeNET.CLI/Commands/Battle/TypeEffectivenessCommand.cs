@@ -25,45 +25,51 @@ public class TypeEffectivenessCommand : CliCommand<TypeEffectivenessCommand.Sett
         public string? DefenseType2 { get; set; }
     }
 
-    public TypeEffectivenessCommand(CliContext context) : base(context) { }
+    public TypeEffectivenessCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
-        await AnsiConsole.Status()
-            .StartAsync("Calculating type effectiveness...", async ctx =>
-            {
-                double effectiveness;
+        await AnsiConsole
+            .Status()
+            .StartAsync(
+                "Calculating type effectiveness...",
+                async ctx =>
+                {
+                    double effectiveness;
 
-                if (string.IsNullOrEmpty(settings.DefenseType2))
-                {
-                    effectiveness = await Context.DataApi.GetTypeEffectivenessAsync(
-                        settings.AttackType,
-                        settings.DefenseType1
-                    );
-                }
-                else
-                {
-                    effectiveness = await Context.DataApi.GetDualTypeEffectivenessAsync(
+                    if (string.IsNullOrEmpty(settings.DefenseType2))
+                    {
+                        effectiveness = await Context.DataApi.GetTypeEffectivenessAsync(
+                            settings.AttackType,
+                            settings.DefenseType1
+                        );
+                    }
+                    else
+                    {
+                        effectiveness = await Context.DataApi.GetDualTypeEffectivenessAsync(
+                            settings.AttackType,
+                            settings.DefenseType1,
+                            settings.DefenseType2
+                        );
+                    }
+
+                    DisplayEffectiveness(
                         settings.AttackType,
                         settings.DefenseType1,
-                        settings.DefenseType2
+                        settings.DefenseType2,
+                        effectiveness
                     );
                 }
-
-                DisplayEffectiveness(
-                    settings.AttackType,
-                    settings.DefenseType1,
-                    settings.DefenseType2,
-                    effectiveness
-                );
-            });
+            );
     }
 
     private static void DisplayEffectiveness(
         string attackType,
         string defenseType1,
         string? defenseType2,
-        double effectiveness)
+        double effectiveness
+    )
     {
         var defenseTypes = string.IsNullOrEmpty(defenseType2)
             ? defenseType1
@@ -73,7 +79,7 @@ public class TypeEffectivenessCommand : CliCommand<TypeEffectivenessCommand.Sett
         var panel = new Panel(new Markup($"[bold white]{title}[/]"))
         {
             Border = BoxBorder.Double,
-            BorderStyle = new Style(Color.Aqua)
+            BorderStyle = new Style(Color.Aqua),
         };
         AnsiConsole.Write(panel);
         AnsiConsole.WriteLine();
@@ -87,7 +93,7 @@ public class TypeEffectivenessCommand : CliCommand<TypeEffectivenessCommand.Sett
             1.0 => ("Normal Damage", "white"),
             2.0 => ("Super Effective", "green"),
             4.0 => ("Super Duper Effective", "lime"),
-            _ => ($"{effectiveness}x", "yellow")
+            _ => ($"{effectiveness}x", "yellow"),
         };
 
         var multiplierText = effectiveness == 0 ? "0×" : $"{effectiveness}×";
@@ -104,4 +110,3 @@ public class TypeEffectivenessCommand : CliCommand<TypeEffectivenessCommand.Sett
         AnsiConsole.Write(table);
     }
 }
-

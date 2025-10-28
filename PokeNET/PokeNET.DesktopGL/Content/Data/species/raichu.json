@@ -1,0 +1,38 @@
+{
+  "id": "raichu",
+  "nationalDexNumber": 26,
+  "name": "Raichu",
+  "types": ["Electric"],
+  "baseStats": {
+    "hp": 60,
+    "attack": 90,
+    "defense": 55,
+    "specialAttack": 90,
+    "specialDefense": 80,
+    "speed": 110
+  },
+  "abilities": ["Static"],
+  "hiddenAbility": "Lightning Rod",
+  "growthRate": "Medium Fast",
+  "baseExperience": 243,
+  "genderRatio": 127,
+  "catchRate": 75,
+  "baseFriendship": 70,
+  "eggGroups": ["Field", "Fairy"],
+  "hatchSteps": 2560,
+  "height": 8,
+  "weight": 300,
+  "description": "When its electricity builds, its muscles are stimulated, and it becomes more aggressive than usual.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Thunder Punch" },
+    { "level": 1, "moveName": "Play Nice" },
+    { "level": 1, "moveName": "Sweet Kiss" },
+    { "level": 1, "moveName": "Nuzzle" },
+    { "level": 1, "moveName": "Nasty Plot" },
+    { "level": 1, "moveName": "Charm" }
+  ],
+  "tmMoves": ["Focus Punch", "Toxic", "Hidden Power", "Hyper Beam", "Light Screen", "Protect", "Rain Dance", "Frustration", "Thunderbolt", "Thunder", "Return", "Brick Break", "Double Team", "Facade", "Rest", "Attract", "Thief", "Round", "Echoed Voice", "Fling", "Charge Beam", "Giga Impact", "Volt Switch", "Thunder Wave", "Grass Knot", "Swagger", "Sleep Talk", "Substitute", "Wild Charge", "Confide"],
+  "eggMoves": [],
+  "evolutions": []
+}
+

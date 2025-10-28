@@ -22,7 +22,8 @@ public sealed class ListMovesCommand : CliCommand<ListMovesCommand.Settings>
         public int? Limit { get; set; } = 20;
     }
 
-    public ListMovesCommand(CliContext context) : base(context) { }
+    public ListMovesCommand(CliContext context)
+        : base(context) { }
 
     protected override async Task ExecuteCommandAsync(CommandContext context, Settings settings)
     {
@@ -32,12 +33,16 @@ public sealed class ListMovesCommand : CliCommand<ListMovesCommand.Settings>
         // Apply filters
         if (!string.IsNullOrEmpty(settings.Type))
         {
-            moves = moves.Where(m => m.Type.Equals(settings.Type, StringComparison.OrdinalIgnoreCase));
+            moves = moves.Where(m =>
+                m.Type.Equals(settings.Type, StringComparison.OrdinalIgnoreCase)
+            );
         }
 
         if (!string.IsNullOrEmpty(settings.Category))
         {
-            moves = moves.Where(m => m.Category.ToString().Equals(settings.Category, StringComparison.OrdinalIgnoreCase));
+            moves = moves.Where(m =>
+                m.Category.ToString().Equals(settings.Category, StringComparison.OrdinalIgnoreCase)
+            );
         }
 
         var moveList = moves.ToList();
@@ -68,27 +73,27 @@ public sealed class ListMovesCommand : CliCommand<ListMovesCommand.Settings>
         AnsiConsole.MarkupLine($"\nShowing {displayMoves.Count()} of {moveList.Count} moves");
     }
 
-    private static string GetTypeColor(string type) => type.ToLower() switch
-    {
-        "normal" => "white",
-        "fire" => "red",
-        "water" => "blue",
-        "electric" => "yellow",
-        "grass" => "green",
-        "ice" => "aqua",
-        "fighting" => "orange1",
-        "poison" => "purple",
-        "ground" => "yellow4",
-        "flying" => "deepskyblue3",
-        "psychic" => "hotpink",
-        "bug" => "chartreuse3",
-        "rock" => "tan",
-        "ghost" => "purple4",
-        "dragon" => "purple3",
-        "dark" => "grey39",
-        "steel" => "grey74",
-        "fairy" => "pink1",
-        _ => "white"
-    };
+    private static string GetTypeColor(string type) =>
+        type.ToLower() switch
+        {
+            "normal" => "white",
+            "fire" => "red",
+            "water" => "blue",
+            "electric" => "yellow",
+            "grass" => "green",
+            "ice" => "aqua",
+            "fighting" => "orange1",
+            "poison" => "purple",
+            "ground" => "yellow4",
+            "flying" => "deepskyblue3",
+            "psychic" => "hotpink",
+            "bug" => "chartreuse3",
+            "rock" => "tan",
+            "ghost" => "purple4",
+            "dragon" => "purple3",
+            "dark" => "grey39",
+            "steel" => "grey74",
+            "fairy" => "pink1",
+            _ => "white",
+        };
 }
-

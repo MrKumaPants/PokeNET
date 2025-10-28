@@ -1,0 +1,47 @@
+{
+  "id": "beedrill",
+  "nationalDexNumber": 15,
+  "name": "Beedrill",
+  "types": ["Bug", "Poison"],
+  "baseStats": {
+    "hp": 65,
+    "attack": 90,
+    "defense": 40,
+    "specialAttack": 45,
+    "specialDefense": 80,
+    "speed": 75
+  },
+  "abilities": ["Swarm"],
+  "hiddenAbility": "Sniper",
+  "growthRate": "Medium Fast",
+  "baseExperience": 198,
+  "genderRatio": 127,
+  "catchRate": 45,
+  "baseFriendship": 70,
+  "eggGroups": ["Bug"],
+  "hatchSteps": 3840,
+  "height": 10,
+  "weight": 295,
+  "description": "It has three poisonous stingers on its forelegs and its tail. They are used to jab its enemy repeatedly.",
+  "levelMoves": [
+    { "level": 1, "moveName": "Fury Attack" },
+    { "level": 1, "moveName": "Poison Sting" },
+    { "level": 11, "moveName": "Poison Sting" },
+    { "level": 14, "moveName": "Fury Attack" },
+    { "level": 17, "moveName": "Focus Energy" },
+    { "level": 20, "moveName": "Twineedle" },
+    { "level": 23, "moveName": "Rage" },
+    { "level": 26, "moveName": "Pursuit" },
+    { "level": 29, "moveName": "Toxic Spikes" },
+    { "level": 32, "moveName": "Pin Missile" },
+    { "level": 35, "moveName": "Agility" },
+    { "level": 38, "moveName": "Assurance" },
+    { "level": 41, "moveName": "Poison Jab" },
+    { "level": 44, "moveName": "Endeavor" },
+    { "level": 47, "moveName": "Fell Stinger" }
+  ],
+  "tmMoves": ["Toxic", "Venoshock", "Hidden Power", "Sunny Day", "Hyper Beam", "Protect", "Roost", "Frustration", "Solar Beam", "Return", "Brick Break", "Double Team", "Sludge Bomb", "Aerial Ace", "Facade", "Rest", "Attract", "Thief", "Round", "False Swipe", "Acrobatics", "Swords Dance", "X-Scissor", "Infestation", "Swagger", "Sleep Talk", "U-turn", "Substitute", "Confide", "Cut"],
+  "eggMoves": [],
+  "evolutions": []
+}
+

@@ -124,7 +124,7 @@ public sealed class EnemyEntityFactory : EntityFactory
                     IV_Speed = 15,
                     IV_SpAttack = 15,
                     IV_SpDefense = 15,
-                    IV_HP = 15
+                    IV_HP = 15,
                 },
             },
             new Dictionary<string, object>
@@ -178,7 +178,7 @@ public sealed class EnemyEntityFactory : EntityFactory
                     IV_Speed = 31,
                     IV_SpAttack = 31,
                     IV_SpDefense = 31,
-                    IV_HP = 31
+                    IV_HP = 31,
                 },
             },
             new Dictionary<string, object>

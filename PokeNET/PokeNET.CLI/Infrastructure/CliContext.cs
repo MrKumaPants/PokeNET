@@ -38,7 +38,8 @@ public class CliContext
         IDataApi dataApi,
         IModLoader modLoader,
         IScriptingEngine scriptingEngine,
-        ILogger<CliContext> logger)
+        ILogger<CliContext> logger
+    )
     {
         DataApi = dataApi;
         ModLoader = modLoader;
@@ -46,4 +47,3 @@ public class CliContext
         Logger = logger;
     }
 }
-
